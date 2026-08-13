@@ -1,36 +1,179 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fiti Frontend
 
-## Getting Started
+This is the Next.js frontend for the Fiti marketplace platform. It handles authentication, role-based registration, protected admin access, and API calls to the backend services used by clients, tailors, and administrators.
 
-First, run the development server:
+## Project purpose
+
+The frontend is split into three main user journeys:
+
+- Client-facing experience
+- Tailor-facing experience
+- Admin experience
+
+The application uses Firebase Authentication for user identity and Next.js App Router for route-based UI organization.
+
+## Tech stack
+
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS
+- Firebase Authentication
+- REST API integration for backend services
+
+## Architecture overview
+
+### 1. App Router structure
+
+The project is organized around the App Router under the `app/` directory:
+
+- `app/(auth)/login/page.tsx` — login page
+- `app/(auth)/register/page.tsx` — choose between client or tailor registration
+- `app/(auth)/register/[role]/page.tsx` — role-specific registration form
+- `app/(auth)/verify-email/page.tsx` — verification screen (available if needed in future flows)
+- `app/(protected)/layout.tsx` — protected route wrapper for authenticated pages
+- `app/(protected)/admin/page.tsx` — admin dashboard placeholder
+- `providers/AuthProvider.tsx` — Firebase auth session provider
+- `lib/firebase/client.ts` — Firebase initialization
+- `lib/api.ts` — generic backend request wrapper and API helpers
+
+### 2. Authentication model
+
+Firebase is used as the authentication provider for user identity.
+
+- `AuthProvider` listens to `onAuthStateChanged(auth, ...)`
+- the current user is shared through React context
+- protected pages check `user` and `loading` before rendering
+
+This prevents unauthenticated users from reaching protected pages such as the admin area.
+
+### 3. Role-based registration flow
+
+The registration flow is intentionally split by user type:
+
+- `Client` registration form collects client-specific fields
+- `Tailor` registration form collects tailor-specific fields
+- users choose a role first, then continue into the matching form
+
+This helps keep the data model separate for each user type instead of forcing all users into one combined schema.
+
+## Backend integration
+
+The frontend connects to multiple backend services via environment variables.
+
+### Client / Tailor backend
+
+The main application backend is configured with:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
+
+This is used by helpers in `lib/api.ts` for the client/tailor APIs such as:
+
+- profile creation
+- shop creation
+- order request creation
+- bid submissions
+
+The generic request wrapper builds URLs as:
+
+```ts
+fetch(`${API_BASE}${endpoint}`, { ...options });
+```
+
+So the frontend calls endpoints relative to the client/tailor backend base URL.
+
+### Admin backend
+
+The admin service is configured with:
+
+```bash
+NEXT_PUBLIC_ADMIN_API_URL=http://localhost:9000/api/v1
+```
+
+This is reserved for admin-related services and analytics or internal admin operations.
+
+In the current implementation, the frontend keeps the admin URL available for future admin-specific endpoints and dashboard logic.
+
+## Firebase configuration
+
+Firebase is initialized in `lib/firebase/client.ts`:
+
+```ts
+const firebaseConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+```
+
+The Firebase project should match the same project used for the app authentication flow.
+
+## Environment setup
+
+Create a `.env` file in the project root and add the variables below:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+
+# Client / Tailor backend
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+
+# Admin backend
+NEXT_PUBLIC_ADMIN_API_URL=http://localhost:9000/api/v1
+```
+
+A sample file is also included as `.env.example`.
+
+## Local development workflow
+
+1. Start the backend services for:
+    - client/tailor API
+    - admin API
+2. Configure `.env` with correct values
+3. Install dependencies:
+
+```bash
+npm install
+```
+
+4. Start the frontend:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open the app in the browser:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Notes on flow
 
-## Learn More
+- Login uses Firebase authentication
+- Registration is role-based
+- Protected pages are guarded by `AuthProvider`
+- API base URLs are environment-driven so the same frontend can target different backend environments
+- The design keeps authentication separate from business profile data so client/tailor onboarding remains modular
 
-To learn more about Next.js, take a look at the following resources:
+## Important caution
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The frontend should always use the same Firebase project that the auth users were created in. If the app points to a different Firebase project, login and auth behavior may appear inconsistent even if the password and email are correct.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Example backend mapping
 
-## Deploy on Vercel
+- Client requests → `NEXT_PUBLIC_API_URL`
+- Tailor requests → `NEXT_PUBLIC_API_URL`
+- Admin dashboard calls → `NEXT_PUBLIC_ADMIN_API_URL`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This keeps frontend API usage clean while allowing different services to be separated by purpose.

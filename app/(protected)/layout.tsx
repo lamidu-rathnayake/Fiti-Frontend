@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function AdminLayout({
     children,

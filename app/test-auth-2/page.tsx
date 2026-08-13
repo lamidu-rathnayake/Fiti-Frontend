@@ -1,8 +1,8 @@
 "use client";
 
-import { useAuth } from "@/providers/AuthProvider";
+import { useAuth } from "@/lib/AuthContext";
 import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase/client";
+import { auth } from "@/lib/firebase/config";
 
 export default function TestAuthPage() {
     const { user, loading } = useAuth();

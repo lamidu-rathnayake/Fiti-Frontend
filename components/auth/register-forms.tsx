@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
-import { auth } from "@/lib/firebase/client";
+import { auth, db } from "@/lib/firebase/config";
 
 export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
     const router = useRouter();
@@ -60,11 +62,24 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                 displayName: form.fullName.trim(),
             });
 
-            router.replace("/admin");
-        } catch (err: any) {
+            await setDoc(doc(db, "users", userCredential.user.uid), {
+                uid: userCredential.user.uid,
+                email: userCredential.user.email,
+                displayName: form.fullName.trim(),
+                photoURL: userCredential.user.photoURL,
+                role: "client",
+                phone: form.phone.trim(),
+                city: form.city.trim(),
+                address: "",
+                updatedAt: serverTimestamp(),
+            });
+
+            router.replace("/client/home");
+        } catch (err: unknown) {
             console.error("Client registration failed:", err);
 
-            switch (err.code) {
+            const errorCode = err instanceof FirebaseError ? err.code : "";
+            switch (errorCode) {
                 case "auth/email-already-in-use":
                     setError("An account with this email already exists.");
                     break;
@@ -315,11 +330,26 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                 displayName: form.fullName.trim(),
             });
 
-            router.replace("/login");
-        } catch (err: any) {
+            await setDoc(doc(db, "users", userCredential.user.uid), {
+                uid: userCredential.user.uid,
+                email: userCredential.user.email,
+                displayName: form.fullName.trim(),
+                photoURL: userCredential.user.photoURL,
+                role: "seller",
+                shopName: form.shopName.trim(),
+                specialty: form.specialty.trim(),
+                city: form.city.trim(),
+                phone: "",
+                address: "",
+                updatedAt: serverTimestamp(),
+            });
+
+            router.replace("/seller/dashboard");
+        } catch (err: unknown) {
             console.error("Tailor registration failed:", err);
 
-            switch (err.code) {
+            const errorCode = err instanceof FirebaseError ? err.code : "";
+            switch (errorCode) {
                 case "auth/email-already-in-use":
                     setError("An account with this email already exists.");
                     break;

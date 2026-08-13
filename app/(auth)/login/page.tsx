@@ -2,89 +2,73 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-    GoogleAuthProvider,
-    signInWithEmailAndPassword,
-    signInWithPopup,
-} from "firebase/auth";
-
-import { auth } from "@/lib/firebase/client";
+import { auth, db, googleProvider } from "@/lib/firebase/config";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function LoginPage() {
     const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { setRole } = useAuth();
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+  const handlePostAuthRedirect = async (uid: string) => {
+    try {
+      const userDocRef = doc(db, "users", uid);
+      const userSnap = await getDoc(userDocRef);
 
-    const handleEmailLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+                const role = data.role;
 
-        const trimmedEmail = email.trim();
+                if (role !== "client" && role !== "seller") {
+                    router.replace("/onboarding");
+                    return;
+                }
 
-        if (!trimmedEmail || !password.trim()) {
-            setError("Please enter your email and password.");
-            return;
+        setRole(role);
+        if (role === "seller") {
+                    router.replace("/seller/dashboard");
+        } else {
+                    router.replace("/client/home");
         }
+      } else {
+        // First time user (e.g. via Google SSO) without a profile yet -> route to onboarding
+                                router.replace("/onboarding");
+      }
+    } catch (err) {
+      console.error("Error reading user profile from Firestore DB:", err);
+                        router.replace("/onboarding");
+    }
+  };
 
-        setError("");
-        setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      await handlePostAuthRedirect(userCred.user.uid);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to log in.");
+      setLoading(false);
+    }
+  };
 
-        try {
-            await signInWithEmailAndPassword(auth, trimmedEmail, password);
-            router.replace("/admin");
-        } catch (error: any) {
-            console.error("Login failed:", error);
-
-            switch (error.code) {
-                case "auth/invalid-credential":
-                    setError("Invalid email or password.");
-                    break;
-
-                case "auth/user-not-found":
-                    setError(
-                        "No account exists with this email. Please register first.",
-                    );
-                    router.replace("/register");
-                    break;
-
-                case "auth/wrong-password":
-                    setError("Incorrect password.");
-                    break;
-
-                case "auth/invalid-email":
-                    setError("Please enter a valid email address.");
-                    break;
-
-                default:
-                    setError("Unable to sign in. Please try again.");
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleGoogleLogin = async () => {
-        setError("");
-        setLoading(true);
-
-        try {
-            const provider = new GoogleAuthProvider();
-
-            await signInWithPopup(auth, provider);
-
-            router.replace("/admin");// meka replace karaganna adala role based page ekata
-        } catch (error: any) {
-            console.error("Google authentication failed:", error);
-
-            if (error.code !== "auth/popup-closed-by-user") {
-                setError("Google sign-in failed. Please try again.");
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const userCred = await signInWithPopup(auth, googleProvider);
+      await handlePostAuthRedirect(userCred.user.uid);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Google sign-in failed.");
+      setLoading(false);
+    }
+  };
 
     const handleRegister = () => {
         router.push("/register");
@@ -117,7 +101,7 @@ export default function LoginPage() {
                     )}
 
                     {/* Email / Password Form */}
-                    <form onSubmit={handleEmailLogin} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Email */}
                         <div>
                             <label
@@ -226,7 +210,7 @@ export default function LoginPage() {
                     {/* Register */}
                     <div className="mt-7 text-center">
                         <p className="text-sm text-slate-500">
-                            Don't have an account?{" "}
+                            Don&apos;t have an account?{" "}
                             <button
                                 type="button"
                                 onClick={handleRegister}

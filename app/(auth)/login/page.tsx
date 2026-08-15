@@ -5,70 +5,80 @@ import { useRouter } from "next/navigation";
 import { auth, db, googleProvider } from "@/lib/firebase/config";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/lib/firebase/AuthContext";
 
 export default function LoginPage() {
     const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const { setRole } = useAuth();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const { setRole } = useAuth();
 
-  const handlePostAuthRedirect = async (uid: string) => {
-    try {
-      const userDocRef = doc(db, "users", uid);
-      const userSnap = await getDoc(userDocRef);
+    const handlePostAuthRedirect = async (uid: string) => {
+        try {
+            const userDocRef = doc(db, "users", uid);
+            const userSnap = await getDoc(userDocRef);
 
-      if (userSnap.exists()) {
-        const data = userSnap.data();
+            if (userSnap.exists()) {
+                const data = userSnap.data();
                 const role = data.role;
 
-                if (role !== "client" && role !== "seller") {
+                if (
+                    role !== "client" &&
+                    role !== "seller" &&
+                    role !== "admin"
+                ) {
                     router.replace("/onboarding");
                     return;
                 }
 
-        setRole(role);
-        if (role === "seller") {
+                setRole(role);
+                if (role === "seller" || role === "admin") {
                     router.replace("/seller/dashboard");
-        } else {
+                } else {
                     router.replace("/client/home");
+                }
+            } else {
+                // First time user (e.g. via Google SSO) without a profile yet -> route to onboarding
+                router.replace("/onboarding");
+            }
+        } catch (err) {
+            console.error("Error reading user profile from Firestore DB:", err);
+            router.replace("/onboarding");
         }
-      } else {
-        // First time user (e.g. via Google SSO) without a profile yet -> route to onboarding
-                                router.replace("/onboarding");
-      }
-    } catch (err) {
-      console.error("Error reading user profile from Firestore DB:", err);
-                        router.replace("/onboarding");
-    }
-  };
+    };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      await handlePostAuthRedirect(userCred.user.uid);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+        try {
+            const userCred = await signInWithEmailAndPassword(
+                auth,
+                email,
+                password,
+            );
+            await handlePostAuthRedirect(userCred.user.uid);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to log in.");
-      setLoading(false);
-    }
-  };
+            setLoading(false);
+        }
+    };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const userCred = await signInWithPopup(auth, googleProvider);
-      await handlePostAuthRedirect(userCred.user.uid);
+    const handleGoogleLogin = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const userCred = await signInWithPopup(auth, googleProvider);
+            await handlePostAuthRedirect(userCred.user.uid);
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Google sign-in failed.");
-      setLoading(false);
-    }
-  };
+            setError(
+                err instanceof Error ? err.message : "Google sign-in failed.",
+            );
+            setLoading(false);
+        }
+    };
 
     const handleRegister = () => {
         router.push("/register");

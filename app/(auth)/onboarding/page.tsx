@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import { updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@/lib/firebase/AuthContext";
 import { auth, db } from "@/lib/firebase/config";
 
-type Role = "client" | "seller";
+type Role = "client" | "seller" | "admin";
 
 const destinationFor = (role: Role) =>
-    role === "seller" ? "/seller/dashboard" : "/client/home";
+    role === "seller" || role === "admin"
+        ? "/seller/dashboard"
+        : "/client/home";
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -64,7 +66,10 @@ export default function OnboardingPage() {
             return;
         }
 
-        if (role === "seller" && (!form.shopName.trim() || !form.specialty.trim())) {
+        if (
+            role === "seller" &&
+            (!form.shopName.trim() || !form.specialty.trim())
+        ) {
             setError("Enter your shop name and specialty.");
             return;
         }
@@ -135,7 +140,8 @@ export default function OnboardingPage() {
                         Complete your profile
                     </h1>
                     <p className="mt-2 text-sm text-slate-600">
-                        Choose your role and add the details needed to get started.
+                        Choose your role and add the details needed to get
+                        started.
                     </p>
                 </div>
 
@@ -157,22 +163,24 @@ export default function OnboardingPage() {
                             Account type
                         </legend>
                         <div className="grid grid-cols-2 gap-3">
-                            {(["client", "seller"] as const).map((option) => (
-                                <button
-                                    key={option}
-                                    type="button"
-                                    aria-pressed={role === option}
-                                    onClick={() => setSelectedRole(option)}
-                                    disabled={submitting}
-                                    className={`rounded-lg border px-4 py-3 text-sm font-semibold capitalize transition ${
-                                        role === option
-                                            ? "border-slate-900 bg-slate-900 text-white"
-                                            : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                                    }`}
-                                >
-                                    {option}
-                                </button>
-                            ))}
+                            {(["client", "seller", "admin"] as const).map(
+                                (option) => (
+                                    <button
+                                        key={option}
+                                        type="button"
+                                        aria-pressed={role === option}
+                                        onClick={() => setSelectedRole(option)}
+                                        disabled={submitting}
+                                        className={`rounded-lg border px-4 py-3 text-sm font-semibold capitalize transition ${
+                                            role === option
+                                                ? "border-slate-900 bg-slate-900 text-white"
+                                                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        {option}
+                                    </button>
+                                ),
+                            )}
                         </div>
                     </fieldset>
 
@@ -182,7 +190,10 @@ export default function OnboardingPage() {
                             <input
                                 value={form.displayName}
                                 onChange={(event) =>
-                                    updateField("displayName", event.target.value)
+                                    updateField(
+                                        "displayName",
+                                        event.target.value,
+                                    )
                                 }
                                 required
                                 disabled={submitting}
@@ -195,7 +206,9 @@ export default function OnboardingPage() {
                             <input
                                 type="tel"
                                 value={form.phone}
-                                onChange={(event) => updateField("phone", event.target.value)}
+                                onChange={(event) =>
+                                    updateField("phone", event.target.value)
+                                }
                                 disabled={submitting}
                                 className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                             />
@@ -205,7 +218,9 @@ export default function OnboardingPage() {
                             City
                             <input
                                 value={form.city}
-                                onChange={(event) => updateField("city", event.target.value)}
+                                onChange={(event) =>
+                                    updateField("city", event.target.value)
+                                }
                                 required
                                 disabled={submitting}
                                 className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
@@ -216,7 +231,9 @@ export default function OnboardingPage() {
                             Address
                             <input
                                 value={form.address}
-                                onChange={(event) => updateField("address", event.target.value)}
+                                onChange={(event) =>
+                                    updateField("address", event.target.value)
+                                }
                                 disabled={submitting}
                                 className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                             />
@@ -230,7 +247,10 @@ export default function OnboardingPage() {
                                 <input
                                     value={form.shopName}
                                     onChange={(event) =>
-                                        updateField("shopName", event.target.value)
+                                        updateField(
+                                            "shopName",
+                                            event.target.value,
+                                        )
                                     }
                                     required
                                     disabled={submitting}
@@ -243,7 +263,10 @@ export default function OnboardingPage() {
                                 <input
                                     value={form.specialty}
                                     onChange={(event) =>
-                                        updateField("specialty", event.target.value)
+                                        updateField(
+                                            "specialty",
+                                            event.target.value,
+                                        )
                                     }
                                     required
                                     disabled={submitting}

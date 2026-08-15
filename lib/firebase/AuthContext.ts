@@ -9,7 +9,7 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 
-export type Role = "client" | "seller" | "admin";
+export type Role = "client" | "tailor";
 
 export interface UserProfile {
     uid: string;
@@ -24,6 +24,7 @@ export interface UserProfile {
 
 interface AuthContextType {
     user: UserProfile | null;
+    dbRole: Role | null;
     loading: boolean;
     logout: () => Promise<void>;
     setRole: (role: Role) => Promise<void>;
@@ -31,6 +32,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
+    dbRole: null,
     loading: true,
     logout: async () => {},
     setRole: async () => {},
@@ -38,6 +40,7 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<UserProfile | null>(null);
+    const [dbRole, setDbRole] = useState<Role | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -49,15 +52,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     let extraProfileData: Partial<UserProfile> = {};
 
                     try {
+                        const token = await firebaseUser.getIdToken();
+                        
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 3000);
+                        
+                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me/role`, {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            },
+                            signal: controller.signal
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.role === "client" || data.role === "tailor") {
+                                roleFromDb = data.role;
+                            }
+                        }
+                    } catch (err) {
+                        if (err instanceof Error && err.name !== "AbortError") {
+                            console.error("Error fetching user role from backend:", err);
+                        }
+                    }
+
+                    try {
                         const userDocRef = doc(db, "users", firebaseUser.uid);
-                        const userSnap = await getDoc(userDocRef);
+                        // Use Promise.race to prevent infinite hang if Firestore is blocked by adblocker
+                        const userSnap = await Promise.race([
+                            getDoc(userDocRef),
+                            new Promise<never>((_, reject) => 
+                                setTimeout(() => reject(new Error("Firestore timeout or blocked")), 3000)
+                            )
+                        ]);
+                        
                         if (userSnap.exists()) {
                             const data = userSnap.data();
-                            if (
-                                data.role === "client" ||
-                                data.role === "seller" ||
-                                data.role === "admin"
-                            ) {
+                            if (!roleFromDb && (data.role === "client" || data.role === "tailor")) {
                                 roleFromDb = data.role;
                             }
                             extraProfileData = {
@@ -81,8 +114,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         role: roleFromDb,
                         ...extraProfileData,
                     });
+                    setDbRole(roleFromDb ?? null);
                 } else {
                     setUser(null);
+                    setDbRole(null);
                 }
                 setLoading(false);
             },
@@ -103,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const nextUser = { ...user, role };
         setUser(nextUser);
+        setDbRole(role);
 
         try {
             await updateDoc(doc(db, "users", auth.currentUser.uid), {
@@ -116,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return React.createElement(
         AuthContext.Provider,
-        { value: { user, loading, logout, setRole } },
+        { value: { user, dbRole, loading, logout, setRole } },
         children,
     );
 }

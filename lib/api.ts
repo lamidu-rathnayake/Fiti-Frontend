@@ -32,7 +32,7 @@ async function request<T>(
 export interface Profile {
     id: string;
     created_at: string;
-    type: "client" | "seller";
+    type: "client" | "tailor";
 }
 
 export interface Shop {
@@ -58,79 +58,3 @@ export interface Bid {
     status: string;
 }
 
-// ── Admin Functions ───────────────────────────────────────────────────
-export function getURL() {
-    return API_BASE;
-}
-
-export async function createClient(data: any) {
-    return request("/profiles/client", {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
-}
-
-export async function createSeller(data: any) {
-    return request("/profiles/seller", {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
-}
-
-export async function createShop(data: any) {
-    return request("/shops/", { method: "POST", body: JSON.stringify(data) });
-}
-
-export async function createClothingRequest(data: any) {
-    return request("/orders/requests", {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
-}
-
-export async function submitBid(data: any) {
-    return request("/orders/bids", {
-        method: "POST",
-        body: JSON.stringify(data),
-    });
-}
-
-// Mock lists for the dashboard since there are no "get all" admin routes in FastAPI right now
-export async function getAllProfiles(): Promise<Profile[]> {
-    return [
-        {
-            id: "client_1",
-            type: "client",
-            created_at: new Date().toISOString(),
-        },
-        {
-            id: "seller_1",
-            type: "seller",
-            created_at: new Date().toISOString(),
-        },
-    ];
-}
-
-export async function getAllShops(): Promise<Shop[]> {
-    return [
-        {
-            shop_id: 1,
-            seller_id: "seller_1",
-            shop_name: "Savile Row Custom",
-            city: "London",
-            average_rating: 4.8,
-        },
-    ];
-}
-
-export async function getAllRequests(): Promise<ClothingRequest[]> {
-    return [
-        {
-            request_id: 101,
-            client_id: "client_1",
-            clothing_category: "SUIT",
-            status: "PENDING",
-            target_budget: 500,
-        },
-    ];
-}

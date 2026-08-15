@@ -15,36 +15,64 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const { setRole } = useAuth();
 
-    const handlePostAuthRedirect = async (uid: string) => {
+    const handlePostAuthRedirect = async (userCred: any) => {
         try {
-            const userDocRef = doc(db, "users", uid);
-            const userSnap = await getDoc(userDocRef);
+            const uid = userCred.user.uid;
+            let role: string | undefined;
 
-            if (userSnap.exists()) {
-                const data = userSnap.data();
-                const role = data.role;
+            try {
+                const token = await userCred.user.getIdToken();
 
-                if (
-                    role !== "client" &&
-                    role !== "seller" &&
-                    role !== "admin"
-                ) {
-                    router.replace("/onboarding");
-                    return;
+                // Abort the backend fetch after 3 seconds to prevent infinite hang
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/auth/me/role`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    signal: controller.signal,
+                });
+
+                clearTimeout(timeoutId);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    role = data.role;
                 }
-
-                setRole(role);
-                if (role === "seller" || role === "admin") {
-                    router.replace("/seller/dashboard");
-                } else {
-                    router.replace("/client/home");
+            } catch (err) {
+                // AbortError means the 5s timeout fired — fall through to Firestore
+                if (err instanceof Error && err.name !== "AbortError") {
+                    console.error("Error fetching user role from backend in login:", err);
                 }
-            } else {
-                // First time user (e.g. via Google SSO) without a profile yet -> route to onboarding
-                router.replace("/onboarding");
             }
+
+            if (!role) {
+                const userDocRef = doc(db, "users", uid);
+                
+                // Use Promise.race to prevent infinite hang if Firestore is blocked
+                const userSnap = await Promise.race([
+                    getDoc(userDocRef),
+                    new Promise<never>((_, reject) => 
+                        setTimeout(() => reject(new Error("Firestore timeout or blocked")), 3000)
+                    )
+                ]);
+
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    role = data.role;
+                }
+            }
+
+            if (role !== "client" && role !== "tailor") {
+                router.replace("/onboarding");
+                return;
+            }
+
+            setRole(role);
+            router.replace(role === "tailor" ? "/tailor/home" : "/client/home");
         } catch (err) {
-            console.error("Error reading user profile from Firestore DB:", err);
+            console.error("Error during post-auth redirect:", err);
             router.replace("/onboarding");
         }
     };
@@ -59,9 +87,10 @@ export default function LoginPage() {
                 email,
                 password,
             );
-            await handlePostAuthRedirect(userCred.user.uid);
+            await handlePostAuthRedirect(userCred);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to log in.");
+        } finally {
             setLoading(false);
         }
     };
@@ -71,11 +100,14 @@ export default function LoginPage() {
         setError("");
         try {
             const userCred = await signInWithPopup(auth, googleProvider);
-            await handlePostAuthRedirect(userCred.user.uid);
+            await handlePostAuthRedirect(userCred);
         } catch (err: unknown) {
-            setError(
-                err instanceof Error ? err.message : "Google sign-in failed.",
-            );
+            // Ignore the popup-closed-by-user error silently
+            const code = (err as any)?.code;
+            if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
+                setError(err instanceof Error ? err.message : "Google sign-in failed.");
+            }
+        } finally {
             setLoading(false);
         }
     };

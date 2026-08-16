@@ -4,9 +4,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import dynamic from "next/dynamic";
 
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { auth, db } from "@/lib/firebase/config";
+import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
+import { createShop } from "@/lib/api/endpoints/shops";
+import { FitiApiError } from "@/lib/api/client";
+
+const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
+    ssr: false,
+    loading: () => <div className="h-64 w-full bg-slate-100 animate-pulse rounded-xl border border-slate-200 flex items-center justify-center text-slate-400">Loading map...</div>
+});
 
 type Role = "client" | "tailor";
 
@@ -26,18 +35,33 @@ export default function OnboardingPage() {
     const [role, setSelectedRole] = useState<Role | null>(null);
     const [form, setForm] = useState({
         displayName: auth.currentUser?.displayName ?? "",
-        phone: "",
+        phone: auth.currentUser?.phoneNumber ?? "",
         city: "",
         address: "",
         shopName: "",
         specialty: "",
-        profileImageUrl: "",
+        profileImageUrl: auth.currentUser?.photoURL ?? "",
         shopImageUrl: "",
         nicFrontUrl: "",
         nicRearUrl: "",
+        shopBio: "",
+        registrationNumber: "",
+        latitude: null as number | null,
+        longitude: null as number | null,
+        shopPhone: "",
+        shopCity: "",
+        shopAddress: "",
+        shopLatitude: null as number | null,
+        shopLongitude: null as number | null,
     });
+    const [usePersonalAddress, setUsePersonalAddress] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
+
+    const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+    const [shopImageFile, setShopImageFile] = useState<File | null>(null);
+    const [nicFrontFile, setNicFrontFile] = useState<File | null>(null);
+    const [nicRearFile, setNicRearFile] = useState<File | null>(null);
 
     useEffect(() => {
         if (authLoading) return;
@@ -52,7 +76,7 @@ export default function OnboardingPage() {
         }
     }, [authLoading, router, user, dbRole]);
 
-    const updateField = (field: keyof typeof form, value: string) => {
+    const updateField = (field: keyof typeof form, value: any) => {
         setForm((current) => ({ ...current, [field]: value }));
     };
 
@@ -87,92 +111,106 @@ export default function OnboardingPage() {
         setSubmitting(true);
 
         try {
+            const uploadImageToCloudinary = async (file: File) => {
+                const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo";
+                const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "unsigned_preset";
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", uploadPreset);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                    method: "POST",
+                    body: formData,
+                });
+                if (!res.ok) throw new Error("Image upload failed");
+                const data = await res.json();
+                return data.secure_url;
+            };
+
+            let finalProfileImageUrl = form.profileImageUrl;
+            let finalShopImageUrl = form.shopImageUrl;
+            let finalNicFrontUrl = form.nicFrontUrl;
+            let finalNicRearUrl = form.nicRearUrl;
+
+            if (profileImageFile) finalProfileImageUrl = await uploadImageToCloudinary(profileImageFile);
+            if (shopImageFile) finalShopImageUrl = await uploadImageToCloudinary(shopImageFile);
+            if (nicFrontFile) finalNicFrontUrl = await uploadImageToCloudinary(nicFrontFile);
+            if (nicRearFile) finalNicRearUrl = await uploadImageToCloudinary(nicRearFile);
+
             const displayName = form.displayName.trim();
-            const photoURL = form.profileImageUrl.trim() || firebaseUser.photoURL || null;
+            const photoURL = finalProfileImageUrl.trim() || firebaseUser.photoURL || null;
             await updateProfile(firebaseUser, { displayName, photoURL });
 
             // Create profile on backend
-            const token = await firebaseUser.getIdToken(true); // Force refresh to include new photoURL
-            const profilePayload = role === "tailor"
-                ? {
-                    specialty: form.specialty.trim() || null,
-                    nic_front: form.nicFrontUrl.trim() || null,
-                    nic_rear: form.nicRearUrl.trim() || null,
-                }
-                : {};
+            await firebaseUser.getIdToken(true); // Force refresh to include new photoURL
 
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-            let backendRes;
             try {
-                backendRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/profiles/${role}`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(profilePayload),
-                    signal: controller.signal,
-                });
-
-                if (backendRes && !backendRes.ok) {
-                    console.warn("Backend profile creation returned a non-OK status:", backendRes.status);
-                } else if (role === "tailor") {
-                    // If tailor profile succeeded, create their Shop
-                    const shopPayload = {
-                        tailor_id: firebaseUser.uid,
-                        shop_name: form.shopName.trim(),
-                        shop_bio: null,
-                        shop_address: form.address.trim() || null,
+                if (role === "tailor") {
+                    await createTailorProfile({
+                        full_name: displayName,
+                        email: firebaseUser.email || "",
+                        profile_image_url: photoURL,
+                        phone: form.phone.trim() || null,
                         city: form.city.trim() || null,
-                        contact_number: form.phone.trim() || null,
-                        registration_number: null,
-                        latitude: null,
-                        longitude: null,
-                        profile_picture_url: form.shopImageUrl.trim() || photoURL
-                    };
-
-                    const shopRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/shops/`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify(shopPayload),
-                        signal: controller.signal,
+                        address: form.address.trim() || null,
+                        latitude: form.latitude,
+                        longitude: form.longitude,
+                        specialty: form.specialty.trim() || null,
+                        nic_front: finalNicFrontUrl.trim() || null,
+                        nic_rear: finalNicRearUrl.trim() || null,
                     });
 
-                    if (!shopRes.ok) {
-                        console.warn("Backend shop creation returned a non-OK status:", shopRes.status);
-                    }
+                    await createShop({
+                        tailor_id: firebaseUser.uid,
+                        shop_name: form.shopName.trim(),
+                        shop_bio: form.shopBio.trim() || null,
+                        shop_address: usePersonalAddress ? (form.address.trim() || null) : (form.shopAddress.trim() || null),
+                        city: usePersonalAddress ? (form.city.trim() || null) : (form.shopCity.trim() || null),
+                        contact_number: usePersonalAddress ? (form.phone.trim() || null) : (form.shopPhone.trim() || null),
+                        registration_number: form.registrationNumber.trim() || null,
+                        latitude: usePersonalAddress ? form.latitude : form.shopLatitude,
+                        longitude: usePersonalAddress ? form.longitude : form.shopLongitude,
+                        profile_picture_url: finalShopImageUrl.trim() || photoURL || null,
+                    });
+                } else {
+                    await createClientProfile({
+                        full_name: displayName,
+                        email: firebaseUser.email || "",
+                        profile_image_url: photoURL,
+                        phone: form.phone.trim() || null,
+                        city: form.city.trim() || null,
+                        address: form.address.trim() || null,
+                        latitude: form.latitude,
+                        longitude: form.longitude,
+                    });
                 }
             } catch (err) {
-                if (err instanceof Error && err.name !== "AbortError") {
-                    console.error("Error sending profile/shop to backend:", err);
+                if (!(err instanceof FitiApiError && err.status === 409)) {
+                    console.warn("Backend profile/shop creation warning:", err);
                 }
-            } finally {
-                clearTimeout(timeoutId);
             }
 
-            const firestorePayload = {
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                displayName,
-                photoURL: photoURL,
-                role,
-                phone: form.phone.trim(),
-                city: form.city.trim(),
-                address: form.address.trim(),
-                ...(role === "tailor"
-                    ? {
-                        shopName: form.shopName.trim(),
-                        specialty: form.specialty.trim(),
-                    }
-                    : {}),
-                createdAt: firebaseUser.metadata.creationTime,
-                updatedAt: serverTimestamp(),
-            };
+            const firestorePayload = role === "tailor"
+                ? {
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    full_name: displayName,
+                    profile_image_url: photoURL,
+                    role: "tailor",
+                    createdAt: firebaseUser.metadata.creationTime,
+                    updatedAt: serverTimestamp(),
+                }
+                : {
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    displayName: displayName,
+                    profile_image_url: photoURL,
+                    role: "client",
+                    createdAt: firebaseUser.metadata.creationTime,
+                    phone: form.phone.trim() || null,
+                    city: form.city.trim() || null,
+                    address: form.address.trim() || null,
+                    updatedAt: serverTimestamp(),
+                };
 
             await Promise.race([
                 setDoc(doc(db, "users", firebaseUser.uid), firestorePayload, { merge: true }),
@@ -315,22 +353,28 @@ export default function OnboardingPage() {
                                 className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                             />
                         </label>
-                        
-                        <label className="text-sm font-medium text-slate-700">
-                            Profile Picture (Placeholder)
+
+                        <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                            Personal Location (Optional)
+                            <p className="text-xs text-slate-500 font-normal mt-1 mb-2">Drag the pin to your home or current location.</p>
+                            <LocationPicker onChange={(loc: { lat: number, lng: number }) => { updateField("latitude", loc.lat); updateField("longitude", loc.lng); }} />
+                        </label>
+
+                        <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                            Profile Picture (Optional)
                             <div className="mt-2 flex items-center gap-3">
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={(event) => {
                                         if (event.target.files?.[0]) {
-                                            updateField("profileImageUrl", "https://res.cloudinary.com/demo/image/upload/sample.jpg");
+                                            setProfileImageFile(event.target.files[0]);
                                         }
                                     }}
                                     disabled={submitting}
                                     className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
                                 />
-                                {form.profileImageUrl && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
+                                {profileImageFile && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
                             </div>
                         </label>
                     </div>
@@ -366,57 +410,136 @@ export default function OnboardingPage() {
                                 />
                             </label>
 
-                            <label className="text-sm font-medium text-slate-700">
-                                Shop Picture (Placeholder)
+                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                                Shop Bio (Optional)
+                                <textarea
+                                    value={form.shopBio}
+                                    onChange={(event) => updateField("shopBio", event.target.value)}
+                                    placeholder="Tell us about your shop..."
+                                    disabled={submitting}
+                                    rows={3}
+                                    className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 resize-none"
+                                />
+                            </label>
+
+                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                                Registration Number (Optional)
+                                <input
+                                    value={form.registrationNumber}
+                                    onChange={(event) => updateField("registrationNumber", event.target.value)}
+                                    placeholder="Business Registration Number"
+                                    disabled={submitting}
+                                    className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                />
+                            </label>
+
+                            <div className="col-span-1 sm:col-span-2">
+                                <div className="flex items-start gap-3 py-3 border-y border-slate-100 my-2">
+                                    <input
+                                        type="checkbox"
+                                        id="usePersonalAddress"
+                                        checked={usePersonalAddress}
+                                        onChange={(e) => setUsePersonalAddress(e.target.checked)}
+                                        className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                    />
+                                    <label htmlFor="usePersonalAddress" className="text-sm text-slate-700 leading-snug">
+                                        <span className="font-medium block mb-0.5">My shop uses my personal address</span>
+                                        We'll automatically use the contact info and map location you provided above for your shop.
+                                    </label>
+                                </div>
+                            </div>
+
+                            {!usePersonalAddress && (
+                                <div className="col-span-1 sm:col-span-2 grid gap-5 sm:grid-cols-2 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <label className="text-sm font-medium text-slate-700">
+                                        Shop Phone
+                                        <input
+                                            type="tel"
+                                            value={form.shopPhone}
+                                            onChange={(event) => updateField("shopPhone", event.target.value)}
+                                            placeholder="+94 77 123 4567"
+                                            disabled={submitting}
+                                            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                        />
+                                    </label>
+                                    <label className="text-sm font-medium text-slate-700">
+                                        Shop City
+                                        <input
+                                            value={form.shopCity}
+                                            onChange={(event) => updateField("shopCity", event.target.value)}
+                                            placeholder="Colombo"
+                                            disabled={submitting}
+                                            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                        />
+                                    </label>
+                                    <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                                        Shop Address
+                                        <input
+                                            value={form.shopAddress}
+                                            onChange={(event) => updateField("shopAddress", event.target.value)}
+                                            placeholder="123 Market Street"
+                                            disabled={submitting}
+                                            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                        />
+                                    </label>
+                                    <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                                        Shop Location (Optional)
+                                        <LocationPicker onChange={(loc: { lat: number, lng: number }) => { updateField("shopLatitude", loc.lat); updateField("shopLongitude", loc.lng); }} />
+                                    </label>
+                                </div>
+                            )}
+
+                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                                Shop Picture (Optional)
                                 <div className="mt-2 flex items-center gap-3">
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={(event) => {
                                             if (event.target.files?.[0]) {
-                                                updateField("shopImageUrl", "https://res.cloudinary.com/demo/image/upload/sample.jpg");
+                                                setShopImageFile(event.target.files[0]);
                                             }
                                         }}
                                         disabled={submitting}
                                         className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
                                     />
-                                    {form.shopImageUrl && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
+                                    {shopImageFile && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
                                 </div>
                             </label>
 
-                            <label className="text-sm font-medium text-slate-700">
-                                NIC Front (Placeholder)
+                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                                NIC Front (Optional)
                                 <div className="mt-2 flex items-center gap-3">
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={(event) => {
                                             if (event.target.files?.[0]) {
-                                                updateField("nicFrontUrl", "https://res.cloudinary.com/demo/image/upload/sample.jpg");
+                                                setNicFrontFile(event.target.files[0]);
                                             }
                                         }}
                                         disabled={submitting}
                                         className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
                                     />
-                                    {form.nicFrontUrl && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
+                                    {nicFrontFile && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
                                 </div>
                             </label>
 
-                            <label className="text-sm font-medium text-slate-700">
-                                NIC Rear (Placeholder)
+                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
+                                NIC Rear (Optional)
                                 <div className="mt-2 flex items-center gap-3">
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={(event) => {
                                             if (event.target.files?.[0]) {
-                                                updateField("nicRearUrl", "https://res.cloudinary.com/demo/image/upload/sample.jpg");
+                                                setNicRearFile(event.target.files[0]);
                                             }
                                         }}
                                         disabled={submitting}
                                         className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
                                     />
-                                    {form.nicRearUrl && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
+                                    {nicRearFile && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
                                 </div>
                             </label>
                         </div>

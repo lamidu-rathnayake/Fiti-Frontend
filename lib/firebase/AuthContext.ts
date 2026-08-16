@@ -7,7 +7,9 @@ import {
     User as FirebaseUser,
     signOut,
 } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { doc, serverTimestamp, updateDoc, onSnapshot } from "firebase/firestore";
+import { getMyRole } from "@/lib/api/endpoints/auth";
+import { FitiApiError } from "@/lib/api/client";
 
 export type Role = "client" | "tailor";
 
@@ -44,7 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(
+        let unsubscribeSnapshot: (() => void) | undefined;
+
+        const unsubscribeAuth = onAuthStateChanged(
             auth,
             async (firebaseUser: FirebaseUser | null) => {
                 if (firebaseUser) {
@@ -52,96 +56,99 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     let extraProfileData: Partial<UserProfile> = {};
 
                     try {
-                        const token = await firebaseUser.getIdToken();
-                        
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 3000);
-                        
-                        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/me/role`, {
-                            headers: {
-                                Authorization: `Bearer ${token}`
-                            },
-                            signal: controller.signal
-                        });
-                        
-                        clearTimeout(timeoutId);
-                        
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data.role === "client" || data.role === "tailor") {
-                                roleFromDb = data.role;
-                            }
-                        }
+                        const data = await getMyRole();
+                        roleFromDb = data.role;
                     } catch (err) {
-                        if (err instanceof Error && err.name !== "AbortError") {
+                        // FitiApiError 404 = new user with no role yet — expected during registration
+                        if (!(err instanceof FitiApiError && err.status === 404)) {
                             console.error("Error fetching user role from backend:", err);
                         }
                     }
 
                     try {
                         const userDocRef = doc(db, "users", firebaseUser.uid);
-                        // Use Promise.race to prevent infinite hang if Firestore is blocked by adblocker
-                        const userSnap = await Promise.race([
-                            getDoc(userDocRef),
-                            new Promise<never>((_, reject) => 
-                                setTimeout(() => reject(new Error("Firestore timeout or blocked")), 3000)
-                            )
-                        ]);
-                        
-                        if (userSnap.exists()) {
-                            const data = userSnap.data();
-                            if (!roleFromDb && (data.role === "client" || data.role === "tailor")) {
-                                roleFromDb = data.role;
+                        unsubscribeSnapshot = onSnapshot(userDocRef, (userSnap) => {
+                            if (userSnap.exists()) {
+                                const data = userSnap.data();
+                                if (!roleFromDb && (data.role === "client" || data.role === "tailor")) {
+                                    roleFromDb = data.role;
+                                }
+                                extraProfileData = {
+                                    phone: data.phone,
+                                    address: data.address,
+                                    city: data.city,
+                                };
                             }
-                            extraProfileData = {
-                                phone: data.phone,
-                                address: data.address,
-                                city: data.city,
-                            };
-                        }
+                            
+                            setUser({
+                                uid: firebaseUser.uid,
+                                email: firebaseUser.email,
+                                displayName: firebaseUser.displayName,
+                                photoURL: firebaseUser.photoURL,
+                                role: roleFromDb,
+                                ...extraProfileData,
+                            });
+                            setDbRole(roleFromDb ?? null);
+                            setLoading(false);
+                        }, (err) => {
+                            console.error("Error fetching user profile from Firestore:", err);
+                            setUser({
+                                uid: firebaseUser.uid,
+                                email: firebaseUser.email,
+                                displayName: firebaseUser.displayName,
+                                photoURL: firebaseUser.photoURL,
+                                role: roleFromDb,
+                            });
+                            setDbRole(roleFromDb ?? null);
+                            setLoading(false);
+                        });
                     } catch (err) {
-                        console.error(
-                            "Error fetching user profile from Firestore:",
-                            err,
-                        );
+                        console.error("Error setting up Firestore listener:", err);
+                        setLoading(false);
                     }
-
-                    setUser({
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email,
-                        displayName: firebaseUser.displayName,
-                        photoURL: firebaseUser.photoURL,
-                        role: roleFromDb,
-                        ...extraProfileData,
-                    });
-                    setDbRole(roleFromDb ?? null);
                 } else {
+                    if (unsubscribeSnapshot) {
+                        unsubscribeSnapshot();
+                        unsubscribeSnapshot = undefined;
+                    }
                     setUser(null);
                     setDbRole(null);
+                    setLoading(false);
                 }
-                setLoading(false);
             },
         );
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+        };
     }, []);
 
     const logout = async () => {
         await signOut(auth);
         setUser(null);
+        setDbRole(null);
     };
 
     const setRole = async (role: Role) => {
-        if (!user || !auth.currentUser) {
-            return;
-        }
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
 
-        const nextUser = { ...user, role };
+        const nextUser: UserProfile = user 
+            ? { ...user, role } 
+            : {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                displayName: currentUser.displayName,
+                photoURL: currentUser.photoURL,
+                role,
+            };
+
         setUser(nextUser);
         setDbRole(role);
 
         try {
-            await updateDoc(doc(db, "users", auth.currentUser.uid), {
+            await updateDoc(doc(db, "users", currentUser.uid), {
                 role,
                 updatedAt: serverTimestamp(),
             });

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, db, googleProvider } from "@/lib/firebase/config";
+import { auth, googleProvider } from "@/lib/firebase/config";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/firebase/AuthContext";
+import { getMyRole } from "@/lib/api/endpoints/auth";
+import { FitiApiError } from "@/lib/api/client";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -15,53 +16,20 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const { setRole } = useAuth();
 
-    const handlePostAuthRedirect = async (userCred: any) => {
+    const handlePostAuthRedirect = async (userCred: { user: { uid: string; getIdToken: () => Promise<string> } }) => {
         try {
-            const uid = userCred.user.uid;
             let role: string | undefined;
 
             try {
-                const token = await userCred.user.getIdToken();
-
-                // Abort the backend fetch after 3 seconds to prevent infinite hang
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/auth/me/role`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    },
-                    signal: controller.signal,
-                });
-
-                clearTimeout(timeoutId);
-
-                if (res.ok) {
-                    const data = await res.json();
-                    role = data.role;
-                }
+                const data = await getMyRole();
+                role = data.role;
             } catch (err) {
-                // AbortError means the 5s timeout fired — fall through to Firestore
-                if (err instanceof Error && err.name !== "AbortError") {
-                    console.error("Error fetching user role from backend in login:", err);
+                if (err instanceof FitiApiError && err.status === 404) {
+                    // New user — no role registered yet
+                    router.replace("/onboarding");
+                    return;
                 }
-            }
-
-            if (!role) {
-                const userDocRef = doc(db, "users", uid);
-                
-                // Use Promise.race to prevent infinite hang if Firestore is blocked
-                const userSnap = await Promise.race([
-                    getDoc(userDocRef),
-                    new Promise<never>((_, reject) => 
-                        setTimeout(() => reject(new Error("Firestore timeout or blocked")), 3000)
-                    )
-                ]);
-
-                if (userSnap.exists()) {
-                    const data = userSnap.data();
-                    role = data.role;
-                }
+                console.error("Error fetching user role from backend in login:", err);
             }
 
             if (role !== "client" && role !== "tailor") {

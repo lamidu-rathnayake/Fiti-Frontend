@@ -185,6 +185,27 @@ Called during onboarding when the user selects the **tailor** role.
 | `GET` | `/orders/requests/{id}` | Public | Get details of a specific clothing request |
 | `PATCH` | `/orders/requests/{id}/cancel` | Client Role | Cancel an open request before a bid is accepted |
 
+**Clothing Request Request Body (POST):**
+```json
+{
+  "client_id": "firebase_uid_here",
+  "target_date": "2026-10-01",
+  "target_budget": 15000.0,
+  "clothing_category": "Suit",
+  "gender": "male",
+  "fabric_status": "client_provided",
+  "description": "Looking for a custom 3-piece suit.",
+  "voice_note_url": "https://firebasestorage...",
+  "service_type": "physical_visit",
+  "request_location": "Colombo",
+  "design_image_urls": [
+    "https://firebasestorage.../image1.png"
+  ],
+  "target_shop_ids": [1, 2]
+}
+```
+> All fields except `client_id` and `service_type` (which defaults to `"online"`) are optional.
+
 ### Bids & Shop Requests (Tailor-side)
 
 | Method | Endpoint | Auth | Description |

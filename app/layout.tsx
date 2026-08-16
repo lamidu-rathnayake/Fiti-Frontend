@@ -3,9 +3,9 @@ import { AuthProvider } from "@/lib/firebase/AuthContext";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-    title: "NextGen Marketplace",
+    title: "Fiti",
     description:
-        "Discover premium products in our verified online marketplace.",
+        "Discover tailor shops in our verified online marketplace.",
 };
 
 export default function RootLayout({

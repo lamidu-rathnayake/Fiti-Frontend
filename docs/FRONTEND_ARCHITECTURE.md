@@ -14,40 +14,57 @@ This document outlines the frontend architecture for authentication (registratio
 | Profile Cache | Firebase Firestore | Stores `UserProfile` as fallback while backend is being called |
 | Authorization & Domain Data | PostgreSQL via Fiti Backend | Authoritative roles stored in `user_roles` table |
 
-### 1.1 Registration Flow (Onboarding)
+### 1.1 Registration Flow
 
-New users land on `/onboarding` after their first Google or email sign-in. Registration is a two-phase process:
+Users can register through role-specific registration pages (`/register` for Clients, `/register/tailor` for Tailors). The process consists of two synchronized phases:
 
-**Phase 1 — Firebase Authentication:**
-- User signs in via Google (`signInWithPopup`) or creates an account via email/password.
-- Firebase creates the user and returns a `UserCredential` with a `uid`.
-- If no role exists in PostgreSQL yet, the user is redirected to `/onboarding`.
+**Phase 1 — Firebase Authentication & Firestore (Cache):**
+- User creates an account via email/password.
+- Firebase Auth creates the user and returns a `UserCredential` with a `uid`.
+- The frontend immediately creates a `users/{uid}` document in Firestore to cache the profile (see Data Separation below).
 
-**Phase 2 — Backend Sync (Onboarding form submission):**
-- User selects their role (`client` or `tailor`) and fills in profile fields (including `profile_picture_url`).
-- Frontend calls `firebaseUser.getIdToken()` to get the Firebase ID Token.
-- Depending on the selected role, the frontend POSTs to:
-  - `POST /api/v1/profiles/client` (Payload includes `profile_picture_url`)
-  - `POST /api/v1/profiles/tailor` (Payload includes `profile_picture_url`)
-- The backend creates the profile record in PostgreSQL **and** inserts a row into `user_roles`.
-- The Firestore `users` document is also updated as a local cache.
-- `dbRole` is set in `AuthContext` and the user is redirected to their dashboard.
+**Phase 2 — Backend Sync & Role Assignment:**
+- Frontend retrieves the Firebase ID Token (`getIdToken()`).
+- Depending on the selected role, the frontend POSTs to backend APIs to create authoritative profiles and shop data in PostgreSQL.
+- To prevent race conditions where the auth state resolves before the Firestore document is fully written, `AuthContext` uses a real-time `onSnapshot` listener on the Firestore `users/{uid}` document. This instantly syncs the newly written role into the local state.
+- `setRole` handles the fallback to `auth.currentUser` if the context hasn't fully hydrated yet.
+- The user is seamlessly redirected to their respective dashboard (`/client/home` or `/tailor/home`).
+- *Note: If a user logs in but lacks an authoritative role or incomplete profile, they are redirected to `/onboarding`.*
 
-### 1.2 Login Flow
+### 1.2 Data Separation: Firebase vs Backend
+
+To maintain a clear separation of concerns, data is distributed across three systems during registration:
+
+#### Firebase Authentication (Identity)
+- **Data stored:** Email, Password (hashed), `uid`, Display Name, Photo URL.
+
+#### Firebase Firestore (Profile Cache)
+Used as a fast, client-side accessible profile cache for the frontend UI. Stored in the `users` collection:
+- **Client Data:** `uid`, `email`, `displayName`, `photoURL`, `role: "client"`, `phone`, `city`, `address`, `createdAt`, `updatedAt`.
+- **Tailor Data:** `uid`, `email`, `displayName`, `photoURL`, `role: "tailor"`, `shopName`, `specialty`, `city`, `phone`, `address`, `createdAt`, `updatedAt`.
+
+#### PostgreSQL via Backend APIs (Authoritative Domain)
+The authoritative source for RBAC, relational data, and domain logic.
+- **Roles:** The backend automatically manages the `user_roles` table, tracking the authoritative role for each `uid`.
+- **Client Profile:** Created via `POST /api/v1/profiles/client`.
+- **Tailor Profile:** Created via `POST /api/v1/profiles/tailor` (Payload: `specialty`, `nic_front`, `nic_rear`).
+- **Tailor Shop:** Created via `POST /api/v1/shops/` (Payload: `tailor_id` (uid), `shop_name`, `shop_address`, `city`, `contact_number`, `profile_picture_url`).
+
+### 1.3 Login Flow
 
 1. User logs in via email/password (`signInWithEmailAndPassword`) or Google (`signInWithPopup`).
 2. Firebase SDK persists the session in Local Storage / IndexedDB.
-3. Frontend calls `GET /api/v1/auth/me/role` with the Firebase JWT Bearer token.
-4. Backend queries PostgreSQL `user_roles` and returns the role.
-5. Frontend redirects:
+3. `AuthContext` sets up a real-time `onSnapshot` listener to fetch the cached profile from Firestore.
+4. Concurrently, the frontend calls `GET /api/v1/auth/me/role` with the Firebase JWT Bearer token to fetch the authoritative role from PostgreSQL.
+5. The router's layout (`ProtectedLayout`) redirects based on the authoritative `dbRole`:
    - `"client"` → `/client/home`
    - `"tailor"` → `/tailor/home`
    - No role / 404 → `/onboarding`
 
-### 1.3 Logout Flow
+### 1.4 Logout Flow
 
 1. Frontend calls `signOut(auth)` from Firebase.
-2. `AuthContext` sets both `user` and `dbRole` to `null`.
+2. `AuthContext` cleans up the `onSnapshot` listener and sets `user` and `dbRole` to `null`.
 3. User is redirected to `/login`.
 
 ---

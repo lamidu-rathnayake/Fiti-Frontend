@@ -2,7 +2,7 @@
 
 This document tracks the current development state of the Fiti Frontend. It is kept up-to-date as features are implemented.
 
-> **Last Updated:** 2026-08-15
+> **Last Updated:** 2026-08-16
 
 ---
 
@@ -23,8 +23,10 @@ This document tracks the current development state of the Fiti Frontend. It is k
 
 ### Authentication System
 - Login page — Email/Password and Google SSO (`signInWithPopup`)
+- Dedicated registration flows (`/register` for Clients, `/register/tailor` for Tailors)
 - Onboarding flow — role selection, profile form, backend sync
 - `AuthContext.ts` — exports `user`, `dbRole`, `loading`, `logout`, `setRole`
+- Fixed registration redirect race condition by introducing a real-time `onSnapshot` listener in `AuthContext` to instantly sync Firestore profile data.
 - `dbRole` fetched from `GET /api/v1/auth/me/role` (backend PostgreSQL) with Firestore fallback
 - Fully compliant with the backend OpenAPI schema.
 

@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "firebase/auth";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
 
 import { useAuth } from "@/lib/firebase/AuthContext";
-import { auth, db } from "@/lib/firebase/config";
+import { auth } from "@/lib/firebase/config";
+import { saveUserProfile } from "@/lib/firebase/user-profile";
 import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
-import { createShop } from "@/lib/api/endpoints/shops";
+import { addShopImage, createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
@@ -146,78 +146,46 @@ export default function OnboardingPage() {
             try {
                 if (role === "tailor") {
                     await createTailorProfile({
-                        full_name: displayName,
-                        email: firebaseUser.email || "",
-                        profile_image_url: photoURL,
-                        phone: form.phone.trim() || null,
-                        city: form.city.trim() || null,
-                        address: form.address.trim() || null,
-                        latitude: form.latitude,
-                        longitude: form.longitude,
-                        specialty: form.specialty.trim() || null,
                         nic_front: finalNicFrontUrl.trim() || null,
                         nic_rear: finalNicRearUrl.trim() || null,
                     });
-
-                    await createShop({
-                        tailor_id: firebaseUser.uid,
-                        shop_name: form.shopName.trim(),
-                        shop_bio: form.shopBio.trim() || null,
-                        shop_address: usePersonalAddress ? (form.address.trim() || null) : (form.shopAddress.trim() || null),
-                        city: usePersonalAddress ? (form.city.trim() || null) : (form.shopCity.trim() || null),
-                        contact_number: usePersonalAddress ? (form.phone.trim() || null) : (form.shopPhone.trim() || null),
-                        registration_number: form.registrationNumber.trim() || null,
-                        latitude: usePersonalAddress ? form.latitude : form.shopLatitude,
-                        longitude: usePersonalAddress ? form.longitude : form.shopLongitude,
-                        profile_picture_url: finalShopImageUrl.trim() || photoURL || null,
-                    });
                 } else {
-                    await createClientProfile({
-                        full_name: displayName,
-                        email: firebaseUser.email || "",
-                        profile_image_url: photoURL,
-                        phone: form.phone.trim() || null,
-                        city: form.city.trim() || null,
-                        address: form.address.trim() || null,
-                        latitude: form.latitude,
-                        longitude: form.longitude,
-                    });
+                    await createClientProfile();
                 }
             } catch (err) {
-                if (!(err instanceof FitiApiError && err.status === 409)) {
-                    console.warn("Backend profile/shop creation warning:", err);
+                if (!(err instanceof FitiApiError && err.status === 409)) throw err;
+            }
+
+            if (role === "tailor") {
+                const shop = await createShop({
+                    shop_name: form.shopName.trim(),
+                    shop_bio: form.shopBio.trim() || null,
+                    shop_address: usePersonalAddress ? (form.address.trim() || null) : (form.shopAddress.trim() || null),
+                    city: usePersonalAddress ? (form.city.trim() || null) : (form.shopCity.trim() || null),
+                    contact_number: usePersonalAddress ? (form.phone.trim() || null) : (form.shopPhone.trim() || null),
+                    registration_number: form.registrationNumber.trim() || null,
+                    latitude: usePersonalAddress ? form.latitude : form.shopLatitude,
+                    longitude: usePersonalAddress ? form.longitude : form.shopLongitude,
+                });
+
+                const shopImageUrl = finalShopImageUrl.trim() || photoURL;
+                if (shopImageUrl) {
+                    await addShopImage(shop.shop_id, { image_url: shopImageUrl });
                 }
             }
 
-            const firestorePayload = role === "tailor"
-                ? {
-                    uid: firebaseUser.uid,
-                    email: firebaseUser.email,
-                    full_name: displayName,
-                    profile_image_url: photoURL,
-                    role: "tailor",
-                    createdAt: firebaseUser.metadata.creationTime,
-                    updatedAt: serverTimestamp(),
-                }
-                : {
-                    uid: firebaseUser.uid,
-                    email: firebaseUser.email,
-                    displayName: displayName,
-                    profile_image_url: photoURL,
-                    role: "client",
-                    createdAt: firebaseUser.metadata.creationTime,
-                    phone: form.phone.trim() || null,
-                    city: form.city.trim() || null,
-                    address: form.address.trim() || null,
-                    updatedAt: serverTimestamp(),
-                };
-
-            await Promise.race([
-                setDoc(doc(db, "users", firebaseUser.uid), firestorePayload, { merge: true }),
-                new Promise<never>((_, reject) =>
-                    setTimeout(() => reject(new Error("Firestore timeout or blocked")), 3000)
-                )
-            ]);
+            await saveUserProfile({
+                user: firebaseUser,
+                role,
+                displayName,
+                photoURL,
+                phone: form.phone.trim() || null,
+                city: form.city.trim() || null,
+                address: form.address.trim() || null,
+                specialty: role === "tailor" ? form.specialty.trim() : undefined,
+                latitude: role === "tailor" ? form.latitude : undefined,
+                longitude: role === "tailor" ? form.longitude : undefined,
+            });
 
             setRole(role);
             router.replace(destinationFor(role));

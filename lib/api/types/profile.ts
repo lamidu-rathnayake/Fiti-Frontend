@@ -11,20 +11,13 @@
  * Request body for POST /api/v1/profiles/client.
  * Firebase UID is extracted from the Bearer token by the backend — no body fields required.
  */
-export interface ClientProfilePayload {
-    full_name?: string;
-    email?: string;
-    profile_image_url?: string | null;
-    phone?: string | null;
-    city?: string | null;
-    address?: string | null;
-    latitude?: number | null;
-    longitude?: number | null;
-}
+export type ClientProfilePayload = Record<string, never>;
 
 /** Success (201) response from POST /api/v1/profiles/client */
 export interface ClientProfileResponse {
-    message: string;
+    id: string;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 /**
@@ -32,11 +25,9 @@ export interface ClientProfileResponse {
  * (Auth: Client Role)
  */
 export interface ClientProfile {
-    uid: string;
-    email: string | null;
-    full_name: string | null;
-    profile_image_url: string | null;
-    created_at: string;
+    id: string;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 // ── Measurements ──────────────────────────────────────────────────────
@@ -66,32 +57,28 @@ export interface Measurements extends MeasurementsPayload {
  * Firebase UID is extracted from the Bearer token by the backend.
  */
 export interface TailorProfilePayload {
-    full_name?: string;
-    email?: string;
-    profile_image_url?: string | null;
-    phone?: string | null;
-    city?: string | null;
-    address?: string | null;
-    latitude?: number | null;
-    longitude?: number | null;
-    specialty?: string | null;
     nic_front?: string | null;
     nic_rear?: string | null;
 }
 
 /** Success (201) response from POST /api/v1/profiles/tailor */
 export interface TailorProfileResponse {
-    message: string;
+    id: string;
+    nic_front: string | null;
+    nic_rear: string | null;
+    is_verified: boolean;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 /** Response from GET /api/v1/profiles/tailor/{id} */
 export interface TailorProfile {
-    uid: string;
-    full_name: string | null;
-    profile_image_url: string | null;
-    specialty: string | null;
+    id: string;
+    nic_front: string | null;
+    nic_rear: string | null;
     is_verified: boolean;
-    created_at: string;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 /** Response from GET /api/v1/profiles/tailor/{id}/verification */

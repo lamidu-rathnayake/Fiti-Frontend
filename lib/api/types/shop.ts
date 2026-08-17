@@ -7,10 +7,9 @@
 
 /**
  * Request body for POST /api/v1/shops/ and PUT /api/v1/shops/{shop_id}.
- * `tailor_id` and `shop_name` are required for POST; all fields are optional for PUT.
+ * Ownership comes from the authenticated Firebase user. `shop_name` is required for POST.
  */
 export interface ShopPayload {
-    tailor_id: string;
     shop_name: string;
     shop_bio?: string | null;
     shop_address?: string | null;
@@ -19,7 +18,6 @@ export interface ShopPayload {
     registration_number?: string | null;
     latitude?: number | null;
     longitude?: number | null;
-    profile_picture_url?: string | null;
 }
 
 /** A shop object returned from GET /api/v1/shops/* */
@@ -34,9 +32,10 @@ export interface Shop {
     registration_number: string | null;
     latitude: number | null;
     longitude: number | null;
-    profile_picture_url: string | null;
-    average_rating: number | null;
-    created_at: string;
+    average_rating: number;
+    images: ShopImage[];
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 /** Request body for POST /api/v1/shops/{shop_id}/images */
@@ -46,10 +45,9 @@ export interface ShopImagePayload {
 
 /** A shop image object */
 export interface ShopImage {
-    id: number;
+    image_id: number | null;
     shop_id: number;
     image_url: string;
-    created_at: string;
 }
 
 /** Query params for GET /api/v1/shops/nearby */

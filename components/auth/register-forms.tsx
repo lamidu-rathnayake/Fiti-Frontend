@@ -17,6 +17,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
         confirmPassword: "",
         phone: "",
         city: "",
+        address: "",
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -32,7 +33,8 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
             !form.fullName.trim() ||
             !form.email.trim() ||
             !form.password ||
-            !form.confirmPassword
+            !form.confirmPassword ||
+            !form.city.trim()
         ) {
             setError("Please complete all fields.");
             return;
@@ -70,7 +72,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                 role: "client",
                 phone: form.phone.trim(),
                 city: form.city.trim(),
-                address: "",
+                address: form.address.trim(),
                 updatedAt: serverTimestamp(),
             });
 
@@ -198,6 +200,27 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                 handleChange("city", e.target.value)
                             }
                             placeholder="Colombo"
+                            required
+                            disabled={loading}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="client-address"
+                            className="block text-sm font-medium text-slate-700 mb-2"
+                        >
+                            Address
+                        </label>
+                        <input
+                            id="client-address"
+                            type="text"
+                            value={form.address}
+                            onChange={(e) =>
+                                handleChange("address", e.target.value)
+                            }
+                            placeholder="Street address"
                             disabled={loading}
                             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
                         />
@@ -283,6 +306,8 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
         shopName: "",
         specialty: "",
         city: "",
+        phone: "",
+        address: "",
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -339,8 +364,8 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                 shopName: form.shopName.trim(),
                 specialty: form.specialty.trim(),
                 city: form.city.trim(),
-                phone: "",
-                address: "",
+                phone: form.phone.trim(),
+                address: form.address.trim(),
                 updatedAt: serverTimestamp(),
             });
 
@@ -490,6 +515,46 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                 handleChange("city", e.target.value)
                             }
                             placeholder="Colombo"
+                            disabled={loading}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="tailor-phone"
+                            className="block text-sm font-medium text-slate-700 mb-2"
+                        >
+                            Phone number
+                        </label>
+                        <input
+                            id="tailor-phone"
+                            type="tel"
+                            value={form.phone}
+                            onChange={(e) =>
+                                handleChange("phone", e.target.value)
+                            }
+                            placeholder="+94 77 123 4567"
+                            disabled={loading}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="tailor-address"
+                            className="block text-sm font-medium text-slate-700 mb-2"
+                        >
+                            Address
+                        </label>
+                        <input
+                            id="tailor-address"
+                            type="text"
+                            value={form.address}
+                            onChange={(e) =>
+                                handleChange("address", e.target.value)
+                            }
+                            placeholder="Street address"
                             disabled={loading}
                             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
                         />

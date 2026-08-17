@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, db, googleProvider } from "@/lib/firebase/config";
+import { auth, googleProvider } from "@/lib/firebase/config";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/lib/AuthContext";
+import { getCurrentUserRole } from "@/lib/api";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -15,34 +15,16 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const { setRole } = useAuth();
 
-  const handlePostAuthRedirect = async (uid: string) => {
-    try {
-      const userDocRef = doc(db, "users", uid);
-      const userSnap = await getDoc(userDocRef);
+    const handlePostAuthRedirect = async (idToken: string) => {
+        const data = await getCurrentUserRole(idToken);
 
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-                const role = data.role;
-
-                if (role !== "client" && role !== "seller") {
-                    router.replace("/onboarding");
-                    return;
-                }
-
-        setRole(role);
-        if (role === "seller") {
-                    router.replace("/seller/dashboard");
-        } else {
-                    router.replace("/client/home");
+        if (data.role !== "client" && data.role !== "seller") {
+            router.replace("/onboarding");
+            return;
         }
-      } else {
-        // First time user (e.g. via Google SSO) without a profile yet -> route to onboarding
-                                router.replace("/onboarding");
-      }
-    } catch (err) {
-      console.error("Error reading user profile from Firestore DB:", err);
-                        router.replace("/onboarding");
-    }
+
+        setRole(data.role);
+        router.replace(data.redirect_to);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +33,8 @@ export default function LoginPage() {
     setError("");
     try {
       const userCred = await signInWithEmailAndPassword(auth, email, password);
-      await handlePostAuthRedirect(userCred.user.uid);
+            const idToken = await userCred.user.getIdToken();
+            await handlePostAuthRedirect(idToken);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to log in.");
       setLoading(false);
@@ -63,7 +46,8 @@ export default function LoginPage() {
     setError("");
     try {
       const userCred = await signInWithPopup(auth, googleProvider);
-      await handlePostAuthRedirect(userCred.user.uid);
+            const idToken = await userCred.user.getIdToken();
+            await handlePostAuthRedirect(idToken);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Google sign-in failed.");
       setLoading(false);

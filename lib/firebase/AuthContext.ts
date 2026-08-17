@@ -7,7 +7,7 @@ import {
     User as FirebaseUser,
     signOut,
 } from "firebase/auth";
-import { doc, serverTimestamp, updateDoc, onSnapshot } from "firebase/firestore";
+import { doc, serverTimestamp, setDoc, onSnapshot } from "firebase/firestore";
 import { getMyRole } from "@/lib/api/endpoints/auth";
 import { FitiApiError } from "@/lib/api/client";
 
@@ -148,10 +148,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setDbRole(role);
 
         try {
-            await updateDoc(doc(db, "users", currentUser.uid), {
-                role,
-                updatedAt: serverTimestamp(),
-            });
+            await setDoc(
+                doc(db, "users", currentUser.uid),
+                {
+                    role,
+                    updatedAt: serverTimestamp(),
+                },
+                { merge: true }
+            );
         } catch (err) {
             console.error("Error updating role in Firestore:", err);
         }

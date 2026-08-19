@@ -73,8 +73,13 @@ export async function apiFetch<T = unknown>(
     if (!res.ok) {
         let detail = `Request failed with status ${res.status}`;
         try {
-            const errJson: ApiError = await res.json();
-            detail = errJson.detail || detail;
+            const errJson = await res.json();
+            if (errJson.detail) {
+                detail =
+                    typeof errJson.detail === "string"
+                        ? errJson.detail
+                        : JSON.stringify(errJson.detail);
+            }
         } catch {
             // Non-JSON error body — use status code message
         }

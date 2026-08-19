@@ -4,55 +4,81 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, googleProvider } from "@/lib/firebase/config";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
-import { useAuth } from "@/lib/AuthContext";
-import { getCurrentUserRole } from "@/lib/api";
+import { useAuth } from "@/lib/firebase/AuthContext";
+import { getMyRole } from "@/lib/api/endpoints/auth";
+import { FitiApiError } from "@/lib/api/client";
 
 export default function LoginPage() {
     const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const { setRole } = useAuth();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const { setRole } = useAuth();
 
-    const handlePostAuthRedirect = async (idToken: string) => {
-        const data = await getCurrentUserRole(idToken);
+    const handlePostAuthRedirect = async (userCred: { user: { uid: string; getIdToken: () => Promise<string> } }) => {
+        try {
+            let role: string | undefined;
 
-        if (data.role !== "client" && data.role !== "seller") {
+            try {
+                const data = await getMyRole();
+                role = data.role;
+            } catch (err) {
+                if (err instanceof FitiApiError && err.status === 404) {
+                    // New user — no role registered yet
+                    router.replace("/onboarding");
+                    return;
+                }
+                console.error("Error fetching user role from backend in login:", err);
+            }
+
+            if (role !== "client" && role !== "tailor") {
+                router.replace("/onboarding");
+                return;
+            }
+
+            setRole(role);
+            router.replace(role === "tailor" ? "/tailor/home" : "/client/home");
+        } catch (err) {
+            console.error("Error during post-auth redirect:", err);
             router.replace("/onboarding");
-            return;
         }
+    };
 
-        setRole(data.role);
-        router.replace(data.redirect_to);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-            const idToken = await userCred.user.getIdToken();
-            await handlePostAuthRedirect(idToken);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+        try {
+            const userCred = await signInWithEmailAndPassword(
+                auth,
+                email,
+                password,
+            );
+            await handlePostAuthRedirect(userCred);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to log in.");
-      setLoading(false);
-    }
-  };
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const userCred = await signInWithPopup(auth, googleProvider);
-            const idToken = await userCred.user.getIdToken();
-            await handlePostAuthRedirect(idToken);
+    const handleGoogleLogin = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const userCred = await signInWithPopup(auth, googleProvider);
+            await handlePostAuthRedirect(userCred);
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "Google sign-in failed.");
-      setLoading(false);
-    }
-  };
+            // Ignore the popup-closed-by-user error silently
+            const code = (err as any)?.code;
+            if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
+                setError(err instanceof Error ? err.message : "Google sign-in failed.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleRegister = () => {
         router.push("/register");

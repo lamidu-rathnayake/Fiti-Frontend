@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-    --font-marketplace-heading: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    --font-marketplace-body: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-marketplace-heading: "Poppins", "Helvetica Neue", Arial, sans-serif;
+    --font-marketplace-body: "Poppins", "Helvetica Neue", Arial, sans-serif;
 }
 
 @theme {

@@ -94,6 +94,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                 try {
                     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
                     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+                    
                     if (cloudName && uploadPreset) {
                         const fd = new FormData();
                         fd.append("file", profileImageFile);
@@ -344,6 +345,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     const uploadToCloudinary = async (file: File): Promise<string | null> => {
         const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
         const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+        
         if (!cloudName || !uploadPreset) return null;
         try {
             const fd = new FormData();

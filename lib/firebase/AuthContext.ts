@@ -59,19 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         roleFromDb = data.role;
                     } catch (err) {
                         // FitiApiError 404 = missing role in user_roles table.
-                        // Fallback: check if the profile itself exists.
+                        // User is new and needs to be redirected to /onboarding
                         if (err instanceof FitiApiError && err.status === 404) {
-                            try {
-                                await getClientProfile(firebaseUser.uid);
-                                roleFromDb = "client";
-                            } catch (clientErr) {
-                                try {
-                                    await getTailorProfile(firebaseUser.uid);
-                                    roleFromDb = "tailor";
-                                } catch (tailorErr) {
-                                    // Both 404 = truly a new user
-                                }
-                            }
+                            // Leave roleFromDb as undefined so they can be routed to onboarding
                         } else {
                             console.error("Error fetching user role from backend:", err);
                         }

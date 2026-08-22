@@ -327,7 +327,7 @@ export default function OnboardingPage() {
                         <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                             Personal Location (Optional)
                             <p className="text-xs text-slate-500 font-normal mt-1 mb-2">Drag the pin to your home or current location.</p>
-                            <LocationPicker onChange={(loc: { lat: number, lng: number }) => { updateField("latitude", loc.lat); updateField("longitude", loc.lng); }} />
+                            <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, latitude: loc.lat, longitude: loc.lng })); }} />
                         </label>
 
                         <label className="text-sm font-medium text-slate-700 sm:col-span-2">
@@ -454,7 +454,7 @@ export default function OnboardingPage() {
                                     </label>
                                     <label className="text-sm font-medium text-slate-700 sm:col-span-2">
                                         Shop Location (Optional)
-                                        <LocationPicker onChange={(loc: { lat: number, lng: number }) => { updateField("shopLatitude", loc.lat); updateField("shopLongitude", loc.lng); }} />
+                                        <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, shopLatitude: loc.lat, shopLongitude: loc.lng })); }} />
                                     </label>
                                 </div>
                             )}

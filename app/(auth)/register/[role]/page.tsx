@@ -14,11 +14,19 @@ export default function RoleRegistrationPage() {
     const role = Array.isArray(params?.role) ? params.role[0] : params?.role;
 
     if (role === "tailor") {
-        return <TailorRegisterForm onBack={() => router.push("/register")} />;
+        return (
+            <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-10">
+                <TailorRegisterForm onBack={() => router.push("/register")} />
+            </main>
+        );
     }
 
     if (role === "client") {
-        return <ClientRegisterForm onBack={() => router.push("/register")} />;
+        return (
+            <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-10">
+                <ClientRegisterForm onBack={() => router.push("/register")} />
+            </main>
+        );
     }
 
     return (

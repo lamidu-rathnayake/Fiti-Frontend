@@ -7,7 +7,6 @@ import dynamic from "next/dynamic";
 
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { auth } from "@/lib/firebase/config";
-import { saveUserProfile } from "@/lib/firebase/user-profile";
 import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
 import { addShopImage, createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
@@ -140,17 +139,30 @@ export default function OnboardingPage() {
             const photoURL = finalProfileImageUrl.trim() || firebaseUser.photoURL || null;
             await updateProfile(firebaseUser, { displayName, photoURL });
 
-            // Create profile on backend
+            // Create profile on backend (Supabase PostgreSQL via API).
+            // Firebase UID is extracted from the Bearer token by the backend.
+            // Business profile fields are sent in the payload — Firestore is no longer used.
             await firebaseUser.getIdToken(true); // Force refresh to include new photoURL
 
             try {
                 if (role === "tailor") {
                     await createTailorProfile({
+                        phone: form.phone.trim() || null,
+                        city: form.city.trim() || null,
+                        address: form.address.trim() || null,
                         nic_front: finalNicFrontUrl.trim() || null,
                         nic_rear: finalNicRearUrl.trim() || null,
+                        latitude: form.latitude || null,
+                        longitude: form.longitude || null,
                     });
                 } else {
-                    await createClientProfile();
+                    await createClientProfile({
+                        phone: form.phone.trim() || null,
+                        city: form.city.trim() || null,
+                        address: form.address.trim() || null,
+                        latitude: form.latitude || null,
+                        longitude: form.longitude || null,
+                    });
                 }
             } catch (err) {
                 if (!(err instanceof FitiApiError && err.status === 409)) throw err;
@@ -159,6 +171,7 @@ export default function OnboardingPage() {
             if (role === "tailor") {
                 const shop = await createShop({
                     shop_name: form.shopName.trim(),
+                    specialty: form.specialty.trim() || null,
                     shop_bio: form.shopBio.trim() || null,
                     shop_address: usePersonalAddress ? (form.address.trim() || null) : (form.shopAddress.trim() || null),
                     city: usePersonalAddress ? (form.city.trim() || null) : (form.shopCity.trim() || null),
@@ -173,19 +186,6 @@ export default function OnboardingPage() {
                     await addShopImage(shop.shop_id, { image_url: shopImageUrl });
                 }
             }
-
-            await saveUserProfile({
-                user: firebaseUser,
-                role,
-                displayName,
-                photoURL,
-                phone: form.phone.trim() || null,
-                city: form.city.trim() || null,
-                address: form.address.trim() || null,
-                specialty: role === "tailor" ? form.specialty.trim() : undefined,
-                latitude: role === "tailor" ? form.latitude : undefined,
-                longitude: role === "tailor" ? form.longitude : undefined,
-            });
 
             setRole(role);
             router.replace(destinationFor(role));

@@ -3,6 +3,10 @@
  *
  * API functions for the Profiles & Measurements resource.
  * Backend reference: /api/v1/profiles/*
+ *
+ * All business profile data (phone, city, address, NIC images, etc.) that was
+ * previously split between Firestore and PostgreSQL is now stored exclusively
+ * in Supabase PostgreSQL via these endpoints.
  */
 
 import { apiFetch } from "@/lib/api/client";
@@ -10,9 +14,11 @@ import type {
     ClientProfilePayload,
     ClientProfileResponse,
     ClientProfile,
+    ClientProfileUpdatePayload,
     TailorProfilePayload,
     TailorProfileResponse,
     TailorProfile,
+    TailorProfileUpdatePayload,
     TailorVerification,
     MeasurementsPayload,
     Measurements,
@@ -23,6 +29,7 @@ import type {
 /**
  * Create a client profile in the backend.
  * Inserts the user into the `clients` table and writes a row into `user_roles`.
+ * Firebase UID is extracted from the Bearer token by the backend.
  *
  * POST /api/v1/profiles/client
  * @throws {FitiApiError} with status 409 if the profile already exists.
@@ -37,12 +44,27 @@ export async function createClientProfile(
 }
 
 /**
- * Fetch a client's profile.
+ * Fetch the authenticated client's own profile.
  * GET /api/v1/profiles/client/{id}
  * (Auth: Client Role)
  */
 export async function getClientProfile(uid: string): Promise<ClientProfile> {
     return apiFetch<ClientProfile>(`/profiles/client/${uid}`);
+}
+
+/**
+ * Update the authenticated client's profile fields.
+ * PATCH /api/v1/profiles/client/{id}
+ * (Auth: Client Role)
+ */
+export async function updateClientProfile(
+    uid: string,
+    payload: ClientProfileUpdatePayload,
+): Promise<ClientProfile> {
+    return apiFetch<ClientProfile>(`/profiles/client/${uid}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+    });
 }
 
 // ── Measurements ──────────────────────────────────────────────────────
@@ -74,6 +96,7 @@ export async function getMeasurements(uid: string): Promise<Measurements> {
 /**
  * Create a tailor profile in the backend.
  * Inserts the user into the `tailors` table and writes a row into `user_roles`.
+ * Firebase UID is extracted from the Bearer token by the backend.
  *
  * POST /api/v1/profiles/tailor
  * @throws {FitiApiError} with status 409 if the profile already exists.
@@ -95,6 +118,21 @@ export async function createTailorProfile(
 export async function getTailorProfile(uid: string): Promise<TailorProfile> {
     return apiFetch<TailorProfile>(`/profiles/tailor/${uid}`, {
         authenticated: false,
+    });
+}
+
+/**
+ * Update the authenticated tailor's profile fields.
+ * PATCH /api/v1/profiles/tailor/{id}
+ * (Auth: Tailor Role)
+ */
+export async function updateTailorProfile(
+    uid: string,
+    payload: TailorProfileUpdatePayload,
+): Promise<TailorProfile> {
+    return apiFetch<TailorProfile>(`/profiles/tailor/${uid}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
     });
 }
 

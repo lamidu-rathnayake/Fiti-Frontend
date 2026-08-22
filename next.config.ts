@@ -4,9 +4,9 @@ const nextConfig: NextConfig = {
     async headers() {
         return [
             {
-                // 🔒 1. STRICT LOCK: Protects your store, checkout, and search paths
-                // This regex applies 'same-origin' to everything EXCEPT /login and /register
-                source: "/((?!login|register).*)",
+                // 🔒 1. STRICT LOCK: Protects all routes that don't need popups
+                // Applies 'same-origin' to everything except auth pages
+                source: "/((?!login|register|onboarding).*)",
                 headers: [
                     {
                         key: "Cross-Origin-Opener-Policy",
@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
                 ],
             },
             {
-                // 🔑 2. TARGETED ACCESS: Allows the Google popup on the login page
+                // 🔑 2. Login — allows Google popup
                 source: "/login",
                 headers: [
                     {
@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
                 ],
             },
             {
-                // 🔑 3. TARGETED ACCESS: Allows the Google popup on the registration page
+                // 🔑 3. Register root — role selection page
                 source: "/register",
                 headers: [
                     {
@@ -35,7 +35,27 @@ const nextConfig: NextConfig = {
                 ],
             },
             {
-                // 🔑 4. TARGETED ACCESS: Allows the Google popup on the test auth pages
+                // 🔑 4. Register role sub-pages (/register/client, /register/tailor)
+                source: "/register/:role",
+                headers: [
+                    {
+                        key: "Cross-Origin-Opener-Policy",
+                        value: "same-origin-allow-popups",
+                    },
+                ],
+            },
+            {
+                // 🔑 5. Onboarding — Google-signed-in users complete their profile here
+                source: "/onboarding",
+                headers: [
+                    {
+                        key: "Cross-Origin-Opener-Policy",
+                        value: "same-origin-allow-popups",
+                    },
+                ],
+            },
+            {
+                // 🔑 6. Test auth pages
                 source: "/:slug(test-auth-.*)",
                 headers: [
                     {

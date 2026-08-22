@@ -8,7 +8,6 @@ import {
     signOut,
 } from "firebase/auth";
 import { getMyRole } from "@/lib/api/endpoints/auth";
-import { getClientProfile, getTailorProfile } from "@/lib/api/endpoints/profiles";
 import { FitiApiError } from "@/lib/api/client";
 
 export type Role = "client" | "tailor";

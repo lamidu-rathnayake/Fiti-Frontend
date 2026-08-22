@@ -7,7 +7,6 @@ import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { getMyRole } from "@/lib/api/endpoints/auth";
-import { getClientProfile, getTailorProfile } from "@/lib/api/endpoints/profiles";
 import { FitiApiError } from "@/lib/api/client";
 
 /** Map Firebase error codes to human-friendly messages. */
@@ -60,30 +59,9 @@ export default function LoginPage() {
             }
 
             setRole(role);
-            router.replace(role === "tailor" ? "/tailor/home" : "/client/home");
+            router.replace(data.target_url || (role === "tailor" ? "/tailor/home" : "/client/home"));
         } catch (err) {
             if (err instanceof FitiApiError && err.status === 404) {
-                // Fallback: The user_roles table might be missing this user.
-                // Let's check if they actually have a profile already.
-                const currentUser = auth.currentUser;
-                if (currentUser) {
-                    try {
-                        await getClientProfile(currentUser.uid);
-                        setRole("client");
-                        router.replace("/client/home");
-                        return;
-                    } catch (clientErr) {
-                        try {
-                            await getTailorProfile(currentUser.uid);
-                            setRole("tailor");
-                            router.replace("/tailor/home");
-                            return;
-                        } catch (tailorErr) {
-                            // If both return 404, they truly are a new user.
-                        }
-                    }
-                }
-                
                 // New user — no role yet
                 router.replace("/onboarding");
                 return;
@@ -123,16 +101,19 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <main className="min-h-screen bg-[#0D0D0D] text-white flex items-center justify-center p-4 selection:bg-[#F6CA57] selection:text-black">
             <div className="w-full max-w-md">
                 {/* Card */}
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8">
+                <div className="bg-[#141414] border border-zinc-800 rounded-3xl shadow-2xl p-8 relative overflow-hidden">
+                    {/* Subtle gold glow behind card content */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[50px] bg-[#F6CA57]/20 blur-[60px] pointer-events-none"></div>
+
                     {/* Header */}
-                    <div className="text-center mb-8">
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                            Welcome back
+                    <div className="text-center mb-8 relative z-10">
+                        <h1 className="text-2xl font-semibold tracking-wide text-zinc-100">
+                            Welcome Back
                         </h1>
-                        <p className="text-sm text-slate-500 mt-2">
+                        <p className="text-sm text-zinc-500 mt-2">
                             Sign in to your Fiti account
                         </p>
                     </div>
@@ -142,21 +123,21 @@ export default function LoginPage() {
                         <div
                             aria-live="polite"
                             role="alert"
-                            className="mb-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+                            className="mb-6 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center"
                         >
                             {error}
                         </div>
                     )}
 
                     {/* Email / Password Form */}
-                    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                    <form onSubmit={handleSubmit} className="space-y-5 relative z-10" noValidate>
                         {/* Email */}
                         <div>
                             <label
                                 htmlFor="login-email"
-                                className="block text-sm font-medium text-slate-700 mb-2"
+                                className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2"
                             >
-                                Email
+                                Email Address
                             </label>
                             <input
                                 id="login-email"
@@ -167,20 +148,18 @@ export default function LoginPage() {
                                 autoComplete="email"
                                 required
                                 disabled={loading}
-                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                             />
                         </div>
 
                         {/* Password */}
                         <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <label
-                                    htmlFor="login-password"
-                                    className="text-sm font-medium text-slate-700"
-                                >
-                                    Password
-                                </label>
-                            </div>
+                            <label
+                                htmlFor="login-password"
+                                className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2"
+                            >
+                                Password
+                            </label>
                             <input
                                 id="login-password"
                                 type="password"
@@ -190,7 +169,7 @@ export default function LoginPage() {
                                 autoComplete="current-password"
                                 required
                                 disabled={loading}
-                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                             />
                         </div>
 
@@ -198,20 +177,20 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 active:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full rounded-xl bg-[#F6CA57] px-4 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-[0_0_15px_rgba(246,202,87,0.2)] transition hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(246,202,87,0.4)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 mt-2"
                         >
                             {loading ? "Signing in…" : "Sign In"}
                         </button>
                     </form>
 
                     {/* Divider */}
-                    <div className="relative my-6">
+                    <div className="relative my-6 z-10">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-200" />
+                            <div className="w-full border-t border-zinc-800" />
                         </div>
                         <div className="relative flex justify-center">
-                            <span className="bg-white px-3 text-xs text-slate-400">
-                                OR
+                            <span className="bg-[#141414] px-4 text-[10px] font-semibold tracking-widest text-zinc-600 uppercase">
+                                Or
                             </span>
                         </div>
                     </div>
@@ -222,7 +201,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={handleGoogleLogin}
                         disabled={loading}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 active:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-3"
+                        className="relative z-10 w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-xs font-semibold text-zinc-300 shadow-sm transition hover:bg-zinc-900 hover:border-zinc-700 active:bg-zinc-950 disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-3"
                     >
                         {/* Google Icon */}
                         <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
@@ -235,24 +214,24 @@ export default function LoginPage() {
                     </button>
 
                     {/* Register link */}
-                    <div className="mt-7 text-center">
-                        <p className="text-sm text-slate-500">
+                    <div className="mt-8 text-center relative z-10">
+                        <p className="text-xs text-zinc-500 font-medium">
                             Don&apos;t have an account?{" "}
                             <button
                                 id="go-to-register-btn"
                                 type="button"
                                 onClick={() => router.push("/register")}
-                                className="font-medium text-slate-900 hover:underline"
+                                className="font-bold text-[#F6CA57] hover:underline hover:text-yellow-400 ml-1"
                             >
-                                Register
+                                Create Account
                             </button>
                         </p>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-xs text-slate-400 mt-6">
-                    &copy; {new Date().getFullYear()} Fiti. All rights reserved.
+                <p className="text-center text-[10px] tracking-widest text-zinc-600 mt-8 uppercase font-semibold">
+                    &copy; {new Date().getFullYear()} Fiti
                 </p>
             </div>
         </main>

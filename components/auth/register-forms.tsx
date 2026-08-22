@@ -145,86 +145,91 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
     };
 
     return (
-        <div className="w-full max-w-md">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8">
-                <div className="text-center mb-8">
-                    <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600">
+        <div className="w-full max-w-md mx-auto my-8 relative z-10">
+            <div className="bg-[#141414] border border-zinc-800 rounded-3xl shadow-2xl p-8 relative overflow-hidden">
+                {/* Subtle gold glow behind card content */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[50px] bg-[#F6CA57]/20 blur-[60px] pointer-events-none"></div>
+
+                <div className="text-center mb-8 relative z-10">
+                    <span className="inline-flex rounded-full bg-[#0D0D0D] border border-[#F6CA57]/30 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-[#F6CA57]">
                         Client
                     </span>
-                    <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-                        Create client account
+                    <h1 className="mt-6 text-2xl font-semibold tracking-wide text-zinc-100">
+                        Create Client Account
                     </h1>
-                    <p className="text-sm text-slate-500 mt-2">
-                        Start your journey as a client.
+                    <p className="text-sm text-zinc-500 mt-2">
+                        Start your journey as a client
                     </p>
                 </div>
 
                 {error && (
-                    <div aria-live="polite" role="alert" className="mb-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    <div aria-live="polite" role="alert" className="mb-6 relative z-10 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                <form onSubmit={handleSubmit} className="space-y-5 relative z-10" noValidate>
                     <div>
-                        <label htmlFor="client-name" className="block text-sm font-medium text-slate-700 mb-2">Full name</label>
+                        <label htmlFor="client-name" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Full Name</label>
                         <input
                             id="client-name" type="text" value={form.fullName}
                             onChange={(e) => handleChange("fullName", e.target.value)}
                             placeholder="Your full name" required disabled={loading}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="client-email" className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                        <label htmlFor="client-email" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Email Address</label>
                         <input
                             id="client-email" type="email" value={form.email}
                             onChange={(e) => handleChange("email", e.target.value)}
                             placeholder="you@example.com" required disabled={loading}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="client-phone" className="block text-sm font-medium text-slate-700 mb-2">Phone number <span className="text-slate-400 font-normal">(optional)</span></label>
+                        <label htmlFor="client-phone" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Phone Number <span className="text-zinc-600 font-medium">(optional)</span></label>
                         <input
                             id="client-phone" type="tel" value={form.phone}
                             onChange={(e) => handleChange("phone", e.target.value)}
                             placeholder="+94 77 123 4567" disabled={loading}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="client-city" className="block text-sm font-medium text-slate-700 mb-2">City</label>
+                        <label htmlFor="client-city" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">City</label>
                         <input
                             id="client-city" type="text" value={form.city}
                             onChange={(e) => handleChange("city", e.target.value)}
                             placeholder="Colombo" required disabled={loading}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="client-address" className="block text-sm font-medium text-slate-700 mb-2">Address <span className="text-slate-400 font-normal">(optional)</span></label>
+                        <label htmlFor="client-address" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Address <span className="text-zinc-600 font-medium">(optional)</span></label>
                         <input
                             id="client-address" type="text" value={form.address}
                             onChange={(e) => handleChange("address", e.target.value)}
                             placeholder="45 Temple Street" disabled={loading}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Location <span className="text-slate-400 font-normal">(optional)</span></label>
-                        <p className="text-xs text-slate-500 mb-3">Drag the pin to your location.</p>
-                        <LocationPicker onChange={(loc: { lat: number; lng: number }) => setForm((prev) => ({ ...prev, latitude: loc.lat, longitude: loc.lng }))} />
+                        <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Location <span className="text-zinc-600 font-medium">(optional)</span></label>
+                        <p className="text-xs text-zinc-500 mb-3">Drag the pin to your location.</p>
+                        <div className="rounded-xl overflow-hidden border border-zinc-800">
+                            <LocationPicker onChange={(loc: { lat: number; lng: number }) => setForm((prev) => ({ ...prev, latitude: loc.lat, longitude: loc.lng }))} />
+                        </div>
                     </div>
 
                     <div>
-                        <label htmlFor="client-profile-image" className="block text-sm font-medium text-slate-700 mb-2">
-                            Profile picture <span className="text-slate-400 font-normal">(optional)</span>
+                        <label htmlFor="client-profile-image" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">
+                            Profile Picture <span className="text-zinc-600 font-medium">(optional)</span>
                         </label>
                         <div className="flex items-center gap-3">
                             <input
@@ -233,48 +238,48 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                 accept="image/*"
                                 onChange={(e) => { if (e.target.files?.[0]) setProfileImageFile(e.target.files[0]); }}
                                 disabled={loading}
-                                className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
                             />
-                            {profileImageFile && <span className="text-xs text-green-600 font-medium whitespace-nowrap">Selected ✓</span>}
+                            {profileImageFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="client-password" className="block text-sm font-medium text-slate-700 mb-2">Password</label>
+                        <label htmlFor="client-password" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Password</label>
                         <input
                             id="client-password" type="password" value={form.password}
                             onChange={(e) => handleChange("password", e.target.value)}
                             placeholder="Create a password (min. 6 characters)" required disabled={loading}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="client-confirm-password" className="block text-sm font-medium text-slate-700 mb-2">Confirm password</label>
+                        <label htmlFor="client-confirm-password" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Confirm Password</label>
                         <input
                             id="client-confirm-password" type="password" value={form.confirmPassword}
                             onChange={(e) => handleChange("confirmPassword", e.target.value)}
                             placeholder="Re-enter your password" required disabled={loading}
-                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 active:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full rounded-xl bg-[#F6CA57] px-4 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-[0_0_15px_rgba(246,202,87,0.2)] transition hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(246,202,87,0.4)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 mt-6"
                     >
-                        {loading ? "Creating account…" : "Create Account"}
+                        {loading ? "Creating Account…" : "Create Account"}
                     </button>
                 </form>
 
-                <div className="mt-7 text-center">
-                    <p className="text-sm text-slate-500">
+                <div className="mt-8 text-center relative z-10">
+                    <p className="text-xs text-zinc-500 font-medium">
                         Changed your mind?{" "}
                         <button
                             type="button"
                             onClick={() => onBack ? onBack() : router.push("/register")}
-                            className="font-medium text-slate-900 hover:underline"
+                            className="font-bold text-[#F6CA57] hover:underline hover:text-yellow-400 ml-1"
                         >
                             Back
                         </button>
@@ -443,93 +448,98 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     };
 
     return (
-        <div className="w-full max-w-md">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-8">
-                <div className="text-center mb-8">
-                    <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600">
+        <div className="w-full max-w-md mx-auto my-8 relative z-10">
+            <div className="bg-[#141414] border border-zinc-800 rounded-3xl shadow-2xl p-8 relative overflow-hidden">
+                {/* Subtle gold glow behind card content */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[50px] bg-[#F6CA57]/20 blur-[60px] pointer-events-none"></div>
+
+                <div className="text-center mb-8 relative z-10">
+                    <span className="inline-flex rounded-full bg-[#0D0D0D] border border-[#F6CA57]/30 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-[#F6CA57]">
                         Tailor — Step {step} of 2
                     </span>
-                    <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-                        {step === 1 ? "Create personal profile" : "Set up your shop"}
+                    <h1 className="mt-6 text-2xl font-semibold tracking-wide text-zinc-100">
+                        {step === 1 ? "Create Personal Profile" : "Set Up Your Shop"}
                     </h1>
-                    <p className="text-sm text-slate-500 mt-2">
+                    <p className="text-sm text-zinc-500 mt-2">
                         {step === 1 ? "Let's start with your personal details." : "Now, tell us about your tailoring business."}
                     </p>
                 </div>
 
                 {error && (
-                    <div aria-live="polite" role="alert" className="mb-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    <div aria-live="polite" role="alert" className="mb-6 relative z-10 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center">
                         {error}
                     </div>
                 )}
 
                 <form
                     onSubmit={step === 1 ? (e) => { e.preventDefault(); handleNextStep(); } : handleSubmit}
-                    className="space-y-5"
+                    className="space-y-5 relative z-10"
                     noValidate
                 >
                     {/* ── STEP 1: PERSONAL DETAILS ─────────────────────────── */}
                     {step === 1 && (
                         <>
                             <div>
-                                <label htmlFor="tailor-name" className="block text-sm font-medium text-slate-700 mb-2">Full name</label>
+                                <label htmlFor="tailor-name" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Full Name</label>
                                 <input
                                     id="tailor-name" type="text" value={form.fullName}
                                     onChange={(e) => handleChange("fullName", e.target.value)}
                                     placeholder="Your full name" required disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="tailor-email" className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                                <label htmlFor="tailor-email" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Email Address</label>
                                 <input
                                     id="tailor-email" type="email" value={form.email}
                                     onChange={(e) => handleChange("email", e.target.value)}
                                     placeholder="you@example.com" required disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="tailor-phone" className="block text-sm font-medium text-slate-700 mb-2">Phone number <span className="text-slate-400 font-normal">(optional)</span></label>
+                                <label htmlFor="tailor-phone" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Phone Number <span className="text-zinc-600 font-medium">(optional)</span></label>
                                 <input
                                     id="tailor-phone" type="tel" value={form.phone}
                                     onChange={(e) => handleChange("phone", e.target.value)}
                                     placeholder="+94 77 123 4567" disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="tailor-city" className="block text-sm font-medium text-slate-700 mb-2">City <span className="text-slate-400 font-normal">(optional)</span></label>
+                                <label htmlFor="tailor-city" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">City <span className="text-zinc-600 font-medium">(optional)</span></label>
                                 <input
                                     id="tailor-city" type="text" value={form.city}
                                     onChange={(e) => handleChange("city", e.target.value)}
                                     placeholder="Colombo" disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="tailor-address" className="block text-sm font-medium text-slate-700 mb-2">Personal address <span className="text-slate-400 font-normal">(optional)</span></label>
+                                <label htmlFor="tailor-address" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Personal Address <span className="text-zinc-600 font-medium">(optional)</span></label>
                                 <input
                                     id="tailor-address" type="text" value={form.address}
                                     onChange={(e) => handleChange("address", e.target.value)}
                                     placeholder="45 Temple Street" disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-2">Personal location <span className="text-slate-400 font-normal">(optional)</span></label>
-                                <p className="text-xs text-slate-500 mb-3">Drag the pin to your home or current location.</p>
-                                <LocationPicker onChange={(loc: { lat: number; lng: number }) => setForm((prev) => ({ ...prev, latitude: loc.lat, longitude: loc.lng }))} />
+                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Personal Location <span className="text-zinc-600 font-medium">(optional)</span></label>
+                                <p className="text-xs text-zinc-500 mb-3">Drag the pin to your home or current location.</p>
+                                <div className="rounded-xl overflow-hidden border border-zinc-800">
+                                    <LocationPicker onChange={(loc: { lat: number; lng: number }) => setForm((prev) => ({ ...prev, latitude: loc.lat, longitude: loc.lng }))} />
+                                </div>
                             </div>
 
                             <div>
-                                <label htmlFor="tailor-profile-image" className="block text-sm font-medium text-slate-700 mb-2">
-                                    Profile picture <span className="text-slate-400 font-normal">(optional)</span>
+                                <label htmlFor="tailor-profile-image" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">
+                                    Profile Picture <span className="text-zinc-600 font-medium">(optional)</span>
                                 </label>
                                 <div className="flex items-center gap-3">
                                     <input
@@ -537,37 +547,37 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         type="file" accept="image/*"
                                         onChange={(e) => { if (e.target.files?.[0]) setProfileImageFile(e.target.files[0]); }}
                                         disabled={loading}
-                                        className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
                                     />
-                                    {profileImageFile && <span className="text-xs text-green-600 font-medium whitespace-nowrap">Selected ✓</span>}
+                                    {profileImageFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="tailor-password" className="block text-sm font-medium text-slate-700 mb-2">Password</label>
+                                <label htmlFor="tailor-password" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Password</label>
                                 <input
                                     id="tailor-password" type="password" value={form.password}
                                     onChange={(e) => handleChange("password", e.target.value)}
                                     placeholder="Create a password (min. 6 characters)" required disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="tailor-confirm-password" className="block text-sm font-medium text-slate-700 mb-2">Confirm password</label>
+                                <label htmlFor="tailor-confirm-password" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Confirm Password</label>
                                 <input
                                     id="tailor-confirm-password" type="password" value={form.confirmPassword}
                                     onChange={(e) => handleChange("confirmPassword", e.target.value)}
                                     placeholder="Re-enter your password" required disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             <button
                                 type="submit"
-                                className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 active:bg-black"
+                                className="w-full rounded-xl bg-[#F6CA57] px-4 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-[0_0_15px_rgba(246,202,87,0.2)] transition hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(246,202,87,0.4)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 mt-6"
                             >
-                                Continue to Shop Details →
+                                Continue to Shop Details &rarr;
                             </button>
                         </>
                     )}
@@ -576,159 +586,161 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                     {step === 2 && (
                         <>
                             <div>
-                                <label htmlFor="shop-name" className="block text-sm font-medium text-slate-700 mb-2">Shop name</label>
+                                <label htmlFor="shop-name" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Shop Name</label>
                                 <input
                                     id="shop-name" type="text" value={form.shopName}
                                     onChange={(e) => handleChange("shopName", e.target.value)}
                                     placeholder="Your shop name" required disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="specialty" className="block text-sm font-medium text-slate-700 mb-2">Specialty</label>
+                                <label htmlFor="specialty" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Specialty</label>
                                 <input
                                     id="specialty" type="text" value={form.specialty}
                                     onChange={(e) => handleChange("specialty", e.target.value)}
                                     placeholder="Bridal wear, tailoring, alterations…" required disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="shop-bio" className="block text-sm font-medium text-slate-700 mb-2">Shop bio <span className="text-slate-400 font-normal">(optional)</span></label>
+                                <label htmlFor="shop-bio" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Shop Bio <span className="text-zinc-600 font-medium">(optional)</span></label>
                                 <textarea
                                     id="shop-bio" value={form.shopBio}
                                     onChange={(e) => handleChange("shopBio", e.target.value)}
                                     placeholder="Tell us about your shop…" disabled={loading} rows={3}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50 resize-none"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="registration-number" className="block text-sm font-medium text-slate-700 mb-2">Registration number <span className="text-slate-400 font-normal">(optional)</span></label>
+                                <label htmlFor="registration-number" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Registration Number <span className="text-zinc-600 font-medium">(optional)</span></label>
                                 <input
                                     id="registration-number" type="text" value={form.registrationNumber}
                                     onChange={(e) => handleChange("registrationNumber", e.target.value)}
                                     placeholder="Business Registration Number" disabled={loading}
-                                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>
 
                             {/* Shop address toggle */}
-                            <div className="flex items-start gap-3 py-3 border-y border-slate-100">
+                            <div className="flex items-start gap-3 py-4 border-y border-zinc-800">
                                 <input
                                     type="checkbox"
                                     id="usePersonalAddress"
                                     checked={usePersonalAddress}
                                     onChange={(e) => setUsePersonalAddress(e.target.checked)}
-                                    className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                    className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-[#F6CA57] focus:ring-[#F6CA57] focus:ring-offset-zinc-950"
                                 />
-                                <label htmlFor="usePersonalAddress" className="text-sm text-slate-700 leading-snug cursor-pointer">
-                                    <span className="font-medium block mb-0.5">My shop uses my personal address</span>
-                                    We&apos;ll automatically use the contact info and map location you provided in Step 1 for your shop.
+                                <label htmlFor="usePersonalAddress" className="text-sm text-zinc-300 leading-snug cursor-pointer">
+                                    <span className="font-semibold block mb-0.5 text-zinc-100">My shop uses my personal address</span>
+                                    <span className="text-xs text-zinc-500">We&apos;ll automatically use the contact info and map location you provided in Step 1 for your shop.</span>
                                 </label>
                             </div>
 
                             {!usePersonalAddress && (
-                                <div className="space-y-5 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <div className="space-y-5 p-5 bg-[#0D0D0D] rounded-xl border border-zinc-800 shadow-inner">
                                     <div>
-                                        <label htmlFor="shop-phone" className="block text-sm font-medium text-slate-700 mb-2">Shop phone</label>
+                                        <label htmlFor="shop-phone" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Shop Phone</label>
                                         <input
                                             id="shop-phone" type="tel" value={form.shopPhone}
                                             onChange={(e) => handleChange("shopPhone", e.target.value)}
                                             placeholder="+94 77 123 4567" disabled={loading}
-                                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="shop-city" className="block text-sm font-medium text-slate-700 mb-2">Shop city</label>
+                                        <label htmlFor="shop-city" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Shop City</label>
                                         <input
                                             id="shop-city" type="text" value={form.shopCity}
                                             onChange={(e) => handleChange("shopCity", e.target.value)}
                                             placeholder="Colombo" disabled={loading}
-                                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="shop-address" className="block text-sm font-medium text-slate-700 mb-2">Shop address</label>
+                                        <label htmlFor="shop-address" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Shop Address</label>
                                         <input
                                             id="shop-address" type="text" value={form.shopAddress}
                                             onChange={(e) => handleChange("shopAddress", e.target.value)}
                                             placeholder="123 Market Street" disabled={loading}
-                                            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:bg-slate-50"
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-2">Shop location <span className="text-slate-400 font-normal">(optional)</span></label>
-                                        <LocationPicker onChange={(loc: { lat: number; lng: number }) => setForm((prev) => ({ ...prev, shopLatitude: loc.lat, shopLongitude: loc.lng }))} />
+                                        <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Shop Location <span className="text-zinc-600 font-medium">(optional)</span></label>
+                                        <div className="rounded-xl overflow-hidden border border-zinc-700">
+                                            <LocationPicker onChange={(loc: { lat: number; lng: number }) => setForm((prev) => ({ ...prev, shopLatitude: loc.lat, shopLongitude: loc.lng }))} />
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
                             <div>
-                                <label htmlFor="shop-image" className="block text-sm font-medium text-slate-700 mb-2">Shop picture <span className="text-slate-400 font-normal">(optional)</span></label>
+                                <label htmlFor="shop-image" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Shop Picture <span className="text-zinc-600 font-medium">(optional)</span></label>
                                 <div className="flex items-center gap-3">
                                     <input
                                         id="shop-image" type="file" accept="image/*"
                                         onChange={(e) => { if (e.target.files?.[0]) setShopImageFile(e.target.files[0]); }}
                                         disabled={loading}
-                                        className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
                                     />
-                                    {shopImageFile && <span className="text-xs text-green-600 font-medium whitespace-nowrap">Selected ✓</span>}
+                                    {shopImageFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="nic-front" className="block text-sm font-medium text-slate-700 mb-2">NIC / ID — front <span className="text-slate-400 font-normal">(optional)</span></label>
+                                <label htmlFor="nic-front" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">NIC / ID — Front <span className="text-zinc-600 font-medium">(optional)</span></label>
                                 <div className="flex items-center gap-3">
                                     <input
                                         id="nic-front" type="file" accept="image/*"
                                         onChange={(e) => { if (e.target.files?.[0]) setNicFrontFile(e.target.files[0]); }}
                                         disabled={loading}
-                                        className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
                                     />
-                                    {nicFrontFile && <span className="text-xs text-green-600 font-medium whitespace-nowrap">Selected ✓</span>}
+                                    {nicFrontFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="nic-rear" className="block text-sm font-medium text-slate-700 mb-2">NIC / ID — rear <span className="text-slate-400 font-normal">(optional)</span></label>
+                                <label htmlFor="nic-rear" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">NIC / ID — Rear <span className="text-zinc-600 font-medium">(optional)</span></label>
                                 <div className="flex items-center gap-3">
                                     <input
                                         id="nic-rear" type="file" accept="image/*"
                                         onChange={(e) => { if (e.target.files?.[0]) setNicRearFile(e.target.files[0]); }}
                                         disabled={loading}
-                                        className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
                                     />
-                                    {nicRearFile && <span className="text-xs text-green-600 font-medium whitespace-nowrap">Selected ✓</span>}
+                                    {nicRearFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                                 </div>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 active:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                                className="w-full rounded-xl bg-[#F6CA57] px-4 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-[0_0_15px_rgba(246,202,87,0.2)] transition hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(246,202,87,0.4)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 mt-6"
                             >
-                                {loading ? "Creating account…" : "Complete Registration"}
+                                {loading ? "Creating Account…" : "Complete Registration"}
                             </button>
                         </>
                     )}
                 </form>
 
-                <div className="mt-7 text-center">
-                    <p className="text-sm text-slate-500">
+                <div className="mt-8 text-center relative z-10">
+                    <p className="text-xs text-zinc-500 font-medium">
                         {step === 2 ? (
                             <>
                                 Need to fix something?{" "}
-                                <button type="button" onClick={() => { setError(""); setStep(1); }} className="font-medium text-slate-900 hover:underline">
-                                    Go back
+                                <button type="button" onClick={() => { setError(""); setStep(1); }} className="font-bold text-[#F6CA57] hover:underline hover:text-yellow-400 ml-1">
+                                    Go Back
                                 </button>
                             </>
                         ) : (
                             <>
                                 Changed your mind?{" "}
-                                <button type="button" onClick={() => onBack ? onBack() : router.push("/register")} className="font-medium text-slate-900 hover:underline">
+                                <button type="button" onClick={() => onBack ? onBack() : router.push("/register")} className="font-bold text-[#F6CA57] hover:underline hover:text-yellow-400 ml-1">
                                     Cancel
                                 </button>
                             </>

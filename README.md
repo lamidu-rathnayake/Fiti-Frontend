@@ -10,6 +10,7 @@ The official project documentation is located in the `docs/` directory.
 - [Frontend Architecture](./docs/FRONTEND_ARCHITECTURE.md) - Overview of the frontend stack, routing, and authentication flow.
 - [API Reference](./docs/API_REFERENCE.md) - Endpoints and payloads for communicating with the backend.
 - [Project Progress](./docs/PROJECT_PROGRESS.md) - Tracking features, milestones, and current development state.
+- [Frontend Features Handoff](./docs/frontend_features_handoff.md) - The master task list and implementation plan for incoming backend features.
 
 ## Testing
 

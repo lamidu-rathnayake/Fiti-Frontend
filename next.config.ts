@@ -5,8 +5,8 @@ const nextConfig: NextConfig = {
         return [
             {
                 // 🔒 1. STRICT LOCK: Protects all routes that don't need popups
-                // Applies 'same-origin' to everything except auth pages
-                source: "/((?!login|register|onboarding).*)",
+                // Applies 'same-origin' to everything except landing, auth pages and onboarding
+                source: "/((?!$|login|register|onboarding).*)",
                 headers: [
                     {
                         key: "Cross-Origin-Opener-Policy",

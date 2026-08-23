@@ -219,23 +219,90 @@ export default function OnboardingPage() {
     }
 
     return (
-        <main className="min-h-screen bg-[#0D0D0D] px-4 py-10 relative overflow-hidden flex flex-col items-center justify-center">
-            {/* Background elements */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#F6CA57]/5 blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#F6CA57]/5 blur-[120px] pointer-events-none" />
-
-            <div className="mx-auto w-full max-w-2xl relative z-10 my-auto">
-                <div className="mb-8 text-center">
-                    <p className="inline-flex rounded-full bg-[#141414] border border-[#F6CA57]/30 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-[#F6CA57]">
-                        Signed in as {user.email}
-                    </p>
-                    <h1 className="mt-6 text-3xl font-semibold tracking-wide text-zinc-100">
-                        Complete Your Profile
-                    </h1>
-                    <p className="mt-2 text-sm text-zinc-500">
-                        Choose your role and add the details needed to get started.
-                    </p>
+        <div className="min-h-screen bg-[#0A0B0E] text-white flex flex-col justify-between relative overflow-x-hidden selection:bg-[#F5CA53] selection:text-black font-sans">
+            {/* Top Navigation Bar */}
+            <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
+                    <a href="/" className="text-xl sm:text-2xl font-black tracking-widest text-[#F5CA53]">
+                        FITI
+                    </a>
+                    <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
+                        <a href="/" className="hover:text-[#F5CA53] transition-colors">Dashboard</a>
+                        <a href="/" className="hover:text-[#F5CA53] transition-colors">Orders</a>
+                        <a href="/" className="hover:text-[#F5CA53] transition-colors">Shops</a>
+                        <a href="/" className="hover:text-[#F5CA53] transition-colors">Tailoring</a>
+                    </nav>
+                    <div className="flex items-center space-x-4">
+                        <span className="text-xs text-zinc-400 font-mono hidden sm:inline">{user.email}</span>
+                        <button
+                            type="button"
+                            onClick={handleUseAnotherAccount}
+                            className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#F5CA53] border border-[#F5CA53]/60 rounded-xl hover:bg-[#F5CA53]/15 transition-all"
+                        >
+                            Sign Out
+                        </button>
+                    </div>
                 </div>
+            </header>
+
+            {/* MAIN CONTENT AREA WITH 2-COLUMN SPLIT */}
+            <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-10 relative z-10">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] bg-[#F5CA53]/10 blur-[160px] rounded-full pointer-events-none" />
+
+                <div className="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                    {/* LEFT COLUMN: CRAFTSMANSHIP & RIGOR */}
+                    <div className="lg:col-span-5 bg-[#131418]/90 border border-zinc-800/90 rounded-[28px] p-8 sm:p-10 flex flex-col justify-between shadow-2xl relative overflow-hidden backdrop-blur-xl min-h-[500px]">
+                        <div className="absolute top-0 left-0 w-48 h-32 bg-[#F5CA53]/10 blur-3xl pointer-events-none" />
+
+                        <div>
+                            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#E5C158] mb-4 block">
+                                Craftsmanship &amp; Rigor
+                            </span>
+                            <h1 className="mb-4">
+                                <span className="text-3xl sm:text-4xl font-light text-white block mb-1">
+                                    The Standard of
+                                </span>
+                                <span className="text-3xl sm:text-4xl font-extrabold text-[#F5D061] tracking-tight block">
+                                    Bespoke Living.
+                                </span>
+                            </h1>
+                            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-md">
+                                Join an exclusive ecosystem where high-performance tailoring meets elite physical discipline. Your measurements, your progress, your FITI.
+                            </p>
+                        </div>
+
+                        {/* Lower Master Tailor Image Card */}
+                        <div className="relative overflow-hidden rounded-2xl border border-zinc-800/90 bg-black/40 h-56 mt-8 group cursor-pointer shadow-lg">
+                            <img
+                                src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80"
+                                alt="Bespoke Master Tailor"
+                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-90"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
+                            <div className="relative z-20 h-full p-5 flex flex-col justify-end">
+                                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53] mb-1 block">
+                                    Elite Status
+                                </span>
+                                <p className="text-xs font-bold text-white tracking-wide">
+                                    Over 2,500 active members in London.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: CREATE PROFILE FORM */}
+                    <div className="lg:col-span-7 bg-[#131418]/90 border border-zinc-800/90 rounded-[28px] p-8 sm:p-10 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between">
+                        <div className="absolute top-0 right-1/2 translate-x-1/2 w-64 h-20 bg-[#F5CA53]/15 blur-2xl pointer-events-none" />
+
+                        <div>
+                            <div className="mb-6 border-b border-zinc-800/80 pb-4">
+                                <h2 className="text-3xl font-extrabold text-white tracking-tight">
+                                    Create Profile
+                                </h2>
+                                <p className="text-xs text-zinc-400 mt-1">
+                                    Enter your details for a truly bespoke experience.
+                                </p>
+                            </div>
 
                 <form
                     onSubmit={handleSubmit}
@@ -569,11 +636,34 @@ export default function OnboardingPage() {
                             disabled={submitting}
                             className="rounded-xl bg-[#F6CA57] px-8 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-[0_0_15px_rgba(246,202,87,0.2)] transition-all hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(246,202,87,0.4)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                         >
-                            {submitting ? "Saving Profile..." : "Continue"}
+                            {submitting ? "Saving Profile..." : "Register"}
                         </button>
                     </div>
                 </form>
             </div>
-        </main>
+        </div>
+    </div>
+</main>
+
+{/* Bottom Footer */}
+<footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-7 px-6 sm:px-12 relative z-20">
+    <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
+            <span className="text-sm font-black tracking-widest text-[#F5CA53]">
+                FITI
+            </span>
+            <span className="text-[11px] text-zinc-500">
+                &copy; {new Date().getFullYear()} FITI Bespoke Fitness &amp; Tailoring. All rights reserved.
+            </span>
+        </div>
+        <div className="flex items-center space-x-6 text-xs text-zinc-400">
+            <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
+            <a href="/contact" className="hover:text-white transition-colors">Contact Us</a>
+            <a href="/about" className="hover:text-white transition-colors">About Us</a>
+        </div>
+    </div>
+</footer>
+</div>
     );
 }

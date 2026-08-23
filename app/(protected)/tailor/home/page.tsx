@@ -1,297 +1,555 @@
 "use client";
 
-import Image from "next/image";
+import { useState } from "react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/firebase/AuthContext";
-import { getTailorProfile, updateTailorProfile } from "@/lib/api/endpoints/profiles";
-import { listNearbyShops } from "@/lib/api/endpoints/shops";
-import type { Shop } from "@/lib/api/types/shop";
-
-const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
-    ssr: false,
-    loading: () => <div className="w-full h-full bg-zinc-900 animate-pulse flex items-center justify-center text-zinc-500 text-sm">Loading map...</div>
-});
 
 export default function TailorHomePage() {
-    const { user } = useAuth();
-    const [nearbyShops, setNearbyShops] = useState<Shop[]>([]);
-    const [loadingShops, setLoadingShops] = useState(true);
+    const { user, logout } = useAuth();
+    const [activeTab, setActiveTab] = useState<"overview" | "schedule" | "clients" | "fabrics" | "earnings" | "settings">("overview");
 
-    // Location Modal State
-    const [showLocationModal, setShowLocationModal] = useState(false);
-    const [savedLocation, setSavedLocation] = useState<{lat: number, lng: number} | null>(null);
-    const [tempLocation, setTempLocation] = useState<{lat: number, lng: number} | null>(null);
-    const [city, setCity] = useState("");
-    const [address, setAddress] = useState("");
-    const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+    // State for orders interactive toggles
+    const [ongoingExpanded, setOngoingExpanded] = useState<Record<string, boolean>>({
+        "ORD-8821": true,
+        "ORD-8825": false,
+    });
+    const [pendingExpanded, setPendingExpanded] = useState(true);
+    const [requestAccepted, setRequestAccepted] = useState<boolean | null>(null);
 
-    const handleSaveLocation = async () => {
-        if (!user || !tempLocation) return;
-        setIsUpdatingLocation(true);
-        try {
-            await updateTailorProfile(user.uid, {
-                latitude: tempLocation.lat,
-                longitude: tempLocation.lng,
-                ...(city && { city }),
-                ...(address && { address })
-            });
-            setSavedLocation(tempLocation);
-            setShowLocationModal(false);
-            // Optionally reload nearby shops if location changed
-            loadNearbyShops(tempLocation.lat, tempLocation.lng);
-        } catch (error) {
-            console.error("Failed to update location", error);
-        } finally {
-            setIsUpdatingLocation(false);
-        }
+    const toggleOngoing = (id: string) => {
+        setOngoingExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
     };
 
-    const loadNearbyShops = async (lat: number, lng: number) => {
-        setLoadingShops(true);
-        try {
-            const shops = await listNearbyShops({ lat, lng, radius_km: 15 });
-            setNearbyShops(shops);
-        } catch (error) {
-            console.error("Failed to load nearby shops", error);
-        } finally {
-            setLoadingShops(false);
-        }
-    };
-
-    useEffect(() => {
-        const initLocation = async () => {
-            if (user) {
-                try {
-                    const profile = await getTailorProfile(user.uid);
-                    if (profile.latitude && profile.longitude) {
-                        const loc = { lat: profile.latitude, lng: profile.longitude };
-                        setSavedLocation(loc);
-                        setTempLocation(loc);
-                        if (profile.city) setCity(profile.city);
-                        if (profile.address) setAddress(profile.address);
-                        
-                        loadNearbyShops(loc.lat, loc.lng);
-                        return;
-                    }
-                } catch (error: any) {
-                    if (error?.status !== 404) {
-                        console.error("Failed to fetch tailor profile", error);
-                    }
-                }
-            }
-
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        const loc = { lat: latitude, lng: longitude };
-                        setSavedLocation(prev => prev || loc);
-                        setTempLocation(prev => prev || loc);
-                        loadNearbyShops(latitude, longitude);
-                    },
-                    (error) => {
-                        console.error("Geolocation error:", error);
-                        const fallback = { lat: 6.9271, lng: 79.8612 };
-                        setSavedLocation(prev => prev || fallback);
-                        setTempLocation(prev => prev || fallback);
-                        loadNearbyShops(fallback.lat, fallback.lng); // Fallback to Colombo
-                    }
-                );
-            } else {
-                const fallback = { lat: 6.9271, lng: 79.8612 };
-                setSavedLocation(prev => prev || fallback);
-                setTempLocation(prev => prev || fallback);
-                loadNearbyShops(fallback.lat, fallback.lng);
-            }
-        };
-
-        initLocation();
-    }, [user]);
     return (
-        <main className="min-h-screen bg-[#0D0D0D] text-white pb-24 font-sans selection:bg-yellow-500 selection:text-black">
-            {/* Header */}
-            <header className="px-6 pt-12 pb-6 flex justify-between items-end">
-                <div>
-                    <p className="text-zinc-500 text-[10px] font-bold tracking-widest uppercase mb-1">
-                        Welcome Back
-                    </p>
-                    <h1 className="text-2xl font-semibold">
-                        {user?.displayName || "Tailor"},
-                    </h1>
+        <div className="min-h-screen bg-[#0A0B0E] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
+            {/* TOP NAVIGATION HEADER */}
+            <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
+                    <Link href="/" className="text-xl sm:text-2xl font-black tracking-widest text-[#F5CA53] hover:opacity-90 transition-opacity">
+                        FITI
+                    </Link>
+
+                    <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
+                        <Link href="/storefront" className="hover:text-[#F5CA53] transition-colors">Storefront</Link>
+                        <Link href="/tailor/home" className="text-[#F5CA53] font-bold relative pb-1 border-b-2 border-[#F5CA53]">Dashboard</Link>
+                        <Link href="/orders" className="hover:text-[#F5CA53] transition-colors">Orders</Link>
+                        <Link href="/tailors" className="hover:text-[#F5CA53] transition-colors">Tailors</Link>
+                    </nav>
+
+                    <div className="flex items-center space-x-5 text-zinc-400">
+                        <Link href="/orders">
+                            <svg className="w-5 h-5 hover:text-white cursor-pointer transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                        </Link>
+                        <div className="relative cursor-pointer">
+                            <svg className="w-5 h-5 hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#F5CA53]" />
+                        </div>
+                        <button
+                            onClick={() => logout()}
+                            title="Sign out"
+                            className="w-8 h-8 rounded-full border border-[#F5CA53]/50 bg-[#F5CA53]/10 flex items-center justify-center text-xs font-bold text-[#F5CA53] hover:bg-[#F5CA53] hover:text-black transition-all"
+                        >
+                            {user?.displayName ? user.displayName.charAt(0).toUpperCase() : "T"}
+                        </button>
+                    </div>
                 </div>
-                <button 
-                    onClick={() => setShowLocationModal(true)}
-                    className="flex items-center gap-1 bg-[#141414] px-3 py-1.5 rounded-lg border border-zinc-800 hover:border-[#F6CA57] transition-colors"
-                >
-                    <svg className="w-3 h-3 text-[#F6CA57]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-[#F6CA57] text-[10px] font-bold tracking-widest uppercase truncate max-w-[120px]">
-                        {city || "Change Location"}
-                    </span>
-                </button>
             </header>
 
-            {/* Dashboard / Order Tracking Card */}
-            <section className="px-6 mb-8">
-                <div className="bg-[#141414] rounded-3xl p-5 shadow-2xl border border-zinc-800/50 relative overflow-hidden">
-                    <div className="flex justify-between items-center mb-6">
-                        <div className="flex gap-2">
-                            <button className="bg-zinc-800/50 text-[#F6CA57] text-xs font-semibold px-3 py-1.5 rounded-lg border border-zinc-700/50 flex items-center gap-2">
-                                Shop 1
-                                <svg className="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-                            <button className="bg-zinc-800/50 text-[#F6CA57] w-8 h-8 rounded-lg border border-zinc-700/50 flex items-center justify-center">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                            </button>
-                        </div>
-                        <Link href="/tailor/dashboard" className="text-[#F6CA57] text-[10px] font-bold tracking-widest uppercase hover:underline">
-                            Dashboard &rarr;
-                        </Link>
-                    </div>
-
-                    <h2 className="text-lg font-medium mb-4 text-zinc-100">Order Tracking</h2>
-
-                    <div className="grid grid-cols-3 gap-3 mb-6">
-                        <div className="bg-zinc-800/40 rounded-2xl p-4 flex flex-col items-center justify-center border border-zinc-700/30">
-                            <span className="text-2xl font-bold text-[#F6CA57] mb-1">02</span>
-                            <span className="text-[9px] font-bold tracking-widest text-zinc-500 uppercase">On Going</span>
-                        </div>
-                        <div className="bg-zinc-800/40 rounded-2xl p-4 flex flex-col items-center justify-center border border-zinc-700/30">
-                            <span className="text-2xl font-bold text-zinc-100 mb-1">05</span>
-                            <span className="text-[9px] font-bold tracking-widest text-zinc-500 uppercase">Pending</span>
-                        </div>
-                        <div className="bg-zinc-800/40 rounded-2xl p-4 flex flex-col items-center justify-center border border-zinc-700/30">
-                            <span className="text-2xl font-bold text-zinc-100 mb-1">01</span>
-                            <span className="text-[9px] font-bold tracking-widest text-zinc-500 uppercase">Requests</span>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-between items-end mb-2">
-                        <span className="text-xs text-zinc-300 font-medium">Three-Piece Suit #2409</span>
-                        <span className="text-[#F6CA57] text-xs font-semibold">Fitting</span>
-                    </div>
-                    <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#F6CA57] w-3/4 shadow-[0_0_10px_rgba(246,202,87,0.5)] rounded-full"></div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Nearby Best Stores (Competitive View) */}
-            <section className="px-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-medium text-zinc-100">Nearby best store</h2>
-                    <button className="text-[#F6CA57] text-[10px] font-semibold tracking-wide hover:underline">
-                        See all
-                    </button>
-                </div>
-
-                <div className="space-y-4">
-                    {loadingShops ? (
-                        <div className="text-zinc-500 text-sm text-center py-8">Loading competitors...</div>
-                    ) : nearbyShops.length === 0 ? (
-                        <div className="text-zinc-500 text-sm text-center py-8">No competitors found nearby.</div>
-                    ) : (
-                        nearbyShops.map((shop, index) => (
-                            <div key={shop.shop_id} className={`flex gap-4 p-4 rounded-2xl bg-[#141414] shadow-lg border border-zinc-800/50 relative ${index === 0 ? "border-l-2 border-[#F6CA57]" : ""}`}>
-                                <div className="w-16 h-16 rounded-xl bg-zinc-800 overflow-hidden shrink-0">
-                                    <img src={shop.images?.[0]?.image_url || "https://images.unsplash.com/photo-1594938298596-70f56fb3cecb?q=80&w=200&auto=format&fit=crop"} className="w-full h-full object-cover" alt={shop.shop_name} />
-                                </div>
-                                <div className="flex-1 flex flex-col justify-center">
-                                    <h3 className="font-semibold text-sm text-zinc-100 mb-1">{shop.shop_name}</h3>
-                                    <div className="flex items-center gap-1 mb-1">
-                                        <svg className="w-3 h-3 text-[#F6CA57]" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                        </svg>
-                                        <span className="text-zinc-300 text-[10px]">{shop.average_rating ? shop.average_rating.toFixed(1) : "New"}</span>
-                                    </div>
-                                    <p className="text-zinc-500 text-[10px]">
-                                        NEARBY • {shop.specialty || "Tailoring Services"}
-                                    </p>
-                                </div>
-                                <button className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-zinc-800 text-zinc-400 flex items-center justify-center hover:bg-zinc-700 transition-colors">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+            {/* DASHBOARD BODY WITH SIDEBAR & MAIN SECTION */}
+            <div className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-10 flex-1 flex gap-10">
+                {/* LEFT SIDEBAR */}
+                <aside className="w-64 shrink-0 hidden lg:flex flex-col justify-between space-y-8">
+                    <div className="space-y-8">
+                        {/* MANAGEMENT SECTION */}
+                        <div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 mb-4 block px-3">
+                                MANAGEMENT
+                            </span>
+                            <nav className="space-y-1.5">
+                                <button
+                                    onClick={() => setActiveTab("overview")}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
+                                        activeTab === "overview"
+                                            ? "bg-[#18191E] border border-zinc-800 text-white shadow-lg"
+                                            : "text-zinc-400 hover:text-white hover:bg-[#131418]"
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4 text-[#F5CA53]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                    </svg>
+                                    <span>Overview</span>
                                 </button>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </section>
 
-            {/* Bottom Navigation */}
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-sm bg-[#1A1A1A] rounded-full p-2 flex justify-between items-center border border-zinc-800 shadow-2xl z-40">
-                <button className="relative w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-tr from-[#EAB308] to-[#FDE047] shadow-[0_0_15px_rgba(234,179,8,0.4)] text-black">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                    <span className="absolute -bottom-1 text-[8px] font-bold tracking-wider uppercase text-[#F6CA57]">Home</span>
-                </button>
-                <button className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </button>
-                <button className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                </button>
-                <button className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                </button>
+                                <button
+                                    onClick={() => setActiveTab("schedule")}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
+                                        activeTab === "schedule"
+                                            ? "bg-[#18191E] border border-zinc-800 text-white shadow-lg"
+                                            : "text-zinc-400 hover:text-white hover:bg-[#131418]"
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span>Workshop Schedule</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab("clients")}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
+                                        activeTab === "clients"
+                                            ? "bg-[#18191E] border border-zinc-800 text-white shadow-lg"
+                                            : "text-zinc-400 hover:text-white hover:bg-[#131418]"
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    <span>Clients</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab("fabrics")}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
+                                        activeTab === "fabrics"
+                                            ? "bg-[#18191E] border border-zinc-800 text-white shadow-lg"
+                                            : "text-zinc-400 hover:text-white hover:bg-[#131418]"
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                    <span>Fabric Archive</span>
+                                </button>
+                            </nav>
+                        </div>
+
+                        {/* SETTINGS SECTION */}
+                        <div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 mb-4 block px-3">
+                                SETTINGS
+                            </span>
+                            <nav className="space-y-1.5">
+                                <button
+                                    onClick={() => setActiveTab("earnings")}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
+                                        activeTab === "earnings"
+                                            ? "bg-[#18191E] border border-zinc-800 text-white shadow-lg"
+                                            : "text-zinc-400 hover:text-white hover:bg-[#131418]"
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                    <span>Earnings</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab("settings")}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
+                                        activeTab === "settings"
+                                            ? "bg-[#18191E] border border-zinc-800 text-white shadow-lg"
+                                            : "text-zinc-400 hover:text-white hover:bg-[#131418]"
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span>Atelier Settings</span>
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+                    {/* WORKSHOP STATUS CARD */}
+                    <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 space-y-3 relative overflow-hidden backdrop-blur-xl">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#F5CA53] animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F5CA53]">
+                                Workshop Status: Open
+                            </span>
+                        </div>
+                        <p className="text-xs text-zinc-400 leading-relaxed font-normal">
+                            You have 4 fittings scheduled for today.
+                        </p>
+                        <button
+                            onClick={() => setActiveTab("schedule")}
+                            className="w-full rounded-xl bg-[#18191E] border border-zinc-800 hover:border-zinc-700 py-2.5 text-[10px] font-black uppercase tracking-widest text-zinc-300 transition-colors"
+                        >
+                            VIEW DAILY SHEET
+                        </button>
+                    </div>
+                </aside>
+
+                {/* MAIN CONTENT DYNAMIC VIEWS */}
+                <main className="flex-1 space-y-8">
+                    {/* TAB 1: OVERVIEW */}
+                    {activeTab === "overview" && (
+                        <>
+                            <div>
+                                <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-1">
+                                    Manage Orders
+                                </h1>
+                                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">
+                                    ACTIVE WORKSHOP SCHEDULE
+                                </p>
+                            </div>
+
+                            {/* SECTION 1: ONGOING */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53]">
+                                        ONGOING
+                                    </span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#F5CA53]/10 border border-[#F5CA53]/30 text-[#F5CA53]">
+                                        2 ACTIVE
+                                    </span>
+                                </div>
+
+                                {/* ONGOING ORDER 1 */}
+                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 shadow-xl transition-all duration-300 hover:border-zinc-700">
+                                    <div
+                                        onClick={() => toggleOngoing("ORD-8821")}
+                                        className="flex items-center justify-between cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700">
+                                                <img
+                                                    src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=200&q=80"
+                                                    alt="Bespoke Navy Suit"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-extrabold text-white">
+                                                    Bespoke Navy Suit
+                                                </h3>
+                                                <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                                                    Adam G. &bull; <span className="text-zinc-500">#ORD-8821</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <svg
+                                            className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${
+                                                ongoingExpanded["ORD-8821"] ? "rotate-180" : ""
+                                            }`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+
+                                    {ongoingExpanded["ORD-8821"] && (
+                                        <div className="mt-4 pt-4 border-t border-zinc-800/80 space-y-3">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-zinc-400">Fitting Stage:</span>
+                                                <span className="text-[#F5CA53] font-bold">Second Fitting Completed</span>
+                                            </div>
+                                            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                                <div className="h-full bg-[#F5CA53] w-3/4 shadow-[0_0_10px_rgba(245,202,83,0.5)]" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* ONGOING ORDER 2 */}
+                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 shadow-xl transition-all duration-300 hover:border-zinc-700">
+                                    <div
+                                        onClick={() => toggleOngoing("ORD-8825")}
+                                        className="flex items-center justify-between cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700">
+                                                <img
+                                                    src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=200&q=80"
+                                                    alt="Overcoat Fitting"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-extrabold text-white">
+                                                    Overcoat Fitting
+                                                </h3>
+                                                <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                                                    Julian V. &bull; <span className="text-zinc-500">#ORD-8825</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <svg
+                                            className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${
+                                                ongoingExpanded["ORD-8825"] ? "rotate-180" : ""
+                                            }`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+
+                                    {ongoingExpanded["ORD-8825"] && (
+                                        <div className="mt-4 pt-4 border-t border-zinc-800/80 space-y-3">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-zinc-400">Fitting Stage:</span>
+                                                <span className="text-[#F5CA53] font-bold">Initial Measurement</span>
+                                            </div>
+                                            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                                <div className="h-full bg-[#F5CA53] w-1/3 shadow-[0_0_10px_rgba(245,202,83,0.5)]" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* SECTION 2: PENDING */}
+                            <div className="space-y-4 pt-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 block">
+                                    PENDING
+                                </span>
+
+                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 shadow-xl transition-all">
+                                    <div
+                                        onClick={() => setPendingExpanded(!pendingExpanded)}
+                                        className="flex items-center justify-between cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-[#18191E] border border-zinc-800 flex items-center justify-center text-zinc-400 shrink-0">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-extrabold text-white">
+                                                    Silk Dinner Jacket
+                                                </h3>
+                                                <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                                                    Robert L. &bull; <span className="text-zinc-400 italic">Awaiting Fabric</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <svg
+                                            className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${
+                                                pendingExpanded ? "rotate-180" : ""
+                                            }`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+
+                                    {pendingExpanded && (
+                                        <div className="mt-5 p-4 rounded-xl bg-[#18191E] border-l-4 border-[#F5CA53] space-y-1.5 text-xs text-zinc-300">
+                                            <p className="font-semibold">Current Status: Fabric transit from Biella, Italy</p>
+                                            <p className="text-zinc-500">Est. Production Start: Oct 28</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* SECTION 3: NEW REQUESTS */}
+                            <div className="space-y-4 pt-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 block">
+                                    NEW REQUESTS
+                                </span>
+
+                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 sm:p-6 shadow-xl space-y-5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-[#18191E] border border-zinc-800 flex items-center justify-center text-[#F5CA53] shrink-0">
+                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-extrabold text-white">
+                                                Tuxedo Alteration
+                                            </h3>
+                                            <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                                                Sarah L. &bull; <span className="text-[#F5CA53] font-bold">Just Now</span>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* CUSTOMER QUOTE BOX */}
+                                    <div className="p-4 rounded-xl bg-[#18191E] border border-zinc-800 text-xs italic text-zinc-300 leading-relaxed">
+                                        &quot;I need the waist taken in on my vintage velvet tuxedo for an event next Friday. Is this possible on short notice?&quot;
+                                    </div>
+
+                                    {/* ACTION BUTTONS */}
+                                    {requestAccepted === true ? (
+                                        <div className="p-3 rounded-xl bg-[#F5CA53]/10 border border-[#F5CA53]/40 text-[#F5CA53] text-xs font-bold text-center uppercase tracking-wider">
+                                            REQUEST ACCEPTED ✓
+                                        </div>
+                                    ) : requestAccepted === false ? (
+                                        <div className="p-3 rounded-xl bg-zinc-800 text-zinc-400 text-xs font-bold text-center uppercase tracking-wider">
+                                            REQUEST DECLINED
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <button
+                                                onClick={() => setRequestAccepted(true)}
+                                                className="w-full rounded-xl bg-[#F5CA53] hover:bg-[#f7d369] py-3.5 text-xs font-black uppercase tracking-[0.15em] text-black shadow-[0_0_15px_rgba(245,202,83,0.25)] transition-all hover:scale-[1.01]"
+                                            >
+                                                ACCEPT REQUEST
+                                            </button>
+                                            <button
+                                                onClick={() => setRequestAccepted(false)}
+                                                className="w-full rounded-xl bg-[#18191E] hover:bg-zinc-800 border border-zinc-800 py-3.5 text-xs font-black uppercase tracking-[0.15em] text-zinc-300 transition-all"
+                                            >
+                                                DECLINE
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* TAB 2: WORKSHOP SCHEDULE */}
+                    {activeTab === "schedule" && (
+                        <div className="space-y-6">
+                            <div>
+                                <h1 className="text-3xl font-extrabold text-white">Workshop Schedule</h1>
+                                <p className="text-xs text-zinc-400 mt-1">Today&apos;s active fitting appointments in Colombo atelier</p>
+                            </div>
+                            <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-6 space-y-4">
+                                <div className="flex justify-between items-center p-4 bg-[#18191E] border border-zinc-800 rounded-xl">
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase text-[#F5CA53] block">10:00 AM - 11:30 AM</span>
+                                        <h4 className="text-sm font-bold text-white">Adam G. &bull; Initial Suit Fitting</h4>
+                                    </div>
+                                    <span className="text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-3 py-1 rounded-full">CONFIRMED</span>
+                                </div>
+                                <div className="flex justify-between items-center p-4 bg-[#18191E] border border-zinc-800 rounded-xl">
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase text-[#F5CA53] block">02:00 PM - 03:00 PM</span>
+                                        <h4 className="text-sm font-bold text-white">Julian V. &bull; Overcoat Chalk Line Adjustment</h4>
+                                    </div>
+                                    <span className="text-xs font-bold text-[#F5CA53] bg-[#F5CA53]/10 border border-[#F5CA53]/30 px-3 py-1 rounded-full">IN PROGRESS</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* TAB 3: CLIENTS */}
+                    {activeTab === "clients" && (
+                        <div className="space-y-6">
+                            <div>
+                                <h1 className="text-3xl font-extrabold text-white">Client Archive</h1>
+                                <p className="text-xs text-zinc-400 mt-1">Master measurement records &amp; style profiles</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-5 space-y-3">
+                                    <h4 className="text-sm font-extrabold text-white">Adam G.</h4>
+                                    <p className="text-xs text-zinc-400">Chest: 40&quot; &bull; Waist: 32&quot; &bull; Shoulders: 18.5&quot;</p>
+                                    <span className="text-[10px] font-black text-[#F5CA53] uppercase block">3 Commissions Completed</span>
+                                </div>
+                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-5 space-y-3">
+                                    <h4 className="text-sm font-extrabold text-white">Julian V.</h4>
+                                    <p className="text-xs text-zinc-400">Chest: 42&quot; &bull; Waist: 34&quot; &bull; Shoulders: 19&quot;</p>
+                                    <span className="text-[10px] font-black text-[#F5CA53] uppercase block">1 Active Order</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* TAB 4: FABRIC ARCHIVE */}
+                    {activeTab === "fabrics" && (
+                        <div className="space-y-6">
+                            <div>
+                                <h1 className="text-3xl font-extrabold text-white">Fabric Archive</h1>
+                                <p className="text-xs text-zinc-400 mt-1">Curated inventory of luxury wools, silks, and linens</p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-4 space-y-2">
+                                    <div className="w-full h-32 bg-zinc-800 rounded-xl overflow-hidden">
+                                        <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=400&q=80" className="w-full h-full object-cover" alt="Biella Wool" />
+                                    </div>
+                                    <h4 className="text-xs font-bold text-white">Biella Super 150s Wool</h4>
+                                    <p className="text-[10px] text-[#F5CA53] font-bold">14 Meters Available</p>
+                                </div>
+                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-4 space-y-2">
+                                    <div className="w-full h-32 bg-zinc-800 rounded-xl overflow-hidden">
+                                        <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=400&q=80" className="w-full h-full object-cover" alt="Midnight Velvet" />
+                                    </div>
+                                    <h4 className="text-xs font-bold text-white">Midnight Velvet</h4>
+                                    <p className="text-[10px] text-[#F5CA53] font-bold">8 Meters Available</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* TAB 5: EARNINGS */}
+                    {activeTab === "earnings" && (
+                        <div className="space-y-6">
+                            <div>
+                                <h1 className="text-3xl font-extrabold text-white">Earnings &amp; Payouts</h1>
+                                <p className="text-xs text-zinc-400 mt-1">Financial performance of Atelier Vane</p>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-5">
+                                    <span className="text-[10px] font-black uppercase text-zinc-500 block mb-1">THIS MONTH</span>
+                                    <h3 className="text-2xl font-extrabold text-[#F5CA53]">LKR 450,000</h3>
+                                </div>
+                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-5">
+                                    <span className="text-[10px] font-black uppercase text-zinc-500 block mb-1">PENDING PAYOUT</span>
+                                    <h3 className="text-2xl font-extrabold text-white">LKR 125,000</h3>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* TAB 6: ATELIER SETTINGS */}
+                    {activeTab === "settings" && (
+                        <div className="space-y-6">
+                            <div>
+                                <h1 className="text-3xl font-extrabold text-white">Atelier Settings</h1>
+                                <p className="text-xs text-zinc-400 mt-1">Manage shop address, working hours, and contact details</p>
+                            </div>
+                            <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-6 space-y-4 max-w-lg">
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-[#F5CA53] block mb-2">Shop Name</label>
+                                    <input type="text" defaultValue="Atelier Vane" className="w-full bg-[#18191E] border border-zinc-800 rounded-xl p-3 text-xs font-semibold text-white" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black uppercase text-[#F5CA53] block mb-2">Shop Address</label>
+                                    <input type="text" defaultValue="Savile Row, Colombo 07" className="w-full bg-[#18191E] border border-zinc-800 rounded-xl p-3 text-xs font-semibold text-white" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </main>
             </div>
 
-            {/* Location Modal */}
-            {showLocationModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-[#141414] w-full max-w-md rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-                        <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-[#0D0D0D]">
-                            <h3 className="font-semibold text-zinc-100">Update Location</h3>
-                            <button onClick={() => setShowLocationModal(false)} className="text-zinc-500 hover:text-white">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        </div>
-                        
-                        <div className="w-full relative bg-[#141414] shrink-0 border-b border-zinc-800 mb-6">
-                            <LocationPicker 
-                                key={savedLocation ? `${savedLocation.lat}-${savedLocation.lng}` : 'default'}
-                                defaultLocation={savedLocation || undefined}
-                                onChange={(loc: { lat: number; lng: number }) => setTempLocation(loc)} 
-                            />
-                        </div>
-                        
-                        <div className="p-4 space-y-4 overflow-y-auto">
-                            <div>
-                                <label className="block text-xs font-medium text-zinc-400 mb-1">City (Optional)</label>
-                                <input 
-                                    type="text" 
-                                    value={city}
-                                    onChange={(e) => setCity(e.target.value)}
-                                    placeholder="e.g. London, UK"
-                                    className="w-full bg-[#0D0D0D] border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#F6CA57] transition-colors placeholder:text-zinc-700"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-zinc-400 mb-1">Address (Optional)</label>
-                                <input 
-                                    type="text" 
-                                    value={address}
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    placeholder="e.g. 123 Savile Row"
-                                    className="w-full bg-[#0D0D0D] border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#F6CA57] transition-colors placeholder:text-zinc-700"
-                                />
-                            </div>
-                        </div>
+            {/* BOTTOM FOOTER */}
+            <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-8 px-6 sm:px-12 relative z-20 mt-12">
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
+                        <span className="text-sm font-black tracking-widest text-[#F5CA53]">
+                            FITI
+                        </span>
+                        <span className="text-[11px] text-zinc-500">
+                            &copy; {new Date().getFullYear()} FITI Digital Atelier. All rights reserved.
+                        </span>
+                    </div>
 
-                        <div className="p-4 border-t border-zinc-800 bg-[#0D0D0D]">
-                            <button 
-                                onClick={handleSaveLocation}
-                                disabled={!tempLocation || isUpdatingLocation}
-                                className="w-full bg-[#F6CA57] text-black font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(246,202,87,0.3)] hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100"
-                            >
-                                {isUpdatingLocation ? "SAVING..." : "SAVE LOCATION"}
-                            </button>
-                        </div>
+                    <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                        <Link href="/privacy" className="hover:text-white transition-colors">Bespoke Process</Link>
+                        <Link href="/terms" className="hover:text-white transition-colors">Our Heritage</Link>
+                        <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                        <Link href="/contact" className="hover:text-white transition-colors">Contact Support</Link>
                     </div>
                 </div>
-            )}
-        </main>
+            </footer>
+        </div>
     );
 }

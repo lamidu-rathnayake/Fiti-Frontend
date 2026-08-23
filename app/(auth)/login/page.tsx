@@ -61,19 +61,23 @@ export default function LoginPage() {
             const data = await getMyRole();
             const role = data.role;
 
-            if (role !== "client" && role !== "tailor") {
-                router.replace("/onboarding");
+            if (role === "tailor" || role === "seller") {
+                setRole("tailor");
+                router.replace("/tailor/home");
                 return;
             }
 
-            setRole(role);
-            router.replace(data.target_url || (role === "tailor" ? "/tailor/home" : "/client/home"));
-        } catch (err) {
-            if (err instanceof FitiApiError && err.status === 404) {
-                router.replace("/onboarding");
+            if (role === "client") {
+                setRole("client");
+                router.replace("/client/home");
                 return;
             }
-            throw err;
+
+            router.replace("/register");
+        } catch (err) {
+            console.warn("Post auth role check fallback:", err);
+            setRole("client");
+            router.replace("/client/home");
         }
     };
 
@@ -158,10 +162,10 @@ export default function LoginPage() {
                         </Link>
                         <button
                             type="button"
-                            onClick={() => setMode(mode === "login" ? "profile" : "login")}
+                            onClick={() => router.push("/register")}
                             className="px-5 py-2 text-xs font-bold uppercase tracking-wider text-black bg-[#F5CA53] hover:bg-[#f7d369] rounded-xl transition-all shadow-[0_0_12px_rgba(245,202,83,0.25)]"
                         >
-                            {mode === "login" ? "Sign In" : "Sign In"}
+                            Register
                         </button>
                     </div>
                 </div>
@@ -216,7 +220,7 @@ export default function LoginPage() {
                                     Elite Status
                                 </span>
                                 <p className="text-xs font-bold text-white tracking-wide">
-                                    Over 2,500 active members in London.
+                                    Over 2,500 active members in Colombo &amp; Kandy.
                                 </p>
                             </div>
                         </div>
@@ -232,12 +236,10 @@ export default function LoginPage() {
                             <div className="flex items-center justify-between mb-6 border-b border-zinc-800/80 pb-4">
                                 <div>
                                     <h2 className="text-3xl font-extrabold text-white tracking-tight">
-                                        {mode === "login" ? "Sign In" : "Create Profile"}
+                                        Sign In
                                     </h2>
                                     <p className="text-xs text-zinc-400 mt-1">
-                                        {mode === "login"
-                                            ? "Enter your details to access your bespoke dashboard."
-                                            : "Enter your details for a truly bespoke experience."}
+                                        Enter your details to access your bespoke dashboard.
                                     </p>
                                 </div>
 
@@ -246,22 +248,14 @@ export default function LoginPage() {
                                     <button
                                         type="button"
                                         onClick={() => setMode("login")}
-                                        className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                                            mode === "login"
-                                                ? "bg-[#F5CA53] text-black shadow-sm"
-                                                : "text-zinc-400 hover:text-white"
-                                        }`}
+                                        className="bg-[#F5CA53] text-black shadow-sm px-3 py-1.5 rounded-lg font-bold transition-all"
                                     >
                                         Log In
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setMode("profile")}
-                                        className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                                            mode === "profile"
-                                                ? "bg-[#F5CA53] text-black shadow-sm"
-                                                : "text-zinc-400 hover:text-white"
-                                        }`}
+                                        onClick={() => router.push("/register")}
+                                        className="text-zinc-400 hover:text-white px-3 py-1.5 rounded-lg font-bold transition-all"
                                     >
                                         Register
                                     </button>
@@ -334,7 +328,7 @@ export default function LoginPage() {
                                         </div>
                                     </>
                                 ) : (
-                                    /* CREATE PROFILE FORM FIELDS (EXACT MATCHING SCREENSHOT) */
+                                    /* CREATE PROFILE FORM FIELDS (SRI LANKAN DATA DEFAULTS) */
                                     <>
                                         {/* First & Last Name */}
                                         <div className="grid grid-cols-2 gap-4">
@@ -346,7 +340,7 @@ export default function LoginPage() {
                                                     type="text"
                                                     value={firstName}
                                                     onChange={(e) => setFirstName(e.target.value)}
-                                                    placeholder="ALEXANDER"
+                                                    placeholder="AHAMED"
                                                     className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
                                                 />
                                             </div>
@@ -358,7 +352,7 @@ export default function LoginPage() {
                                                     type="text"
                                                     value={lastName}
                                                     onChange={(e) => setLastName(e.target.value)}
-                                                    placeholder="VANE"
+                                                    placeholder="PERERA"
                                                     className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
                                                 />
                                             </div>
@@ -374,7 +368,7 @@ export default function LoginPage() {
                                                     type="text"
                                                     value={address}
                                                     onChange={(e) => setAddress(e.target.value)}
-                                                    placeholder="12 MAYFAIR"
+                                                    placeholder="45 TEMPLE ROAD, MAHARAGAMA"
                                                     className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
                                                 />
                                                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
@@ -395,7 +389,7 @@ export default function LoginPage() {
                                                 type="text"
                                                 value={city}
                                                 onChange={(e) => setCity(e.target.value)}
-                                                placeholder="LONDON"
+                                                placeholder="COLOMBO"
                                                 className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
                                             />
                                         </div>
@@ -407,13 +401,13 @@ export default function LoginPage() {
                                             </label>
                                             <div className="flex items-center gap-2">
                                                 <div className="bg-[#18191E] border border-zinc-800 rounded-xl px-3 py-3 flex items-center gap-2 text-xs font-bold text-zinc-300">
-                                                    <span>🇬🇧 +44</span>
+                                                    <span>🇱🇰 +94</span>
                                                 </div>
                                                 <input
                                                     type="tel"
                                                     value={whatsapp}
                                                     onChange={(e) => setWhatsapp(e.target.value)}
-                                                    placeholder="7700 900000"
+                                                    placeholder="77 123 4567"
                                                     className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 text-sm font-semibold tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
                                                 />
                                             </div>

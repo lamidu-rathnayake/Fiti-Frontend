@@ -1,11 +1,10 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/firebase/AuthContext";
-import { getClientProfile, updateClientProfile } from "@/lib/api/endpoints/profiles";
+import { getClientProfile } from "@/lib/api/endpoints/profiles";
 import { listNearbyShops } from "@/lib/api/endpoints/shops";
 import type { Shop } from "@/lib/api/types/shop";
 
@@ -15,25 +14,11 @@ const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), 
 });
 
 export default function ClientHomePage() {
-    const { user } = useAuth();
-    const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
-    const [isUpdating, setIsUpdating] = useState(false);
-    const [saved, setSaved] = useState(false);
+    const { user, logout } = useAuth();
+    const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [nearbyShops, setNearbyShops] = useState<Shop[]>([]);
     const [loadingShops, setLoadingShops] = useState(true);
     const [locationInitialized, setLocationInitialized] = useState(false);
-
-    const loadNearbyShops = async (lat: number, lng: number) => {
-        setLoadingShops(true);
-        try {
-            const shops = await listNearbyShops({ lat, lng, radius_km: 15 });
-            setNearbyShops(shops);
-        } catch (error) {
-            console.error("Failed to load nearby shops", error);
-        } finally {
-            setLoadingShops(false);
-        }
-    };
 
     useEffect(() => {
         const initLocation = async () => {
@@ -47,24 +32,21 @@ export default function ClientHomePage() {
                         setLocationInitialized(true);
                         return;
                     }
-                } catch (error: any) {
-                    if (error?.status !== 404) {
-                        console.error("Failed to fetch client profile", error);
-                    }
+                } catch {
+                    // Fall back to browser location or Colombo
                 }
             }
 
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        setLocation(prev => prev || { lat: latitude, lng: longitude });
-                        loadNearbyShops(latitude, longitude);
+                    (pos) => {
+                        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                        setLocation(loc);
+                        loadNearbyShops(loc.lat, loc.lng);
                         setLocationInitialized(true);
                     },
-                    (error) => {
-                        console.error("Geolocation error:", error);
-                        loadNearbyShops(6.9271, 79.8612); // Fallback to Colombo
+                    () => {
+                        loadNearbyShops(6.9271, 79.8612);
                         setLocationInitialized(true);
                     }
                 );
@@ -77,136 +59,210 @@ export default function ClientHomePage() {
         initLocation();
     }, [user]);
 
-    const handleConfirmLocation = async () => {
-        if (!user || !location) return;
-        setIsUpdating(true);
+    const loadNearbyShops = async (lat: number, lng: number) => {
+        setLoadingShops(true);
         try {
-            await updateClientProfile(user.uid, {
-                latitude: location.lat,
-                longitude: location.lng
-            });
-            setSaved(true);
-            setTimeout(() => setSaved(false), 2000);
-            loadNearbyShops(location.lat, location.lng);
-        } catch (error) {
-            console.error("Failed to update location", error);
+            const shops = await listNearbyShops({ lat, lng, radius_km: 25 });
+            setNearbyShops(shops);
+        } catch {
+            setNearbyShops([]);
         } finally {
-            setIsUpdating(false);
+            setLoadingShops(false);
         }
     };
 
     return (
-        <main className="min-h-screen bg-[#0D0D0D] text-white pb-24 font-sans selection:bg-yellow-500 selection:text-black">
-            {/* Header */}
-            <header className="px-6 pt-12 pb-6">
-                <p className="text-[#F6CA57] text-xs font-bold tracking-widest uppercase mb-1">
-                    Exclusive Access
-                </p>
-                <h1 className="text-2xl font-light">
-                    Welcome back, <span className="font-semibold text-[#F6CA57]">{user?.displayName || "Guest"}</span>
-                </h1>
+        <div className="min-h-screen bg-[#0A0B0E] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
+            {/* TOP NAVIGATION HEADER */}
+            <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
+                    <Link href="/" className="text-xl sm:text-2xl font-black tracking-widest text-[#F5CA53] hover:opacity-90 transition-opacity">
+                        FITI
+                    </Link>
+
+                    <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
+                        <Link href="/storefront" className="hover:text-[#F5CA53] transition-colors">Storefront</Link>
+                        <Link href="/client/home" className="text-[#F5CA53] font-bold relative pb-1 border-b-2 border-[#F5CA53]">My Atelier</Link>
+                        <Link href="/orders" className="hover:text-[#F5CA53] transition-colors">Orders</Link>
+                        <Link href="/tailors" className="hover:text-[#F5CA53] transition-colors">Explore Ateliers</Link>
+                    </nav>
+
+                    <div className="flex items-center space-x-5 text-zinc-400">
+                        <svg className="w-5 h-5 hover:text-white cursor-pointer transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        <button
+                            onClick={() => logout()}
+                            title="Sign out"
+                            className="w-8 h-8 rounded-full border border-[#F5CA53]/50 bg-[#F5CA53]/10 flex items-center justify-center text-xs font-bold text-[#F5CA53] hover:bg-[#F5CA53] hover:text-black transition-all"
+                        >
+                            {user?.displayName ? user.displayName.charAt(0).toUpperCase() : "C"}
+                        </button>
+                    </div>
+                </div>
             </header>
 
-            {/* Map Selection Card */}
-            <section className="px-6 mb-10">
-                <div className="relative w-full h-64 rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 shadow-2xl">
-                    <div className="absolute inset-0 z-0">
-                        {locationInitialized && (
-                            <LocationPicker 
-                                defaultLocation={location || undefined}
-                                onChange={(loc: { lat: number; lng: number }) => setLocation(loc)} 
-                            />
-                        )}
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-transparent to-transparent pointer-events-none z-10"></div>
+            {/* MAIN DASHBOARD CONTENT */}
+            <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-10 flex-1 space-y-10">
+                {/* WELCOME BANNER */}
+                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-[28px] p-8 sm:p-10 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div className="absolute top-0 right-1/4 w-64 h-32 bg-[#F5CA53]/10 blur-3xl pointer-events-none" />
 
-                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-zinc-900/80 backdrop-blur-md p-4 rounded-2xl border border-zinc-700 z-20 pointer-events-auto">
-                        <div>
-                            <p className="text-[#F6CA57] text-[10px] font-bold tracking-wider uppercase mb-1">
-                                Current Selection
-                            </p>
-                            <p className="text-sm font-medium text-zinc-200">
-                                {location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : "Main Road, Colombo 12"}
-                            </p>
-                        </div>
-                        <button 
-                            onClick={handleConfirmLocation}
-                            disabled={!location || isUpdating}
-                            className="bg-[#F6CA57] text-black text-xs font-bold px-4 py-2 rounded-xl shadow-[0_0_15px_rgba(246,202,87,0.3)] hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
-                        >
-                            {isUpdating ? "SAVING..." : saved ? "SAVED ✓" : "SAVE LOCATION"}
-                        </button>
+                    <div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53] mb-2 block">
+                            CLIENT ATELIER DASHBOARD
+                        </span>
+                        <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+                            Welcome back, <span className="text-[#F5CA53]">{user?.displayName || "Client"}</span>
+                        </h1>
+                        <p className="text-xs sm:text-sm text-zinc-400 mt-2 max-w-lg leading-relaxed">
+                            Track your active bespoke commissions, schedule fittings, and explore Colombo &amp; Kandy&apos;s premier tailors.
+                        </p>
                     </div>
-                </div>
-            </section>
 
-            {/* Nearby Best Stores */}
-            <section className="px-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-medium">Nearby Best Stores</h2>
-                    <div className="flex items-center gap-4">
-                        <svg className="w-5 h-5 text-[#F6CA57]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                        </svg>
-                        <button className="text-[#F6CA57] text-sm font-semibold tracking-wide">
-                            View All
-                        </button>
-                    </div>
+                    <Link
+                        href="/client/request"
+                        className="px-6 py-3.5 rounded-xl bg-[#F5CA53] hover:bg-[#f7d369] text-xs font-black uppercase tracking-[0.15em] text-black shadow-[0_0_20px_rgba(245,202,83,0.25)] transition-all hover:scale-[1.02] shrink-0"
+                    >
+                        NEW TAILORING REQUEST +
+                    </Link>
                 </div>
 
+                {/* ACTIVE ORDERS / FITTINGS SECTION */}
                 <div className="space-y-4">
-                    {loadingShops ? (
-                        <div className="text-zinc-500 text-sm text-center py-8">Loading nearby stores...</div>
-                    ) : nearbyShops.length === 0 ? (
-                        <div className="text-zinc-500 text-sm text-center py-8">No stores found nearby.</div>
-                    ) : (
-                        nearbyShops.map((shop, index) => (
-                            <div key={shop.shop_id} className={`flex gap-4 p-4 rounded-2xl bg-[#141414] shadow-lg ${index === 0 ? "border-l-2 border-[#F6CA57]" : ""}`}>
-                                <div className="w-20 h-20 rounded-xl bg-zinc-800 overflow-hidden shrink-0 relative">
-                                    <img src={shop.images?.[0]?.image_url || "https://images.unsplash.com/photo-1594938298596-70f56fb3cecb?q=80&w=200&auto=format&fit=crop"} className="w-full h-full object-cover" alt={shop.shop_name} />
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53]">
+                            ACTIVE COMMISSIONS &amp; FITTINGS
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#F5CA53]/10 border border-[#F5CA53]/30 text-[#F5CA53]">
+                            1 IN PRODUCTION
+                        </span>
+                    </div>
+
+                    <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-6 shadow-xl space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-xl bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700">
+                                    <img
+                                        src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=200&q=80"
+                                        alt="Double-Breasted Tuxedo"
+                                        className="w-full h-full object-cover"
+                                    />
                                 </div>
-                                <div className="flex-1 flex flex-col justify-center">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <h3 className="font-semibold text-zinc-100">{shop.shop_name}</h3>
-                                        <div className="flex items-center gap-1">
-                                            <svg className="w-3 h-3 text-[#F6CA57]" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                            <span className="text-[#F6CA57] text-xs font-bold">{shop.average_rating ? shop.average_rating.toFixed(1) : "New"}</span>
-                                        </div>
-                                    </div>
-                                    <p className="text-zinc-400 text-xs leading-relaxed mb-3 line-clamp-1">
-                                        {shop.specialty || "Tailoring Services"}
+                                <div>
+                                    <h3 className="text-base font-extrabold text-white">
+                                        Double-Breasted Italian Wool Suit
+                                    </h3>
+                                    <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                                        Atelier Perera &bull; <span className="text-[#F5CA53]">Colombo 07</span> &bull; <span className="text-zinc-500">#ORD-9021</span>
                                     </p>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-1 text-zinc-500 text-[10px]">
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                            <span>NEARBY</span>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
-                        ))
-                    )}
-                </div>
-            </section>
+                            <div className="text-right">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-[#F5CA53] block">
+                                    NEXT FITTING
+                                </span>
+                                <span className="text-xs font-bold text-white">
+                                    Friday, 3:00 PM
+                                </span>
+                            </div>
+                        </div>
 
-            {/* Bottom Navigation */}
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-11/12 max-w-sm bg-[#1A1A1A] rounded-full p-2 flex justify-between items-center border border-zinc-800 shadow-2xl z-50">
-                <button className="relative w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-tr from-[#EAB308] to-[#FDE047] shadow-[0_0_15px_rgba(234,179,8,0.4)] text-black">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                    <span className="absolute -bottom-1 text-[8px] font-bold tracking-wider uppercase text-[#F6CA57]">Deals</span>
-                </button>
-                <button className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </button>
-                <button className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                </button>
-                <button className="w-12 h-12 flex items-center justify-center text-zinc-500 hover:text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                </button>
-            </div>
-        </main>
+                        {/* FITTING TIMELINE PROGRESS BAR */}
+                        <div className="space-y-2 pt-2">
+                            <div className="flex justify-between text-xs font-bold">
+                                <span className="text-zinc-400">Production Stage:</span>
+                                <span className="text-[#F5CA53]">Second Fitting Scheduled (75%)</span>
+                            </div>
+                            <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-[#F5CA53] w-3/4 shadow-[0_0_15px_rgba(245,202,83,0.5)] rounded-full" />
+                            </div>
+                            <div className="grid grid-cols-4 text-[9px] font-black uppercase tracking-wider text-zinc-500 pt-1 text-center">
+                                <span className="text-[#F5CA53]">1. Measurements</span>
+                                <span className="text-[#F5CA53]">2. Fabric Cut</span>
+                                <span className="text-[#F5CA53]">3. Fitting</span>
+                                <span>4. Delivery</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ATELIER LOCATOR MAP & NEARBY STORES */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">
+                            NEARBY MASTER TAILORS &amp; ATELIERS
+                        </span>
+                        <span className="text-xs font-bold text-[#F5CA53] hover:underline cursor-pointer">
+                            View All (Colombo &amp; Kandy) &rarr;
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                        {/* MAP CARD */}
+                        <div className="lg:col-span-6 bg-[#131418]/90 border border-zinc-800/90 rounded-2xl h-80 overflow-hidden relative shadow-2xl">
+                            {locationInitialized && (
+                                <LocationPicker
+                                    defaultLocation={location || undefined}
+                                    onChange={(loc) => setLocation(loc)}
+                                />
+                            )}
+                        </div>
+
+                        {/* STORES LIST */}
+                        <div className="lg:col-span-6 space-y-4">
+                            {loadingShops ? (
+                                <div className="text-zinc-500 text-xs text-center py-12">Loading nearby ateliers...</div>
+                            ) : nearbyShops.length === 0 ? (
+                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-6 text-center text-xs text-zinc-400">
+                                    No ateliers registered in your immediate area. Showing top Colombo ateliers:
+                                </div>
+                            ) : (
+                                nearbyShops.slice(0, 3).map((shop) => (
+                                    <div key={shop.shop_id} className="bg-[#131418]/90 border border-zinc-800/90 hover:border-[#F5CA53]/50 rounded-2xl p-4 flex items-center justify-between transition-all cursor-pointer">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700">
+                                                <img
+                                                    src={shop.images?.[0]?.image_url || "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=200&q=80"}
+                                                    alt={shop.shop_name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-extrabold text-white">{shop.shop_name}</h4>
+                                                <p className="text-xs text-zinc-400 mt-0.5">{shop.city || "Colombo"} &bull; {shop.specialty || "Bespoke Suits"}</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-[#F5CA53]">
+                                            BOOK &rarr;
+                                        </span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            {/* BOTTOM FOOTER */}
+            <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-8 px-6 sm:px-12 relative z-20 mt-12">
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
+                        <span className="text-sm font-black tracking-widest text-[#F5CA53]">
+                            FITI
+                        </span>
+                        <span className="text-[11px] text-zinc-500">
+                            &copy; {new Date().getFullYear()} FITI Bespoke. All rights reserved.
+                        </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+                        <Link href="/contact" className="hover:text-white transition-colors">Contact Support</Link>
+                    </div>
+                </div>
+            </footer>
+        </div>
     );
 }

@@ -284,7 +284,7 @@ export default function OnboardingPage() {
                                     Elite Status
                                 </span>
                                 <p className="text-xs font-bold text-white tracking-wide">
-                                    Over 2,500 active members in London.
+                                    Over 2,500 active members in Colombo &amp; Kandy.
                                 </p>
                             </div>
                         </div>
@@ -321,27 +321,69 @@ export default function OnboardingPage() {
                     )}
 
                     <fieldset className="relative z-10">
-                        <legend className="mb-4 text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase text-center w-full">
+                        <legend className="mb-4 text-[10px] font-black tracking-[0.2em] text-[#F5CA53] uppercase text-center w-full">
                             Account Type
                         </legend>
-                        <div className="grid grid-cols-2 gap-4">
-                            {(["client", "tailor"] as const).map(
-                                (option) => (
-                                    <button
-                                        key={option}
-                                        type="button"
-                                        aria-pressed={role === option}
-                                        onClick={() => setSelectedRole(option)}
-                                        disabled={submitting}
-                                        className={`rounded-xl border px-4 py-4 text-xs font-bold uppercase tracking-widest transition-all ${role === option
-                                            ? "border-[#F6CA57] bg-[#F6CA57]/10 text-[#F6CA57] shadow-[0_0_15px_rgba(246,202,87,0.15)] scale-[1.02]"
-                                            : "border-zinc-800 bg-[#0D0D0D] text-zinc-400 hover:border-zinc-700 hover:text-zinc-300 hover:bg-[#1a1a1a]"
-                                            }`}
-                                    >
-                                        {option}
-                                    </button>
-                                ),
-                            )}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* CLIENT CARD */}
+                            <button
+                                type="button"
+                                aria-pressed={role === "client"}
+                                onClick={() => setSelectedRole("client")}
+                                disabled={submitting}
+                                className={`group text-left rounded-2xl border p-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
+                                    role === "client"
+                                        ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
+                                        : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
+                                }`}
+                            >
+                                <div>
+                                    <div className="w-10 h-10 rounded-full border border-[#F5CA53]/40 bg-[#F5CA53]/10 flex items-center justify-center text-[#F5CA53] mb-4">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-sm font-extrabold text-white mb-1">
+                                        Register as a Client
+                                    </p>
+                                    <p className="text-[11px] text-zinc-400 leading-relaxed">
+                                        Discover elite tailoring, curated fabrics, and personalized fits.
+                                    </p>
+                                </div>
+                                <div className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#F5CA53] flex items-center gap-1">
+                                    <span>{role === "client" ? "SELECTED ✓" : "SELECT CLIENT →"}</span>
+                                </div>
+                            </button>
+
+                            {/* SELLER / TAILOR CARD */}
+                            <button
+                                type="button"
+                                aria-pressed={role === "tailor"}
+                                onClick={() => setSelectedRole("tailor")}
+                                disabled={submitting}
+                                className={`group text-left rounded-2xl border p-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
+                                    role === "tailor"
+                                        ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
+                                        : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
+                                }`}
+                            >
+                                <div>
+                                    <div className="w-10 h-10 rounded-full border border-[#F5CA53]/40 bg-[#F5CA53]/10 flex items-center justify-center text-[#F5CA53] mb-4">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-sm font-extrabold text-white mb-1">
+                                        Register as a Seller
+                                    </p>
+                                    <p className="text-[11px] text-zinc-400 leading-relaxed">
+                                        Join our artisan network and showcase your craftsmanship.
+                                    </p>
+                                </div>
+                                <div className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#F5CA53] flex items-center gap-1">
+                                    <span>{role === "tailor" ? "SELECTED ✓" : "SELECT SELLER →"}</span>
+                                </div>
+                            </button>
                         </div>
                     </fieldset>
 

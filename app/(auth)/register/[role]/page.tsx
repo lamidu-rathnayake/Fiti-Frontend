@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
@@ -7,43 +8,51 @@ import {
     TailorRegisterForm,
 } from "@/components/auth/register-forms";
 
-export default function RoleRegistrationPage() {
-    const params = useParams();
+export default function RoleRegistrationPage({
+    params,
+}: {
+    params: Promise<{ role: string }>;
+}) {
     const router = useRouter();
-
-    const role = Array.isArray(params?.role) ? params.role[0] : params?.role;
-
-    if (role === "tailor") {
-        return (
-            <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-10">
-                <TailorRegisterForm onBack={() => router.push("/register")} />
-            </main>
-        );
+    const routeParams = useParams();
+    
+    // Safely resolve params for Next.js 15+ App Router
+    let roleParam: string | string[] | undefined = routeParams?.role;
+    try {
+        const resolvedParams = use(params);
+        if (resolvedParams?.role) {
+            roleParam = resolvedParams.role;
+        }
+    } catch {
+        // Fallback to routeParams
     }
 
-    if (role === "client") {
-        return (
-            <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-10">
-                <ClientRegisterForm onBack={() => router.push("/register")} />
-            </main>
-        );
+    const role = Array.isArray(roleParam) ? roleParam[0] : roleParam;
+    const normalizedRole = role?.toLowerCase();
+
+    if (normalizedRole === "tailor" || normalizedRole === "seller") {
+        return <TailorRegisterForm onBack={() => router.push("/register")} />;
+    }
+
+    if (normalizedRole === "client") {
+        return <ClientRegisterForm onBack={() => router.push("/register")} />;
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                    Invalid role
+        <main className="min-h-screen bg-[#0A0B0E] text-white flex items-center justify-center p-4 selection:bg-[#F5CA53] selection:text-black font-sans">
+            <div className="w-full max-w-md bg-[#131418] border border-zinc-800 rounded-2xl p-8 text-center shadow-2xl">
+                <h1 className="text-2xl font-bold tracking-tight text-[#F5CA53]">
+                    Invalid Role Selected
                 </h1>
-                <p className="mt-2 text-sm text-slate-500">
-                    Please choose a valid registration role.
+                <p className="mt-2 text-xs text-zinc-400">
+                    Please choose a valid registration role to proceed.
                 </p>
                 <button
                     type="button"
                     onClick={() => router.push("/register")}
-                    className="mt-5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
+                    className="mt-6 rounded-xl bg-[#F5CA53] px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-black transition hover:bg-[#f7d369]"
                 >
-                    Back to role selection
+                    Back to Role Selection
                 </button>
             </div>
         </main>

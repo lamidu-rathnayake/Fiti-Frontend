@@ -18,9 +18,6 @@ export default function TestAuthPage() {
                   value: user.displayName ?? "Not provided",
               },
               { label: "Role", value: user.role ?? "Not assigned" },
-              { label: "Phone", value: user.phone ?? "Not provided" },
-              { label: "Address", value: user.address ?? "Not provided" },
-              { label: "City", value: user.city ?? "Not provided" },
               {
                   label: "Photo URL",
                   value: user.photoURL ?? "Not provided",

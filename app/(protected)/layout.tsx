@@ -27,7 +27,7 @@ export default function ProtectedLayout({
                 }
             }
         }
-    }, [loading, router, user, pathname]);
+    }, [loading, router, user, dbRole, pathname]);
 
     if (loading || !user || !dbRole) {
         return (

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useMemo, memo } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
-import L from "leaflet";
 
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility";
@@ -17,39 +16,47 @@ interface LocationPickerProps {
 const DEFAULT_CENTER = { lat: 7.8731, lng: 80.7718 };
 const DEFAULT_ZOOM = 7;
 
-function LocationMarker({ position, setPosition, onChange }: any) {
+function LocationMarker({ position, setPosition, onChangeRef }: any) {
     useMapEvents({
         click(e) {
-            setPosition(e.latlng);
-            onChange({ lat: e.latlng.lat, lng: e.latlng.lng });
+            const pos = { lat: e.latlng.lat, lng: e.latlng.lng };
+            setPosition(pos);
+            if (onChangeRef.current) onChangeRef.current(pos);
         },
     });
+
+    const eventHandlers = useMemo(
+        () => ({
+            dragend: (e: any) => {
+                const marker = e.target;
+                const latlng = marker.getLatLng();
+                const pos = { lat: latlng.lat, lng: latlng.lng };
+                setPosition(pos);
+                if (onChangeRef.current) onChangeRef.current(pos);
+            },
+        }),
+        [setPosition, onChangeRef]
+    );
 
     return position === null ? null : (
         <Marker
             position={position}
             draggable={true}
-            eventHandlers={{
-                dragend: (e) => {
-                    const marker = e.target;
-                    const pos = marker.getLatLng();
-                    setPosition(pos);
-                    onChange({ lat: pos.lat, lng: pos.lng });
-                },
-            }}
+            eventHandlers={eventHandlers}
         />
     );
 }
 
-function LocateControl({ setPosition, onChange }: any) {
+function LocateControl({ setPosition, onChangeRef }: any) {
     const map = useMap();
     const [locating, setLocating] = useState(false);
 
     const handleLocate = () => {
         setLocating(true);
         map.locate().on("locationfound", function (e) {
-            setPosition(e.latlng);
-            onChange({ lat: e.latlng.lat, lng: e.latlng.lng });
+            const pos = { lat: e.latlng.lat, lng: e.latlng.lng };
+            setPosition(pos);
+            if (onChangeRef.current) onChangeRef.current(pos);
             map.flyTo(e.latlng, map.getZoom() > 13 ? map.getZoom() : 13);
             setLocating(false);
         }).on("locationerror", function (e) {
@@ -72,9 +79,15 @@ function LocateControl({ setPosition, onChange }: any) {
     );
 }
 
-export default function LocationPicker({ onChange, defaultLocation }: LocationPickerProps) {
-    const [position, setPosition] = useState<L.LatLng | null>(
-        defaultLocation ? L.latLng(defaultLocation.lat, defaultLocation.lng) : null
+const LocationPicker = memo(function LocationPicker({ onChange, defaultLocation }: LocationPickerProps) {
+    const onChangeRef = useRef(onChange);
+
+    useEffect(() => {
+        onChangeRef.current = onChange;
+    }, [onChange]);
+
+    const [position, setPosition] = useState<{ lat: number; lng: number } | null>(
+        defaultLocation ? { lat: defaultLocation.lat, lng: defaultLocation.lng } : null
     );
 
     return (
@@ -90,8 +103,8 @@ export default function LocationPicker({ onChange, defaultLocation }: LocationPi
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    <LocationMarker position={position} setPosition={setPosition} onChange={onChange} />
-                    <LocateControl setPosition={setPosition} onChange={onChange} />
+                    <LocationMarker position={position} setPosition={setPosition} onChangeRef={onChangeRef} />
+                    <LocateControl setPosition={setPosition} onChangeRef={onChangeRef} />
                 </MapContainer>
             </div>
             {position && (
@@ -101,4 +114,6 @@ export default function LocationPicker({ onChange, defaultLocation }: LocationPi
             )}
         </div>
     );
-}
+});
+
+export default LocationPicker;

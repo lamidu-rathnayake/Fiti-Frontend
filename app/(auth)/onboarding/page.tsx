@@ -7,10 +7,12 @@ import dynamic from "next/dynamic";
 
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { auth } from "@/lib/firebase/config";
-import { saveUserProfile } from "@/lib/firebase/user-profile";
 import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
 import { addShopImage, createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
+import { z } from "zod";
+import { onboardingClientSchema, onboardingTailorSchema } from "@/lib/validations/auth";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
     ssr: false,
@@ -54,6 +56,7 @@ export default function OnboardingPage() {
         shopLatitude: null as number | null,
         shopLongitude: null as number | null,
     });
+    const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
     const [usePersonalAddress, setUsePersonalAddress] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -78,7 +81,11 @@ export default function OnboardingPage() {
 
     const updateField = (field: keyof typeof form, value: any) => {
         setForm((current) => ({ ...current, [field]: value }));
+        if (fieldErrors[field]) {
+            setFieldErrors(prev => ({ ...prev, [field]: "" }));
+        }
     };
+
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -94,17 +101,42 @@ export default function OnboardingPage() {
             return;
         }
 
-        if (!form.displayName.trim() || !form.city.trim()) {
-            setError("Enter your name and city.");
+        setFieldErrors({});
+        setError("");
+
+        const schema = role === "tailor" ? onboardingTailorSchema : onboardingClientSchema;
+        const result = schema.safeParse(form);
+
+        if (!result.success) {
+            const formattedErrors = result.error.format();
+            const errors: Partial<Record<keyof typeof form, string>> = {};
+            
+            Object.keys(formattedErrors).forEach((key) => {
+                if (key !== "_errors") {
+                    const fieldError = formattedErrors[key as keyof typeof formattedErrors];
+                    if (fieldError && "_errors" in fieldError && fieldError._errors.length > 0) {
+                        errors[key as keyof typeof form] = fieldError._errors[0];
+                    }
+                }
+            });
+            
+            setFieldErrors(errors);
+            setError("Please correct the errors in the form.");
             return;
         }
 
-        if (
-            role === "tailor" &&
-            (!form.shopName.trim() || !form.specialty.trim())
-        ) {
-            setError("Enter your shop name and specialty.");
-            return;
+        if (role === "tailor") {
+            if (!shopImageFile || !nicFrontFile || !nicRearFile) {
+                if (!window.confirm("You haven't selected all optional images (Shop Picture, NIC Front/Rear). Do you want to submit without them?")) {
+                    return;
+                }
+            }
+        } else {
+            if (!profileImageFile && !form.profileImageUrl) {
+                if (!window.confirm("You haven't selected a profile picture. Do you want to submit without one?")) {
+                    return;
+                }
+            }
         }
 
         setError("");
@@ -114,9 +146,11 @@ export default function OnboardingPage() {
             const uploadImageToCloudinary = async (file: File) => {
                 const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo";
                 const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "unsigned_preset";
+                
                 const formData = new FormData();
                 formData.append("file", file);
                 formData.append("upload_preset", uploadPreset);
+                
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
                     method: "POST",
                     body: formData,
@@ -140,17 +174,30 @@ export default function OnboardingPage() {
             const photoURL = finalProfileImageUrl.trim() || firebaseUser.photoURL || null;
             await updateProfile(firebaseUser, { displayName, photoURL });
 
-            // Create profile on backend
+            // Create profile on backend (Supabase PostgreSQL via API).
+            // Firebase UID is extracted from the Bearer token by the backend.
+            // Business profile fields are sent in the payload — Firestore is no longer used.
             await firebaseUser.getIdToken(true); // Force refresh to include new photoURL
 
             try {
                 if (role === "tailor") {
                     await createTailorProfile({
+                        phone: form.phone.trim() || null,
+                        city: form.city.trim() || null,
+                        address: form.address.trim() || null,
                         nic_front: finalNicFrontUrl.trim() || null,
                         nic_rear: finalNicRearUrl.trim() || null,
+                        latitude: form.latitude || null,
+                        longitude: form.longitude || null,
                     });
                 } else {
-                    await createClientProfile();
+                    await createClientProfile({
+                        phone: form.phone.trim() || null,
+                        city: form.city.trim() || null,
+                        address: form.address.trim() || null,
+                        latitude: form.latitude || null,
+                        longitude: form.longitude || null,
+                    });
                 }
             } catch (err) {
                 if (!(err instanceof FitiApiError && err.status === 409)) throw err;
@@ -159,6 +206,7 @@ export default function OnboardingPage() {
             if (role === "tailor") {
                 const shop = await createShop({
                     shop_name: form.shopName.trim(),
+                    specialty: form.specialty.trim() || null,
                     shop_bio: form.shopBio.trim() || null,
                     shop_address: usePersonalAddress ? (form.address.trim() || null) : (form.shopAddress.trim() || null),
                     city: usePersonalAddress ? (form.city.trim() || null) : (form.shopCity.trim() || null),
@@ -173,19 +221,6 @@ export default function OnboardingPage() {
                     await addShopImage(shop.shop_id, { image_url: shopImageUrl });
                 }
             }
-
-            await saveUserProfile({
-                user: firebaseUser,
-                role,
-                displayName,
-                photoURL,
-                phone: form.phone.trim() || null,
-                city: form.city.trim() || null,
-                address: form.address.trim() || null,
-                specialty: role === "tailor" ? form.specialty.trim() : undefined,
-                latitude: role === "tailor" ? form.latitude : undefined,
-                longitude: role === "tailor" ? form.longitude : undefined,
-            });
 
             setRole(role);
             router.replace(destinationFor(role));
@@ -206,47 +241,58 @@ export default function OnboardingPage() {
     };
 
     if (authLoading || !user || dbRole) {
-        return (
-            <main className="flex min-h-screen items-center justify-center bg-slate-50 p-4 text-sm text-slate-500">
-                Preparing your profile...
-            </main>
-        );
+        return <LoadingOverlay isOpen={true} message="Preparing your profile..." />;
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 px-4 py-10">
-            <div className="mx-auto w-full max-w-2xl">
-                <div className="mb-8">
-                    <p className="text-sm font-medium text-slate-500">
+        <main className="min-h-screen bg-[#0D0D0D] px-4 py-10 relative overflow-hidden flex flex-col items-center justify-center">
+            <LoadingOverlay isOpen={submitting} message="Saving Profile..." />
+            {/* Background elements */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#F6CA57]/5 blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#F6CA57]/5 blur-[120px] pointer-events-none" />
+
+            <div className="mx-auto w-full max-w-2xl relative z-10 my-auto">
+                <div className="mb-8 text-center">
+                    <p className="inline-flex rounded-full bg-[#141414] border border-[#F6CA57]/30 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-[#F6CA57]">
                         Signed in as {user.email}
                     </p>
-                    <h1 className="mt-2 text-3xl font-bold text-slate-900">
-                        Complete your profile
+                    <h1 className="mt-6 text-3xl font-semibold tracking-wide text-zinc-100">
+                        Complete Your Profile
                     </h1>
-                    <p className="mt-2 text-sm text-slate-600">
-                        Choose your role and add the details needed to get
-                        started.
+                    <p className="mt-2 text-sm text-zinc-500">
+                        Choose your role and add the details needed to get started.
                     </p>
                 </div>
 
                 <form
                     onSubmit={handleSubmit}
-                    className="space-y-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                            if (!form.latitude || !form.longitude) {
+                                e.preventDefault();
+                                setError("Please choose a location from the map before submitting.");
+                            }
+                        }
+                    }}
+                    className="space-y-6 rounded-3xl border border-zinc-800 bg-[#141414] p-6 shadow-2xl sm:p-8 relative overflow-hidden"
                 >
+                    {/* Subtle gold glow behind card content */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[50px] bg-[#F6CA57]/20 blur-[60px] pointer-events-none"></div>
+
                     {error && (
                         <div
                             aria-live="polite"
-                            className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+                            className="relative z-10 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center"
                         >
                             {error}
                         </div>
                     )}
 
-                    <fieldset>
-                        <legend className="mb-3 text-sm font-semibold text-slate-800">
-                            Account type
+                    <fieldset className="relative z-10">
+                        <legend className="mb-4 text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase text-center w-full">
+                            Account Type
                         </legend>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-4">
                             {(["client", "tailor"] as const).map(
                                 (option) => (
                                     <button
@@ -255,9 +301,9 @@ export default function OnboardingPage() {
                                         aria-pressed={role === option}
                                         onClick={() => setSelectedRole(option)}
                                         disabled={submitting}
-                                        className={`rounded-lg border px-4 py-3 text-sm font-semibold capitalize transition ${role === option
-                                            ? "border-slate-900 bg-slate-900 text-white"
-                                            : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                                        className={`rounded-xl border px-4 py-4 text-xs font-bold uppercase tracking-widest transition-all ${role === option
+                                            ? "border-[#F6CA57] bg-[#F6CA57]/10 text-[#F6CA57] shadow-[0_0_15px_rgba(246,202,87,0.15)] scale-[1.02]"
+                                            : "border-zinc-800 bg-[#0D0D0D] text-zinc-400 hover:border-zinc-700 hover:text-zinc-300 hover:bg-[#1a1a1a]"
                                             }`}
                                     >
                                         {option}
@@ -267,70 +313,79 @@ export default function OnboardingPage() {
                         </div>
                     </fieldset>
 
-                    <div className="grid gap-5 sm:grid-cols-2">
-                        <label className="text-sm font-medium text-slate-700">
-                            Full name
+                    <div className="grid gap-6 sm:grid-cols-2 relative z-10 mt-8 pt-8 border-t border-zinc-800">
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                Full Name
+                            </label>
                             <input
                                 value={form.displayName}
-                                onChange={(event) =>
-                                    updateField(
-                                        "displayName",
-                                        event.target.value,
-                                    )
-                                }
+                                onChange={(event) => updateField("displayName", event.target.value)}
                                 required
                                 disabled={submitting}
-                                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                             />
-                        </label>
+                            {fieldErrors.displayName && <p className="text-xs text-rose-400 mt-1">{fieldErrors.displayName}</p>}
+                        </div>
 
-                        <label className="text-sm font-medium text-slate-700">
-                            Phone number
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                Phone Number
+                            </label>
                             <input
                                 type="tel"
                                 value={form.phone}
-                                onChange={(event) =>
-                                    updateField("phone", event.target.value)
-                                }
+                                onChange={(event) => updateField("phone", event.target.value)}
                                 disabled={submitting}
-                                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                placeholder="+94 77 123 4567"
+                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                             />
-                        </label>
+                            {fieldErrors.phone && <p className="text-xs text-rose-400 mt-1">{fieldErrors.phone}</p>}
+                        </div>
 
-                        <label className="text-sm font-medium text-slate-700">
-                            City
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                City
+                            </label>
                             <input
                                 value={form.city}
-                                onChange={(event) =>
-                                    updateField("city", event.target.value)
-                                }
+                                onChange={(event) => updateField("city", event.target.value)}
                                 required
                                 disabled={submitting}
-                                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                placeholder="Colombo"
+                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                             />
-                        </label>
+                            {fieldErrors.city && <p className="text-xs text-rose-400 mt-1">{fieldErrors.city}</p>}
+                        </div>
 
-                        <label className="text-sm font-medium text-slate-700">
-                            Address
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                Address
+                            </label>
                             <input
                                 value={form.address}
-                                onChange={(event) =>
-                                    updateField("address", event.target.value)
-                                }
+                                onChange={(event) => updateField("address", event.target.value)}
                                 disabled={submitting}
-                                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                placeholder="45 Temple Street"
+                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                             />
-                        </label>
+                        </div>
 
-                        <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                            Personal Location (Optional)
-                            <p className="text-xs text-slate-500 font-normal mt-1 mb-2">Drag the pin to your home or current location.</p>
-                            <LocationPicker onChange={(loc: { lat: number, lng: number }) => { updateField("latitude", loc.lat); updateField("longitude", loc.lng); }} />
-                        </label>
+                        <div className="space-y-2 sm:col-span-2">
+                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                Personal Location <span className="text-zinc-600 font-medium">(optional)</span>
+                            </label>
+                            <p className="text-xs text-zinc-500 mb-3">Drag the pin to your home or current location.</p>
+                            <div className="rounded-xl overflow-hidden border border-zinc-800">
+                                <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, latitude: loc.lat, longitude: loc.lng })); }} />
+                            </div>
+                        </div>
 
-                        <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                            Profile Picture (Optional)
-                            <div className="mt-2 flex items-center gap-3">
+                        <div className="space-y-2 sm:col-span-2">
+                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                Profile Picture <span className="text-zinc-600 font-medium">(optional)</span>
+                            </label>
+                            <div className="flex items-center gap-3 mt-2">
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -340,125 +395,151 @@ export default function OnboardingPage() {
                                         }
                                     }}
                                     disabled={submitting}
-                                    className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                    className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
                                 />
-                                {profileImageFile && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
+                                {profileImageFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                             </div>
-                        </label>
+                        </div>
                     </div>
 
                     {role === "tailor" && (
-                        <div className="grid gap-5 border-t border-slate-200 pt-6 sm:grid-cols-2">
-                            <label className="text-sm font-medium text-slate-700">
-                                Shop name
+                        <div className="grid gap-6 border-t border-zinc-800 pt-8 mt-8 sm:grid-cols-2 relative z-10">
+                            <div className="col-span-1 sm:col-span-2 text-center mb-2">
+                                <span className="inline-flex rounded-full bg-[#0D0D0D] border border-zinc-700 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                                    Shop Details
+                                </span>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                    Shop Name
+                                </label>
                                 <input
                                     value={form.shopName}
-                                    onChange={(event) =>
-                                        updateField(
-                                            "shopName",
-                                            event.target.value,
-                                        )
-                                    }
+                                    onChange={(event) => updateField("shopName", event.target.value)}
                                     required
+                                    minLength={2}
+                                    maxLength={150}
                                     disabled={submitting}
-                                    className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                    placeholder="Your shop name"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
-                            </label>
+                                {fieldErrors.shopName && <p className="text-xs text-rose-400 mt-1">{fieldErrors.shopName}</p>}
+                            </div>
 
-                            <label className="text-sm font-medium text-slate-700">
-                                Specialty
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                    Specialty
+                                </label>
                                 <input
                                     value={form.specialty}
-                                    onChange={(event) =>
-                                        updateField("specialty", event.target.value)
-                                    }
+                                    onChange={(event) => updateField("specialty", event.target.value)}
                                     required
                                     disabled={submitting}
-                                    className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                    placeholder="Bridal wear, tailoring..."
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
-                            </label>
+                                {fieldErrors.specialty && <p className="text-xs text-rose-400 mt-1">{fieldErrors.specialty}</p>}
+                            </div>
 
-                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                                Shop Bio (Optional)
+                            <div className="space-y-2 sm:col-span-2">
+                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                    Shop Bio <span className="text-zinc-600 font-medium">(optional)</span>
+                                </label>
                                 <textarea
                                     value={form.shopBio}
                                     onChange={(event) => updateField("shopBio", event.target.value)}
                                     placeholder="Tell us about your shop..."
                                     disabled={submitting}
                                     rows={3}
-                                    className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 resize-none"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                                 />
-                            </label>
+                            </div>
 
-                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                                Registration Number (Optional)
+                            <div className="space-y-2 sm:col-span-2">
+                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                    Registration Number <span className="text-zinc-600 font-medium">(optional)</span>
+                                </label>
                                 <input
                                     value={form.registrationNumber}
                                     onChange={(event) => updateField("registrationNumber", event.target.value)}
                                     placeholder="Business Registration Number"
                                     disabled={submitting}
-                                    className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
-                            </label>
+                            </div>
 
                             <div className="col-span-1 sm:col-span-2">
-                                <div className="flex items-start gap-3 py-3 border-y border-slate-100 my-2">
+                                <div className="flex items-start gap-3 py-4 border-y border-zinc-800 my-4">
                                     <input
                                         type="checkbox"
                                         id="usePersonalAddress"
                                         checked={usePersonalAddress}
                                         onChange={(e) => setUsePersonalAddress(e.target.checked)}
-                                        className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                        className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-[#F6CA57] focus:ring-[#F6CA57] focus:ring-offset-zinc-950"
                                     />
-                                    <label htmlFor="usePersonalAddress" className="text-sm text-slate-700 leading-snug">
-                                        <span className="font-medium block mb-0.5">My shop uses my personal address</span>
-                                        We'll automatically use the contact info and map location you provided above for your shop.
+                                    <label htmlFor="usePersonalAddress" className="text-sm text-zinc-300 leading-snug cursor-pointer">
+                                        <span className="font-semibold block mb-0.5 text-zinc-100">My shop uses my personal address</span>
+                                        <span className="text-xs text-zinc-500">We'll automatically use the contact info and map location you provided above for your shop.</span>
                                     </label>
                                 </div>
                             </div>
 
                             {!usePersonalAddress && (
-                                <div className="col-span-1 sm:col-span-2 grid gap-5 sm:grid-cols-2 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                    <label className="text-sm font-medium text-slate-700">
-                                        Shop Phone
+                                <div className="col-span-1 sm:col-span-2 grid gap-6 sm:grid-cols-2 p-5 bg-[#0D0D0D] rounded-xl border border-zinc-800 shadow-inner">
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                            Shop Phone
+                                        </label>
                                         <input
                                             type="tel"
                                             value={form.shopPhone}
                                             onChange={(event) => updateField("shopPhone", event.target.value)}
                                             placeholder="+94 77 123 4567"
                                             disabled={submitting}
-                                            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
-                                    </label>
-                                    <label className="text-sm font-medium text-slate-700">
-                                        Shop City
+                                        {fieldErrors.shopPhone && <p className="text-xs text-rose-400 mt-1">{fieldErrors.shopPhone}</p>}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                            Shop City
+                                        </label>
                                         <input
                                             value={form.shopCity}
                                             onChange={(event) => updateField("shopCity", event.target.value)}
                                             placeholder="Colombo"
                                             disabled={submitting}
-                                            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
-                                    </label>
-                                    <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                                        Shop Address
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                            Shop Address
+                                        </label>
                                         <input
                                             value={form.shopAddress}
                                             onChange={(event) => updateField("shopAddress", event.target.value)}
                                             placeholder="123 Market Street"
                                             disabled={submitting}
-                                            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
-                                    </label>
-                                    <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                                        Shop Location (Optional)
-                                        <LocationPicker onChange={(loc: { lat: number, lng: number }) => { updateField("shopLatitude", loc.lat); updateField("shopLongitude", loc.lng); }} />
-                                    </label>
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                            Shop Location <span className="text-zinc-600 font-medium">(optional)</span>
+                                        </label>
+                                        <div className="rounded-xl overflow-hidden border border-zinc-700">
+                                            <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, shopLatitude: loc.lat, shopLongitude: loc.lng })); }} />
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
-                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                                Shop Picture (Optional)
+                            <div className="space-y-2 sm:col-span-2">
+                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                    Shop Picture <span className="text-zinc-600 font-medium">(optional)</span>
+                                </label>
                                 <div className="mt-2 flex items-center gap-3">
                                     <input
                                         type="file"
@@ -469,14 +550,16 @@ export default function OnboardingPage() {
                                             }
                                         }}
                                         disabled={submitting}
-                                        className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
                                     />
-                                    {shopImageFile && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
+                                    {shopImageFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                                 </div>
-                            </label>
+                            </div>
 
-                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                                NIC Front (Optional)
+                            <div className="space-y-2 sm:col-span-2">
+                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                    NIC Front <span className="text-zinc-600 font-medium">(optional)</span>
+                                </label>
                                 <div className="mt-2 flex items-center gap-3">
                                     <input
                                         type="file"
@@ -487,14 +570,16 @@ export default function OnboardingPage() {
                                             }
                                         }}
                                         disabled={submitting}
-                                        className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
                                     />
-                                    {nicFrontFile && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
+                                    {nicFrontFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                                 </div>
-                            </label>
+                            </div>
 
-                            <label className="text-sm font-medium text-slate-700 sm:col-span-2">
-                                NIC Rear (Optional)
+                            <div className="space-y-2 sm:col-span-2">
+                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                    NIC Rear <span className="text-zinc-600 font-medium">(optional)</span>
+                                </label>
                                 <div className="mt-2 flex items-center gap-3">
                                     <input
                                         type="file"
@@ -505,29 +590,29 @@ export default function OnboardingPage() {
                                             }
                                         }}
                                         disabled={submitting}
-                                        className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
                                     />
-                                    {nicRearFile && <span className="text-xs text-green-600 font-medium">Selected ✓</span>}
+                                    {nicRearFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                                 </div>
-                            </label>
+                            </div>
                         </div>
                     )}
 
-                    <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-between">
+                    <div className="flex flex-col-reverse gap-3 border-t border-zinc-800 pt-8 mt-8 sm:flex-row sm:justify-between relative z-10">
                         <button
                             type="button"
                             onClick={handleUseAnotherAccount}
                             disabled={submitting}
-                            className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                            className="rounded-xl border border-zinc-700 px-6 py-3 text-xs font-bold tracking-widest uppercase text-zinc-400 hover:bg-[#1a1a1a] hover:text-zinc-300 disabled:opacity-50 transition-colors"
                         >
-                            Use another account
+                            Use Another Account
                         </button>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-xl bg-[#F6CA57] px-8 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-[0_0_15px_rgba(246,202,87,0.2)] transition-all hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(246,202,87,0.4)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                         >
-                            {submitting ? "Saving profile..." : "Continue"}
+                            {submitting ? "Saving Profile..." : "Continue"}
                         </button>
                     </div>
                 </form>

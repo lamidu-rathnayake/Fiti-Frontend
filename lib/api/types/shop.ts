@@ -11,6 +11,7 @@
  */
 export interface ShopPayload {
     shop_name: string;
+    specialty?: string | null;
     shop_bio?: string | null;
     shop_address?: string | null;
     city?: string | null;
@@ -25,6 +26,7 @@ export interface Shop {
     shop_id: number;
     tailor_id: string;        // NOTE: was incorrectly `seller_id` in the old lib/api.ts
     shop_name: string;
+    specialty: string | null;
     shop_bio: string | null;
     shop_address: string | null;
     city: string | null;

@@ -9,13 +9,26 @@
 
 /**
  * Request body for POST /api/v1/profiles/client.
- * Firebase UID is extracted from the Bearer token by the backend — no body fields required.
+ * Firebase UID is extracted from the Bearer token by the backend.
+ * Business profile fields (formerly stored in Firestore) are now persisted
+ * directly in the `clients` table in Supabase PostgreSQL.
  */
-export type ClientProfilePayload = Record<string, never>;
+export interface ClientProfilePayload {
+    phone?: string | null;
+    city?: string | null;
+    address?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+}
 
 /** Success (201) response from POST /api/v1/profiles/client */
 export interface ClientProfileResponse {
     id: string;
+    phone: string | null;
+    city: string | null;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
     created_at: string | null;
     updated_at: string | null;
 }
@@ -26,9 +39,17 @@ export interface ClientProfileResponse {
  */
 export interface ClientProfile {
     id: string;
+    phone: string | null;
+    city: string | null;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
     created_at: string | null;
     updated_at: string | null;
 }
+
+/** Request body for PATCH /api/v1/profiles/client/{id} */
+export type ClientProfileUpdatePayload = Partial<ClientProfilePayload>;
 
 // ── Measurements ──────────────────────────────────────────────────────
 
@@ -55,8 +76,15 @@ export interface Measurements extends MeasurementsPayload {
 /**
  * Request body for POST /api/v1/profiles/tailor.
  * Firebase UID is extracted from the Bearer token by the backend.
+ * Business profile fields (formerly stored in Firestore) are now persisted
+ * directly in the `tailors` table in Supabase PostgreSQL.
  */
 export interface TailorProfilePayload {
+    phone?: string | null;
+    city?: string | null;
+    address?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     nic_front?: string | null;
     nic_rear?: string | null;
 }
@@ -64,6 +92,11 @@ export interface TailorProfilePayload {
 /** Success (201) response from POST /api/v1/profiles/tailor */
 export interface TailorProfileResponse {
     id: string;
+    phone: string | null;
+    city: string | null;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
     nic_front: string | null;
     nic_rear: string | null;
     is_verified: boolean;
@@ -74,6 +107,11 @@ export interface TailorProfileResponse {
 /** Response from GET /api/v1/profiles/tailor/{id} */
 export interface TailorProfile {
     id: string;
+    phone: string | null;
+    city: string | null;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
     nic_front: string | null;
     nic_rear: string | null;
     is_verified: boolean;
@@ -86,3 +124,6 @@ export interface TailorVerification {
     uid: string;
     is_verified: boolean;
 }
+
+/** Request body for PATCH /api/v1/profiles/tailor/{id} */
+export type TailorProfileUpdatePayload = Partial<TailorProfilePayload>;

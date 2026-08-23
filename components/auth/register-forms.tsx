@@ -12,6 +12,8 @@ import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/pr
 import { addShopImage, createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
 import dynamic from "next/dynamic";
+import { z } from "zod";
+import { clientRegisterSchema, tailorRegisterSchema } from "@/lib/validations/auth";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
     ssr: false,
@@ -53,28 +55,48 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
         latitude: null as number | null,
         longitude: null as number | null,
     });
+    const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
     const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     const handleChange = (field: string, value: string) => {
         setForm((prev) => ({ ...prev, [field]: value }));
+        if (fieldErrors[field as keyof typeof form]) {
+            setFieldErrors(prev => ({ ...prev, [field]: "" }));
+        }
     };
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        if (!form.fullName.trim() || !form.email.trim() || !form.password || !form.confirmPassword || !form.city.trim()) {
-            setError("Please complete all required fields.");
+        setFieldErrors({});
+        setError("");
+
+        const result = clientRegisterSchema.safeParse(form);
+
+        if (!result.success) {
+            const formattedErrors = result.error.format();
+            const errors: Partial<Record<keyof typeof form, string>> = {};
+            
+            Object.keys(formattedErrors).forEach((key) => {
+                if (key !== "_errors") {
+                    const fieldError = formattedErrors[key as keyof typeof formattedErrors];
+                    if (fieldError && "_errors" in fieldError && fieldError._errors.length > 0) {
+                        errors[key as keyof typeof form] = fieldError._errors[0];
+                    }
+                }
+            });
+            
+            setFieldErrors(errors);
+            setError("Please correct the errors in the form.");
             return;
         }
-        if (form.password.length < 6) {
-            setError("Password must be at least 6 characters long.");
-            return;
-        }
-        if (form.password !== form.confirmPassword) {
-            setError("Passwords do not match.");
-            return;
+
+        if (!profileImageFile) {
+            if (!window.confirm("You haven't selected a profile picture. Do you want to register without one?")) {
+                return;
+            }
         }
 
         setError("");
@@ -168,7 +190,14 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-5 relative z-10" noValidate>
+                <form onSubmit={handleSubmit} onKeyDown={(e) => { 
+                    if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                        if (!form.latitude || !form.longitude) {
+                            e.preventDefault();
+                            setError("Please choose a location from the map before submitting.");
+                        }
+                    } 
+                }} className="space-y-6 relative z-10" noValidate>
                     <div>
                         <label htmlFor="client-name" className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase mb-2">Full Name</label>
                         <input
@@ -177,6 +206,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                             placeholder="Your full name" required disabled={loading}
                             className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
+                        {fieldErrors.fullName && <p className="text-xs text-rose-400 mt-1">{fieldErrors.fullName}</p>}
                     </div>
 
                     <div>
@@ -187,6 +217,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                             placeholder="you@example.com" required disabled={loading}
                             className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
+                        {fieldErrors.email && <p className="text-xs text-rose-400 mt-1">{fieldErrors.email}</p>}
                     </div>
 
                     <div>
@@ -197,6 +228,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                             placeholder="+94 77 123 4567" disabled={loading}
                             className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
+                        {fieldErrors.phone && <p className="text-xs text-rose-400 mt-1">{fieldErrors.phone}</p>}
                     </div>
 
                     <div>
@@ -207,6 +239,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                             placeholder="Colombo" required disabled={loading}
                             className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
+                        {fieldErrors.city && <p className="text-xs text-rose-400 mt-1">{fieldErrors.city}</p>}
                     </div>
 
                     <div>
@@ -252,6 +285,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                             placeholder="Create a password (min. 6 characters)" required disabled={loading}
                             className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
+                        {fieldErrors.password && <p className="text-xs text-rose-400 mt-1">{fieldErrors.password}</p>}
                     </div>
 
                     <div>
@@ -262,6 +296,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                             placeholder="Re-enter your password" required disabled={loading}
                             className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                         />
+                        {fieldErrors.confirmPassword && <p className="text-xs text-rose-400 mt-1">{fieldErrors.confirmPassword}</p>}
                     </div>
 
                     <button
@@ -322,26 +357,55 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
     const [step, setStep] = useState(1);
     const [usePersonalAddress, setUsePersonalAddress] = useState(true);
 
-    const handleChange = (field: string, value: string) => {
+    const handleChange = (field: keyof typeof form, value: string) => {
         setForm((prev) => ({ ...prev, [field]: value }));
+        if (fieldErrors[field]) {
+            setFieldErrors(prev => ({ ...prev, [field]: "" }));
+        }
     };
 
     const handleNextStep = () => {
-        if (!form.fullName.trim() || !form.email.trim() || !form.password || !form.confirmPassword) {
-            setError("Please complete all required personal profile fields.");
+        setFieldErrors({});
+        setError("");
+
+        // Validate just step 1 fields using Zod
+        const step1Schema = z.object({
+            fullName: z.string().min(2, "Name must be at least 2 characters."),
+            email: z.string().email("Please enter a valid email address."),
+            password: z.string().min(6, "Password must be at least 6 characters."),
+            confirmPassword: z.string(),
+            phone: z.string().refine((val) => !val || /^(?:0|\+94)[ \-]?(?:[0-9][ \-]?){9}$/.test(val.trim()), "Invalid Sri Lankan phone number.").optional().or(z.literal('')),
+            city: z.string().optional(),
+            address: z.string().optional(),
+        }).refine((data) => data.password === data.confirmPassword, {
+            message: "Passwords do not match.",
+            path: ["confirmPassword"],
+        });
+
+        const result = step1Schema.safeParse(form);
+
+        if (!result.success) {
+            const formattedErrors = result.error.format();
+            const errors: Partial<Record<keyof typeof form, string>> = {};
+            
+            Object.keys(formattedErrors).forEach((key) => {
+                if (key !== "_errors") {
+                    const fieldError = formattedErrors[key as keyof typeof formattedErrors];
+                    if (fieldError && "_errors" in fieldError && fieldError._errors.length > 0) {
+                        errors[key as keyof typeof form] = fieldError._errors[0];
+                    }
+                }
+            });
+            
+            setFieldErrors(errors);
+            setError("Please correct the errors in the form before proceeding.");
             return;
         }
-        if (form.password.length < 6) {
-            setError("Password must be at least 6 characters long.");
-            return;
-        }
-        if (form.password !== form.confirmPassword) {
-            setError("Passwords do not match.");
-            return;
-        }
+
         setError("");
         setStep(2);
     };
@@ -368,9 +432,34 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        if (!form.shopName.trim() || !form.specialty.trim()) {
-            setError("Please complete all required shop fields.");
+        setFieldErrors({});
+        setError("");
+
+        // Use the full schema for final submit, dynamically updating validation based on usePersonalAddress
+        const result = tailorRegisterSchema.safeParse(form);
+
+        if (!result.success) {
+            const formattedErrors = result.error.format();
+            const errors: Partial<Record<keyof typeof form, string>> = {};
+            
+            Object.keys(formattedErrors).forEach((key) => {
+                if (key !== "_errors") {
+                    const fieldError = formattedErrors[key as keyof typeof formattedErrors];
+                    if (fieldError && "_errors" in fieldError && fieldError._errors.length > 0) {
+                        errors[key as keyof typeof form] = fieldError._errors[0];
+                    }
+                }
+            });
+            
+            setFieldErrors(errors);
+            setError("Please correct the errors in the form.");
             return;
+        }
+
+        if (!shopImageFile || !nicFrontFile || !nicRearFile) {
+            if (!window.confirm("You haven't selected all optional images (Shop Picture, NIC Front/Rear). Do you want to submit without them?")) {
+                return;
+            }
         }
 
         setError("");
@@ -473,7 +562,18 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
 
                 <form
                     onSubmit={step === 1 ? (e) => { e.preventDefault(); handleNextStep(); } : handleSubmit}
-                    className="space-y-5 relative z-10"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                            if (step === 1 && (!form.latitude || !form.longitude)) {
+                                e.preventDefault();
+                                setError("Please choose a personal location from the map before proceeding.");
+                            } else if (step === 2 && !usePersonalAddress && (!form.shopLatitude || !form.shopLongitude)) {
+                                e.preventDefault();
+                                setError("Please choose a shop location from the map before submitting.");
+                            }
+                        }
+                    }}
+                    className="space-y-6 relative z-10"
                     noValidate
                 >
                     {/* ── STEP 1: PERSONAL DETAILS ─────────────────────────── */}
@@ -591,6 +691,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     id="shop-name" type="text" value={form.shopName}
                                     onChange={(e) => handleChange("shopName", e.target.value)}
                                     placeholder="Your shop name" required disabled={loading}
+                                    minLength={2} maxLength={150}
                                     className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
                             </div>

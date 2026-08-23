@@ -26,9 +26,17 @@ export default function TailorHomePage() {
     const [city, setCity] = useState("");
     const [address, setAddress] = useState("");
     const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+    const [locationError, setLocationError] = useState("");
 
     const handleSaveLocation = async () => {
         if (!user || !tempLocation) return;
+
+        if (address && address.trim().length > 0 && address.trim().length < 5) {
+            setLocationError("Address must be at least 5 characters long.");
+            return;
+        }
+
+        setLocationError("");
         setIsUpdatingLocation(true);
         try {
             await updateTailorProfile(user.uid, {
@@ -258,6 +266,11 @@ export default function TailorHomePage() {
                         </div>
                         
                         <div className="p-4 space-y-4 overflow-y-auto">
+                            {locationError && (
+                                <div className="text-xs text-rose-400 bg-rose-950/30 border border-rose-900/50 rounded-xl p-3 text-center">
+                                    {locationError}
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-xs font-medium text-zinc-400 mb-1">City (Optional)</label>
                                 <input 

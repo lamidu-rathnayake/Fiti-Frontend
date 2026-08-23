@@ -10,6 +10,8 @@ import { auth } from "@/lib/firebase/config";
 import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
 import { addShopImage, createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
+import { z } from "zod";
+import { onboardingClientSchema, onboardingTailorSchema } from "@/lib/validations/auth";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
     ssr: false,
@@ -53,6 +55,7 @@ export default function OnboardingPage() {
         shopLatitude: null as number | null,
         shopLongitude: null as number | null,
     });
+    const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
     const [usePersonalAddress, setUsePersonalAddress] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -77,7 +80,11 @@ export default function OnboardingPage() {
 
     const updateField = (field: keyof typeof form, value: any) => {
         setForm((current) => ({ ...current, [field]: value }));
+        if (fieldErrors[field]) {
+            setFieldErrors(prev => ({ ...prev, [field]: "" }));
+        }
     };
+
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -93,17 +100,42 @@ export default function OnboardingPage() {
             return;
         }
 
-        if (!form.displayName.trim() || !form.city.trim()) {
-            setError("Enter your name and city.");
+        setFieldErrors({});
+        setError("");
+
+        const schema = role === "tailor" ? onboardingTailorSchema : onboardingClientSchema;
+        const result = schema.safeParse(form);
+
+        if (!result.success) {
+            const formattedErrors = result.error.format();
+            const errors: Partial<Record<keyof typeof form, string>> = {};
+            
+            Object.keys(formattedErrors).forEach((key) => {
+                if (key !== "_errors") {
+                    const fieldError = formattedErrors[key as keyof typeof formattedErrors];
+                    if (fieldError && "_errors" in fieldError && fieldError._errors.length > 0) {
+                        errors[key as keyof typeof form] = fieldError._errors[0];
+                    }
+                }
+            });
+            
+            setFieldErrors(errors);
+            setError("Please correct the errors in the form.");
             return;
         }
 
-        if (
-            role === "tailor" &&
-            (!form.shopName.trim() || !form.specialty.trim())
-        ) {
-            setError("Enter your shop name and specialty.");
-            return;
+        if (role === "tailor") {
+            if (!shopImageFile || !nicFrontFile || !nicRearFile) {
+                if (!window.confirm("You haven't selected all optional images (Shop Picture, NIC Front/Rear). Do you want to submit without them?")) {
+                    return;
+                }
+            }
+        } else {
+            if (!profileImageFile && !form.profileImageUrl) {
+                if (!window.confirm("You haven't selected a profile picture. Do you want to submit without one?")) {
+                    return;
+                }
+            }
         }
 
         setError("");
@@ -239,6 +271,14 @@ export default function OnboardingPage() {
 
                 <form
                     onSubmit={handleSubmit}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                            if (!form.latitude || !form.longitude) {
+                                e.preventDefault();
+                                setError("Please choose a location from the map before submitting.");
+                            }
+                        }
+                    }}
                     className="space-y-6 rounded-3xl border border-zinc-800 bg-[#141414] p-6 shadow-2xl sm:p-8 relative overflow-hidden"
                 >
                     {/* Subtle gold glow behind card content */}
@@ -290,6 +330,7 @@ export default function OnboardingPage() {
                                 disabled={submitting}
                                 className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                             />
+                            {fieldErrors.displayName && <p className="text-xs text-rose-400 mt-1">{fieldErrors.displayName}</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -304,6 +345,7 @@ export default function OnboardingPage() {
                                 placeholder="+94 77 123 4567"
                                 className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                             />
+                            {fieldErrors.phone && <p className="text-xs text-rose-400 mt-1">{fieldErrors.phone}</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -318,6 +360,7 @@ export default function OnboardingPage() {
                                 placeholder="Colombo"
                                 className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                             />
+                            {fieldErrors.city && <p className="text-xs text-rose-400 mt-1">{fieldErrors.city}</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -380,10 +423,13 @@ export default function OnboardingPage() {
                                     value={form.shopName}
                                     onChange={(event) => updateField("shopName", event.target.value)}
                                     required
+                                    minLength={2}
+                                    maxLength={150}
                                     disabled={submitting}
                                     placeholder="Your shop name"
                                     className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
+                                {fieldErrors.shopName && <p className="text-xs text-rose-400 mt-1">{fieldErrors.shopName}</p>}
                             </div>
 
                             <div className="space-y-2">
@@ -398,6 +444,7 @@ export default function OnboardingPage() {
                                     placeholder="Bridal wear, tailoring..."
                                     className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                 />
+                                {fieldErrors.specialty && <p className="text-xs text-rose-400 mt-1">{fieldErrors.specialty}</p>}
                             </div>
 
                             <div className="space-y-2 sm:col-span-2">
@@ -457,6 +504,7 @@ export default function OnboardingPage() {
                                             disabled={submitting}
                                             className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
+                                        {fieldErrors.shopPhone && <p className="text-xs text-rose-400 mt-1">{fieldErrors.shopPhone}</p>}
                                     </div>
                                     <div className="space-y-2">
                                         <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">

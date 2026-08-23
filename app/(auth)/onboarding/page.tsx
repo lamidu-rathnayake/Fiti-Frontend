@@ -12,6 +12,7 @@ import { addShopImage, createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
 import { z } from "zod";
 import { onboardingClientSchema, onboardingTailorSchema } from "@/lib/validations/auth";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
     ssr: false,
@@ -240,18 +241,12 @@ export default function OnboardingPage() {
     };
 
     if (authLoading || !user || dbRole) {
-        return (
-            <main className="flex min-h-screen items-center justify-center bg-[#0D0D0D] p-4 text-sm text-[#F6CA57] font-bold tracking-widest uppercase">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-8 h-8 border-2 border-[#F6CA57]/30 border-t-[#F6CA57] rounded-full animate-spin"></div>
-                    Preparing your profile...
-                </div>
-            </main>
-        );
+        return <LoadingOverlay isOpen={true} message="Preparing your profile..." />;
     }
 
     return (
         <main className="min-h-screen bg-[#0D0D0D] px-4 py-10 relative overflow-hidden flex flex-col items-center justify-center">
+            <LoadingOverlay isOpen={submitting} message="Saving Profile..." />
             {/* Background elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#F6CA57]/5 blur-[120px] pointer-events-none" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#F6CA57]/5 blur-[120px] pointer-events-none" />

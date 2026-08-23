@@ -32,8 +32,7 @@ Authentication is handled via **Firebase Auth** purely on the client side to man
 1. **Sign In/Sign Up:** The user authenticates via Email/Password or Google OAuth using the Firebase SDK.
 2. **Context Management:** The `AuthProvider` (`lib/firebase/AuthContext.ts`) listens to the Firebase `onAuthStateChanged` event.
 3. **Role Resolution:** Once a user is authenticated, the context makes a request to `GET /api/v1/auth/me/role` to fetch the user's role from the PostgreSQL backend.
-4. **Fallback Handling:** If the backend fails to resolve a role (e.g., returning a `404`), the frontend executes fallback requests to explicitly check if a `client` or `tailor` profile exists to route the user correctly and bypass onboarding.
-5. **Route Guarding:** 
+4. **Route Guarding:** 
    - `app/(protected)/layout.tsx` enforces that only users with a valid `dbRole` can access its children.
    - Cross-role access is prevented (e.g., a Client trying to access `/tailor/home` will be redirected).
 

@@ -8,6 +8,7 @@ import { FirebaseError } from "firebase/app";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { getMyRole } from "@/lib/api/endpoints/auth";
 import { FitiApiError } from "@/lib/api/client";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 /** Map Firebase error codes to human-friendly messages. */
 function firebaseErrorMessage(err: unknown): string {
@@ -102,6 +103,7 @@ export default function LoginPage() {
 
     return (
         <main className="min-h-screen bg-[#0D0D0D] text-white flex items-center justify-center p-4 selection:bg-[#F6CA57] selection:text-black">
+            <LoadingOverlay isOpen={loading} message="Signing in..." />
             <div className="w-full max-w-md">
                 {/* Card */}
                 <div className="bg-[#141414] border border-zinc-800 rounded-3xl shadow-2xl p-8 relative overflow-hidden">

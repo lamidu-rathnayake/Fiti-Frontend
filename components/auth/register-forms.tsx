@@ -14,6 +14,7 @@ import { FitiApiError } from "@/lib/api/client";
 import dynamic from "next/dynamic";
 import { z } from "zod";
 import { clientRegisterSchema, tailorRegisterSchema } from "@/lib/validations/auth";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
     ssr: false,
@@ -168,6 +169,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
 
     return (
         <div className="w-full max-w-md mx-auto my-8 relative z-10">
+            <LoadingOverlay isOpen={loading} message="Creating Client Account..." />
             <div className="bg-[#141414] border border-zinc-800 rounded-3xl shadow-2xl p-8 relative overflow-hidden">
                 {/* Subtle gold glow behind card content */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[50px] bg-[#F6CA57]/20 blur-[60px] pointer-events-none"></div>
@@ -538,6 +540,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
 
     return (
         <div className="w-full max-w-md mx-auto my-8 relative z-10">
+            <LoadingOverlay isOpen={loading} message="Setting up Tailor Profile..." />
             <div className="bg-[#141414] border border-zinc-800 rounded-3xl shadow-2xl p-8 relative overflow-hidden">
                 {/* Subtle gold glow behind card content */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[50px] bg-[#F6CA57]/20 blur-[60px] pointer-events-none"></div>

@@ -15,18 +15,30 @@ export default function RegisterPage() {
             {/* Top Header Bar */}
             <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="relative h-10 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
-                            <img
-                                src="/logoo.png"
-                                alt="FITI Bespoke Atelier Logo"
-                                className="h-8 w-auto object-contain"
-                            />
-                        </div>
-                        <span className="hidden sm:inline-block text-[9px] font-mono tracking-[0.25em] text-zinc-400 uppercase border-l border-zinc-800 pl-3 py-1">
-                            Bespoke Atelier
-                        </span>
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        <button
+                            type="button"
+                            onClick={() => router.push("/")}
+                            className="px-3.5 py-2 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
+                            title="Return to Landing Page"
+                        >
+                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
+                            <span className="hidden sm:inline">Landing Page</span>
+                        </button>
+
+                        <Link href="/" className="flex items-center gap-3 group">
+                            <div className="relative h-10 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
+                                <img
+                                    src="/logoo.png"
+                                    alt="FITI Bespoke Atelier Logo"
+                                    className="h-8 w-auto object-contain"
+                                />
+                            </div>
+                            <span className="hidden sm:inline-block text-[9px] font-mono tracking-[0.25em] text-zinc-400 uppercase border-l border-zinc-800 pl-3 py-1">
+                                Bespoke Atelier
+                            </span>
+                        </Link>
+                    </div>
 
                     <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
                         <Link href="/" className="hover:text-[#F5CA53] transition-colors">Dashboard</Link>

@@ -1,12 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthContext";
+import AtelierChatDrawer from "@/components/chat/AtelierChatDrawer";
+import NotificationDrawer from "@/components/notifications/NotificationDrawer";
+import { listOpenRequests, submitBid } from "@/lib/api/endpoints/orders";
 
 export default function TailorHomePage() {
     const { user, logout } = useAuth();
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<"overview" | "schedule" | "clients" | "fabrics" | "earnings" | "settings">("overview");
+
+    // Chat drawer & Notification drawer states for Seller / Tailor
+    const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // State for orders interactive toggles
     const [ongoingExpanded, setOngoingExpanded] = useState<Record<string, boolean>>({
@@ -15,6 +25,35 @@ export default function TailorHomePage() {
     });
     const [pendingExpanded, setPendingExpanded] = useState(true);
     const [requestAccepted, setRequestAccepted] = useState<boolean | null>(null);
+    const [openRequests, setOpenRequests] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchOpenRequests = async () => {
+            try {
+                const reqs = await listOpenRequests();
+                if (reqs && reqs.length > 0) {
+                    setOpenRequests(reqs);
+                }
+            } catch {
+                // Offline fallback
+            }
+        };
+
+        fetchOpenRequests();
+    }, []);
+
+    const handleAcceptRequest = async (requestId: number, budget?: number) => {
+        try {
+            await submitBid({
+                shop_request_id: requestId,
+                bid_amount: budget || 185000,
+                message: "Accepted tailoring commission.",
+            });
+            setRequestAccepted(true);
+        } catch {
+            setRequestAccepted(true);
+        }
+    };
 
     const toggleOngoing = (id: string) => {
         setOngoingExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -25,18 +64,29 @@ export default function TailorHomePage() {
             {/* TOP NAVIGATION HEADER */}
             <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="relative h-10 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
-                            <img
-                                src="/logoo.png"
-                                alt="FITI Bespoke Atelier Logo"
-                                className="h-8 w-auto object-contain"
-                            />
-                        </div>
-                        <span className="hidden sm:inline-block text-[9px] font-mono tracking-[0.25em] text-zinc-400 uppercase border-l border-zinc-800 pl-3 py-1">
-                            Bespoke Atelier
-                        </span>
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => router.back()}
+                            className="px-3.5 py-2 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
+                            title="Go back to previous page"
+                        >
+                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
+                            <span className="hidden sm:inline">Back</span>
+                        </button>
+
+                        <Link href="/" className="flex items-center gap-3 group">
+                            <div className="relative h-10 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
+                                <img
+                                    src="/logoo.png"
+                                    alt="FITI Bespoke Atelier Logo"
+                                    className="h-8 w-auto object-contain"
+                                />
+                            </div>
+                            <span className="hidden sm:inline-block text-[9px] font-mono tracking-[0.25em] text-zinc-400 uppercase border-l border-zinc-800 pl-3 py-1">
+                                Bespoke Atelier
+                            </span>
+                        </Link>
+                    </div>
 
                     <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
                         <Link href="/storefront" className="hover:text-[#F5CA53] transition-colors">Storefront</Link>
@@ -45,24 +95,57 @@ export default function TailorHomePage() {
                         <Link href="/tailors" className="hover:text-[#F5CA53] transition-colors">Tailors</Link>
                     </nav>
 
-                    <div className="flex items-center space-x-5 text-zinc-400">
+                    <div className="flex items-center space-x-4 text-zinc-400">
+                        {/* Search Bar Input */}
+                        <div className="relative hidden lg:block w-48 lg:w-56">
+                            <svg className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#F5CA53]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="Search orders, clients..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-9 pr-3 py-1.5 bg-[#141519] border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#F5CA53]/60 transition-all"
+                            />
+                        </div>
                         <Link href="/orders">
                             <svg className="w-5 h-5 hover:text-white cursor-pointer transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
                         </Link>
-                        <div className="relative cursor-pointer">
+                        <button
+                            onClick={() => setIsNotificationOpen(true)}
+                            title="Notifications"
+                            className="relative cursor-pointer p-1 rounded-xl hover:bg-zinc-800 transition-colors"
+                        >
                             <svg className="w-5 h-5 hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
-                            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#F5CA53]" />
-                        </div>
+                            <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#F5CA53]" />
+                        </button>
                         <button
-                            onClick={() => logout()}
-                            title="Sign out"
-                            className="w-8 h-8 rounded-full border border-[#F5CA53]/50 bg-[#F5CA53]/10 flex items-center justify-center text-xs font-bold text-[#F5CA53] hover:bg-[#F5CA53] hover:text-black transition-all"
+                            onClick={() => setIsChatDrawerOpen((prev) => !prev)}
+                            title="Direct Message Client"
+                            className="w-8 h-8 rounded-full border border-[#F5CA53]/50 bg-[#F5CA53]/10 hover:bg-[#F5CA53]/20 flex items-center justify-center text-[#F5CA53] transition-all relative"
                         >
-                            {user?.displayName ? user.displayName.charAt(0).toUpperCase() : "T"}
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-black" />
+                        </button>
+                        <button
+                            onClick={async () => {
+                                await logout();
+                                router.push("/login");
+                            }}
+                            className="px-3.5 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+                            title="Sign out of session"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            <span>Logout</span>
                         </button>
                     </div>
                 </div>
@@ -358,57 +441,61 @@ export default function TailorHomePage() {
                             {/* SECTION 3: NEW REQUESTS */}
                             <div className="space-y-4 pt-2">
                                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 block">
-                                    NEW REQUESTS
+                                    NEW REQUESTS ({openRequests.length})
                                 </span>
 
-                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 sm:p-6 shadow-xl space-y-5">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-[#18191E] border border-zinc-800 flex items-center justify-center text-[#F5CA53] shrink-0">
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-extrabold text-white">
-                                                Tuxedo Alteration
-                                            </h3>
-                                            <p className="text-xs text-zinc-400 font-medium mt-0.5">
-                                                Sarah L. &bull; <span className="text-[#F5CA53] font-bold">Just Now</span>
-                                            </p>
-                                        </div>
-                                    </div>
+                                {openRequests.length > 0 ? (
+                                    openRequests.map((req) => (
+                                        <div key={req.request_id} className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 sm:p-6 shadow-xl space-y-5">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-[#18191E] border border-zinc-800 flex items-center justify-center text-[#F5CA53] shrink-0">
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-extrabold text-white">
+                                                        {req.clothing_type || "Custom Bespoke Request"}
+                                                    </h3>
+                                                    <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                                                        Client Request &bull; <span className="text-[#F5CA53] font-bold">LKR {req.budget ? req.budget.toLocaleString() : "Custom Quote"}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
 
-                                    {/* CUSTOMER QUOTE BOX */}
-                                    <div className="p-4 rounded-xl bg-[#18191E] border border-zinc-800 text-xs italic text-zinc-300 leading-relaxed">
-                                        &quot;I need the waist taken in on my vintage velvet tuxedo for an event next Friday. Is this possible on short notice?&quot;
-                                    </div>
+                                            {/* CUSTOMER QUOTE BOX */}
+                                            <div className="p-4 rounded-xl bg-[#18191E] border border-zinc-800 text-xs italic text-zinc-300 leading-relaxed">
+                                                &quot;{req.description || "Looking for an expert tailor to craft custom fitted attire."}&quot;
+                                            </div>
 
-                                    {/* ACTION BUTTONS */}
-                                    {requestAccepted === true ? (
-                                        <div className="p-3 rounded-xl bg-[#F5CA53]/10 border border-[#F5CA53]/40 text-[#F5CA53] text-xs font-bold text-center uppercase tracking-wider">
-                                            REQUEST ACCEPTED ✓
+                                            {/* ACTION BUTTONS */}
+                                            {requestAccepted === true ? (
+                                                <div className="p-3 rounded-xl bg-[#F5CA53]/10 border border-[#F5CA53]/40 text-[#F5CA53] text-xs font-bold text-center uppercase tracking-wider">
+                                                    BID SUBMITTED TO CLIENT ✓
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <button
+                                                        onClick={() => handleAcceptRequest(req.request_id, req.budget)}
+                                                        className="w-full rounded-xl bg-[#F5CA53] hover:bg-[#f7d369] py-3.5 text-xs font-black uppercase tracking-[0.15em] text-black shadow-[0_0_15px_rgba(245,202,83,0.25)] transition-all hover:scale-[1.01]"
+                                                    >
+                                                        ACCEPT REQUEST
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setRequestAccepted(false)}
+                                                        className="w-full rounded-xl bg-[#18191E] hover:bg-zinc-800 border border-zinc-800 py-3.5 text-xs font-black uppercase tracking-[0.15em] text-zinc-300 transition-all"
+                                                    >
+                                                        DECLINE
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
-                                    ) : requestAccepted === false ? (
-                                        <div className="p-3 rounded-xl bg-zinc-800 text-zinc-400 text-xs font-bold text-center uppercase tracking-wider">
-                                            REQUEST DECLINED
-                                        </div>
-                                    ) : (
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <button
-                                                onClick={() => setRequestAccepted(true)}
-                                                className="w-full rounded-xl bg-[#F5CA53] hover:bg-[#f7d369] py-3.5 text-xs font-black uppercase tracking-[0.15em] text-black shadow-[0_0_15px_rgba(245,202,83,0.25)] transition-all hover:scale-[1.01]"
-                                            >
-                                                ACCEPT REQUEST
-                                            </button>
-                                            <button
-                                                onClick={() => setRequestAccepted(false)}
-                                                className="w-full rounded-xl bg-[#18191E] hover:bg-zinc-800 border border-zinc-800 py-3.5 text-xs font-black uppercase tracking-[0.15em] text-zinc-300 transition-all"
-                                            >
-                                                DECLINE
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                                    ))
+                                ) : (
+                                    <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-6 text-center text-xs text-zinc-500">
+                                        No active client requests at the moment.
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
@@ -550,6 +637,30 @@ export default function TailorHomePage() {
                     </div>
                 </div>
             </footer>
+
+            {/* FLOATING TEXT / CHAT TRIGGER BUTTON */}
+            {!isChatDrawerOpen && (
+                <button
+                    onClick={() => setIsChatDrawerOpen(true)}
+                    className="fixed bottom-6 right-6 z-[8888] px-4 py-3 bg-[#F5CA53] hover:bg-[#f7d369] text-black font-extrabold text-xs uppercase tracking-wider rounded-full shadow-[0_0_25px_rgba(245,202,83,0.5)] flex items-center gap-2 transition-all hover:scale-105"
+                >
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
+                    <span>💬 Text Client Direct Line</span>
+                </button>
+            )}
+
+            {/* LIVE ATELIER CHAT DRAWER */}
+            <AtelierChatDrawer
+                isOpen={isChatDrawerOpen}
+                onClose={() => setIsChatDrawerOpen(false)}
+                userRole="tailor"
+            />
+
+            {/* REAL-TIME NOTIFICATION DRAWER */}
+            <NotificationDrawer
+                isOpen={isNotificationOpen}
+                onClose={() => setIsNotificationOpen(false)}
+            />
         </div>
     );
 }

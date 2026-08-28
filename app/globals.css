@@ -1,13 +1,194 @@
 @import "tailwindcss";
 
 :root {
-    --font-marketplace-heading: "Poppins", "Helvetica Neue", Arial, sans-serif;
-    --font-marketplace-body: "Poppins", "Helvetica Neue", Arial, sans-serif;
+    --font-heading: var(--font-heading, "Manrope", sans-serif);
+    --font-serif: var(--font-heading, "Manrope", sans-serif);
+    --font-sans: var(--font-sans, "Inter", sans-serif);
+    --gold-primary: #F5CA53;
+    --gold-light: #FFE28A;
+    --gold-dark: #C5A059;
+    --bg-dark: #0A0B0E;
+    --bg-card: #131418;
 }
 
 @theme {
-    /* 🛍️ Use with: font-heading */
-    --font-heading: var(--font-marketplace-heading);
-    /* 🏷️ Use with: font-body */
-    --font-body: var(--font-marketplace-body);
+    --font-serif: var(--font-serif);
+    --font-heading: var(--font-heading);
+    --font-sans: var(--font-sans);
+    --color-gold-500: #F5CA53;
+    --color-gold-400: #FFE28A;
+    --color-gold-600: #C5A059;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #0A0B0E;
+}
+::-webkit-scrollbar-thumb {
+    background: #252833;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #F5CA53;
+}
+
+/* -------------------------------------------------------------
+ * LUXURY ANIMATIONS & KEYFRAMES
+ * ------------------------------------------------------------- */
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(0.5deg);
+    }
+}
+
+@keyframes floatSlow {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-14px);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        opacity: 0.35;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.65;
+        transform: scale(1.08);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spinSlow {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-float {
+    animation: float 5s ease-in-out infinite;
+}
+
+.animate-float-slow {
+    animation: floatSlow 8s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+    animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-spin-slow {
+    animation: spinSlow 25s linear infinite;
+}
+
+/* -------------------------------------------------------------
+ * DESIGN UTILITY CLASSES
+ * ------------------------------------------------------------- */
+
+/* Luxury Gold Text Gradient */
+.gold-gradient-text {
+    background: linear-gradient(135deg, #FFE28A 0%, #F5CA53 50%, #C5A059 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Luxury Card Glassmorphism */
+.glass-card {
+    background: rgba(19, 20, 24, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+    border-color: rgba(245, 202, 83, 0.4);
+    box-shadow: 0 25px 60px rgba(245, 202, 83, 0.12), 0 0 30px rgba(0, 0, 0, 0.9);
+}
+
+/* Shimmer Button Effect */
+.btn-gold-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: #F5CA53;
+    color: #0A0B0E;
+    font-weight: 800;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 20px rgba(245, 202, 83, 0.25);
+}
+
+.btn-gold-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: translateX(-100%);
+}
+
+.btn-gold-shimmer:hover::after {
+    animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.btn-gold-shimmer:hover {
+    background: #FFE28A;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(245, 202, 83, 0.4);
+}
+
+.btn-gold-shimmer:active {
+    transform: translateY(0);
+}
+
+/* Tailor Stitch Dashed Border */
+.stitch-border {
+    position: relative;
+}
+
+.stitch-border::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px dashed rgba(245, 202, 83, 0.3);
+    border-radius: inherit;
+    pointer-events: none;
 }

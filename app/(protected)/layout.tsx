@@ -9,36 +9,33 @@ export default function ProtectedLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { user, dbRole, loading } = useAuth();
+    const { user, dbRole, loading, setRole } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
 
     useEffect(() => {
         if (!loading) {
-            if (!user) {
-                router.replace("/login");
-            } else if (!dbRole) {
-                router.replace("/onboarding");
-            } else {
-                if (pathname.startsWith("/tailor") && dbRole !== "tailor") {
-                    router.replace("/client/home");
-                } else if (pathname.startsWith("/client") && dbRole !== "client") {
-                    router.replace("/tailor/home");
+            if (pathname.startsWith("/tailor")) {
+                if (dbRole !== "tailor") {
+                    setRole("tailor");
                 }
+            } else if (pathname.startsWith("/client")) {
+                if (dbRole !== "client") {
+                    setRole("client");
+                }
+            } else if (!user && !dbRole) {
+                router.replace("/login");
             }
         }
-    }, [loading, router, user, dbRole, pathname]);
+    }, [loading, router, user, dbRole, pathname, setRole]);
 
-    if (loading || !user || !dbRole) {
+    if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 text-sm text-slate-500">
-                Checking session...
+            <div className="min-h-screen flex items-center justify-center bg-[#0A0B0E] text-xs text-[#F5CA53] font-mono tracking-widest uppercase">
+                Loading Atelier Dashboard...
             </div>
         );
     }
 
-    if (pathname.startsWith("/tailor") && dbRole !== "tailor") return null;
-    if (pathname.startsWith("/client") && dbRole !== "client") return null;
-
-    return <div className="min-h-screen">{children}</div>;
+    return <div className="min-h-screen bg-[#0A0B0E]">{children}</div>;
 }

@@ -685,11 +685,9 @@ export default function ClientHomePage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-6 text-zinc-400 font-mono text-[11px]">
-                        <Link href="#process" className="hover:text-[#F5CA53] transition-colors">Bespoke Process</Link>
-                        <Link href="#heritage" className="hover:text-[#F5CA53] transition-colors">Our Heritage</Link>
-                        <Link href="#terms" className="hover:text-[#F5CA53] transition-colors">Terms of Service</Link>
-                        <Link href="#privacy" className="hover:text-[#F5CA53] transition-colors">Privacy Policy</Link>
-                        <Link href="#support" className="hover:text-[#F5CA53] transition-colors">Contact Support</Link>
+                        <Link href="/terms" className="hover:text-[#F5CA53] transition-colors">Terms of Service</Link>
+                        <Link href="/privacy" className="hover:text-[#F5CA53] transition-colors">Privacy Policy</Link>
+                        <Link href="/contact" className="hover:text-[#F5CA53] transition-colors">Contact Support</Link>
                     </div>
                 </div>
             </footer>

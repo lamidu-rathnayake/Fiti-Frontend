@@ -629,8 +629,6 @@ export default function TailorHomePage() {
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                        <Link href="/privacy" className="hover:text-white transition-colors">Bespoke Process</Link>
-                        <Link href="/terms" className="hover:text-white transition-colors">Our Heritage</Link>
                         <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
                         <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
                         <Link href="/contact" className="hover:text-white transition-colors">Contact Support</Link>

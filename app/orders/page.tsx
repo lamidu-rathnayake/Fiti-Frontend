@@ -289,9 +289,9 @@ export default function OrdersPage() {
                         ATELIER DIGITAL
                     </span>
                     <div className="flex gap-6 text-[10px] font-mono uppercase font-bold text-zinc-400">
-                        <Link href="#privacy">Privacy Policy</Link>
-                        <Link href="#terms">Terms of Service</Link>
-                        <Link href="#contact">Contact Support</Link>
+                        <Link href="/privacy" className="hover:text-[#F5CA53] transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-[#F5CA53] transition-colors">Terms of Service</Link>
+                        <Link href="/contact" className="hover:text-[#F5CA53] transition-colors">Contact Support</Link>
                     </div>
                 </div>
             </footer>

@@ -10,7 +10,7 @@ import { auth } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
 import { createShop } from "@/lib/api/endpoints/shops";
-import { FitiApiError } from "@/lib/api/client";
+import { FitiApiError } from "../../lib/api/client";
 
 function registrationErrorMessage(error: unknown): string {
     if (error instanceof FitiApiError) return error.detail;
@@ -28,15 +28,15 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
     const router = useRouter();
     const { setRole } = useAuth();
 
-    const [firstName, setFirstName] = useState("Ahamed");
-    const [lastName, setLastName] = useState("Perera");
-    const [address, setAddress] = useState("45 Temple Road, Maharagama");
-    const [city, setCity] = useState("Colombo");
-    const [whatsapp, setWhatsapp] = useState("77 123 4567");
-    const [gender, setGender] = useState("MALE");
-    const [age, setAge] = useState("25");
-    const [email, setEmail] = useState("ahamed.perera@example.com");
-    const [password, setPassword] = useState("password123");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [address, setAddress] = useState("");
+    const [city, setCity] = useState("");
+    const [whatsapp, setWhatsapp] = useState("");
+    const [gender, setGender] = useState("");
+    const [age, setAge] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -44,9 +44,9 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const fullName = `${firstName.trim()} ${lastName.trim()}`.trim() || "Client User";
-        const userEmail = email.trim() || `client_${Date.now()}@fiti.lk`;
-        const userPass = password || "password123";
+        const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+        const userEmail = email.trim();
+        const userPass = password;
 
         setError("");
         setLoading(true);
@@ -62,7 +62,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
 
             await createClientProfile({
                 phone: whatsapp.trim() ? `+94${whatsapp.replace(/\D/g, "")}` : null,
-                city: city.trim() || "Colombo",
+                city: city.trim() || null,
                 address: address.trim() || null,
             });
 
@@ -226,6 +226,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     onChange={(e) => setGender(e.target.value)}
                                     className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53] appearance-none"
                                 >
+                                    <option value="" disabled>SELECT</option>
                                     <option value="MALE">MALE</option>
                                     <option value="FEMALE">FEMALE</option>
                                     <option value="OTHER">OTHER</option>
@@ -344,25 +345,25 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     const { setRole } = useAuth();
 
     // Personal Details State
-    const [firstName, setFirstName] = useState("Alexander");
-    const [lastName, setLastName] = useState("Vane");
-    const [address, setAddress] = useState("12 Mayfair");
-    const [city, setCity] = useState("Colombo");
-    const [personalBio, setPersonalBio] = useState("Master bespoke artisan specialized in suits and tuxedos.");
-    const [whatsapp, setWhatsapp] = useState("77 900 0000");
-    const [gender, setGender] = useState("MALE");
-    const [age, setAge] = useState("25");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [address, setAddress] = useState("");
+    const [city, setCity] = useState("");
+    const [personalBio, setPersonalBio] = useState("");
+    const [whatsapp, setWhatsapp] = useState("");
+    const [gender, setGender] = useState("");
+    const [age, setAge] = useState("");
 
     // Shop Details State
-    const [shopName, setShopName] = useState("Atelier Vane");
-    const [shopBio, setShopBio] = useState("Providing high-precision hand-tailored garments.");
-    const [shopAddress, setShopAddress] = useState("Savile Row, Colombo 07");
-    const [shopContact, setShopContact] = useState("77 712 3456");
-    const [registrationNumber, setRegistrationNumber] = useState("REG-123456789");
+    const [shopName, setShopName] = useState("");
+    const [shopBio, setShopBio] = useState("");
+    const [shopAddress, setShopAddress] = useState("");
+    const [shopContact, setShopContact] = useState("");
+    const [registrationNumber, setRegistrationNumber] = useState("");
 
     // Auth State
-    const [email, setEmail] = useState("atelier.vane@example.com");
-    const [password, setPassword] = useState("password123");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -370,9 +371,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const fullName = `${firstName.trim()} ${lastName.trim()}`.trim() || "Master Tailor";
-        const userEmail = email.trim() || `tailor_${Date.now()}@fiti.lk`;
-        const userPass = password || "password123";
+        const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+        const userEmail = email.trim();
+        const userPass = password;
 
         setError("");
         setLoading(true);
@@ -388,16 +389,16 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
 
             await createTailorProfile({
                 phone: whatsapp.trim() ? `+94${whatsapp.replace(/\D/g, "")}` : null,
-                city: city.trim() || "Colombo",
+                city: city.trim() || null,
                 address: address.trim() || null,
             });
 
             await createShop({
-                shop_name: shopName.trim() || "Atelier Vane",
-                specialty: "Bespoke Tailoring",
+                shop_name: shopName.trim(),
+                specialty: null,
                 shop_bio: shopBio.trim() || null,
                 shop_address: shopAddress.trim() || address.trim() || null,
-                city: city.trim() || "Colombo",
+                city: city.trim() || null,
                 contact_number: shopContact.trim() ? `+94${shopContact.replace(/\D/g, "")}` : null,
                 registration_number: registrationNumber.trim() || null,
             });
@@ -580,6 +581,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         onChange={(e) => setGender(e.target.value)}
                                         className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53] appearance-none"
                                     >
+                                        <option value="" disabled>SELECT</option>
                                         <option value="MALE">MALE</option>
                                         <option value="FEMALE">FEMALE</option>
                                         <option value="OTHER">OTHER</option>

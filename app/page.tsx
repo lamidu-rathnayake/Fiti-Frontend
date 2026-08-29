@@ -259,21 +259,6 @@ export default function HomePage() {
                         </nav>
                     </div>
 
-                    {/* Center Search Input */}
-                    <div className="hidden md:flex flex-1 max-w-md mx-4">
-                        <div className="relative w-full">
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search for fabrics, tailors, custom suits..."
-                                className="w-full bg-[#B0BA99] border border-[#9d6638]/50 rounded-full py-2.5 pl-5 pr-11 text-xs text-[#4e220f] placeholder-[#4e220f]/60 focus:outline-none focus:border-[#4e220f] shadow-xs transition-all"
-                            />
-                            <button type="button" aria-label="Search" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#4e220f] hover:text-[#9d6638] transition-colors">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                            </button>
-                        </div>
-                    </div>
 
                     {/* Right Utility Navigation */}
                     <div className="flex items-center gap-4 sm:gap-6">

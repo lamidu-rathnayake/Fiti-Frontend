@@ -343,11 +343,12 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
     );
 }
 
-// ── SELLER / TAILOR REGISTRATION FORM ────────────
-
 export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     const router = useRouter();
     const { setRole } = useAuth();
+
+    // Step state (1: Personal Details, 2: Shop Details)
+    const [step, setStep] = useState<1 | 2>(1);
 
     // Personal Details State
     const [firstName, setFirstName] = useState("");
@@ -372,6 +373,18 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    const handleNextStep = (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+
+        if (!firstName.trim() || !lastName.trim()) {
+            setError("First Name and Last Name are required to proceed.");
+            return;
+        }
+
+        setStep(2);
+    };
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -457,307 +470,353 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
             </header>
 
             {/* MAIN CONTENT CONTAINER */}
-            <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-8 relative z-10">
+            <main className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-8 relative z-10">
                 {/* PAGE HEADER */}
-                <div className="mb-8 max-w-2xl bg-[#f7f1de]/90 p-6 rounded-2xl border border-[#9d6638]/30 shadow-lg backdrop-blur-md">
-                    <h1 className="text-3xl sm:text-4xl font-black text-[#4e220f] tracking-wider uppercase mb-2">
+                <div className="mb-6 bg-[#f7f1de]/95 p-6 rounded-2xl border border-[#9d6638]/30 shadow-lg backdrop-blur-md text-center">
+                    <h1 className="text-2xl sm:text-3xl font-black text-[#4e220f] tracking-wider uppercase mb-2">
                         SELLER REGISTRATION
                     </h1>
-                    <p className="text-xs sm:text-sm text-[#4e220f]/80 leading-relaxed font-medium">
+                    <p className="text-xs text-[#4e220f]/80 font-medium max-w-lg mx-auto">
                         Begin your journey as a master artisan in our digital atelier. Establish your bespoke presence today.
                     </p>
+
+                    {/* STEP PROGRESS INDICATOR */}
+                    <div className="flex items-center justify-center gap-3 mt-6">
+                        <button
+                            type="button"
+                            onClick={() => setStep(1)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
+                                step === 1
+                                    ? "bg-[#9d6638] text-[#f7f1de] shadow-md"
+                                    : "bg-[#B0BA99]/40 text-[#4e220f] hover:bg-[#B0BA99]/60"
+                            }`}
+                        >
+                            <span className="w-5 h-5 rounded-full bg-[#f7f1de] text-[#4e220f] flex items-center justify-center text-[10px]">1</span>
+                            <span>Personal Details</span>
+                        </button>
+
+                        <div className="w-8 h-0.5 bg-[#9d6638]/40" />
+
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                if (firstName.trim() && lastName.trim()) {
+                                    setStep(2);
+                                } else {
+                                    handleNextStep(e);
+                                }
+                            }}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
+                                step === 2
+                                    ? "bg-[#9d6638] text-[#f7f1de] shadow-md"
+                                    : "bg-[#B0BA99]/40 text-[#4e220f] hover:bg-[#B0BA99]/60"
+                            }`}
+                        >
+                            <span className="w-5 h-5 rounded-full bg-[#f7f1de] text-[#4e220f] flex items-center justify-center text-[10px]">2</span>
+                            <span>Shop Details</span>
+                        </button>
+                    </div>
                 </div>
 
                 {error && (
-                    <div aria-live="polite" className="mb-8 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center">
+                    <div aria-live="polite" className="mb-6 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center">
                         {error}
                     </div>
                 )}
 
-                {/* FORM CONTAINER: 2 COLUMNS (PERSONAL DETAILS & SHOP DETAILS) */}
-                <form onSubmit={handleSubmit} className="space-y-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                {/* STEP 1: PERSONAL DETAILS */}
+                {step === 1 && (
+                    <form onSubmit={handleNextStep} className="bg-[#f7f1de] border border-[#9d6638]/30 rounded-3xl p-6 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl space-y-5">
+                        <div className="border-b border-[#9d6638]/20 pb-4 mb-2 flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#9d6638] block">
+                                STEP 01 — PERSONAL DETAILS
+                            </span>
+                            <span className="text-xs font-bold text-[#4e220f]/60">1 of 2</span>
+                        </div>
 
-                        {/* LEFT COLUMN: PERSONAL DETAILS */}
-                        <div className="bg-[#f7f1de] border border-[#9d6638]/30 rounded-3xl p-8 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] relative overflow-hidden backdrop-blur-xl space-y-5">
-                            <div className="border-b border-[#9d6638]/20 pb-4 mb-2">
-                                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#9d6638] block">
-                                    PERSONAL DETAILS
-                                </span>
-                            </div>
-
-                            {/* FIRST NAME & LAST NAME */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                        FIRST NAME
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={firstName}
-                                        onChange={(e) => setFirstName(e.target.value)}
-                                        placeholder="ALEXANDER"
-                                        required
-                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                        LAST NAME
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={lastName}
-                                        onChange={(e) => setLastName(e.target.value)}
-                                        placeholder="VANE"
-                                        required
-                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* ADDRESS */}
+                        {/* FIRST NAME & LAST NAME */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                    ADDRESS
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        value={address}
-                                        onChange={(e) => setAddress(e.target.value)}
-                                        placeholder="12 MAYFAIR"
-                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                    />
-                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* CITY */}
-                            <div>
-                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                    CITY
+                                    FIRST NAME *
                                 </label>
                                 <input
                                     type="text"
-                                    value={city}
-                                    onChange={(e) => setCity(e.target.value)}
-                                    placeholder="LONDON"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    placeholder="First Name"
+                                    required
                                     className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                 />
                             </div>
-
-                            {/* BIO */}
                             <div>
                                 <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                    BIO
+                                    LAST NAME *
                                 </label>
-                                <textarea
-                                    value={personalBio}
-                                    onChange={(e) => setPersonalBio(e.target.value)}
-                                    placeholder="TELL US ABOUT YOUR STYLE PREFERENCES..."
-                                    rows={3}
-                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] resize-none"
+                                <input
+                                    type="text"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    placeholder="Last Name"
+                                    required
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                 />
                             </div>
+                        </div>
 
-                            {/* WHATSAPP NUMBER */}
-                            <div>
-                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                    WHATSAPP NUMBER
-                                </label>
-                                <div className="flex items-center gap-2">
-                                    <div className="bg-[#B0BA99]/30 border border-[#9d6638]/40 rounded-xl px-4 py-3 flex items-center gap-2 text-xs font-bold text-[#4e220f] shrink-0">
-                                        <span>🇱🇰 +94</span>
-                                    </div>
-                                    <input
-                                        type="tel"
-                                        value={whatsapp}
-                                        onChange={(e) => setWhatsapp(e.target.value)}
-                                        placeholder="77 900 0000"
-                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* GENDER & AGE */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                        GENDER
-                                    </label>
-                                    <select
-                                        value={gender}
-                                        onChange={(e) => setGender(e.target.value)}
-                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] appearance-none"
-                                    >
-                                        <option value="" disabled>SELECT</option>
-                                        <option value="MALE">MALE</option>
-                                        <option value="FEMALE">FEMALE</option>
-                                        <option value="OTHER">OTHER</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                        AGE
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            value={age}
-                                            onChange={(e) => setAge(e.target.value)}
-                                            placeholder="25"
-                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                        />
-                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a2 2 0 002 2h12a2 2 0 002-2l-3-9m-13 0h16" />
-                                            </svg>
-                                        </div>
-                                    </div>
+                        {/* ADDRESS */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                ADDRESS
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    placeholder="12 MAYFAIR STREET"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                                />
+                                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    </svg>
                                 </div>
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN: SHOP DETAILS */}
-                        <div className="bg-[#f7f1de] border border-[#9d6638]/30 rounded-3xl p-8 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] relative overflow-hidden backdrop-blur-xl space-y-5 flex flex-col justify-between min-h-[620px]">
-                            <div className="space-y-5">
-                                <div className="border-b border-[#9d6638]/20 pb-4 mb-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#9d6638] block">
-                                        SHOP DETAILS
-                                    </span>
-                                </div>
+                        {/* CITY */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                CITY
+                            </label>
+                            <input
+                                type="text"
+                                value={city}
+                                onChange={(e) => setCity(e.target.value)}
+                                placeholder="COLOMBO"
+                                className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                            />
+                        </div>
 
-                                {/* SHOP NAME */}
-                                <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                        SHOP NAME
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={shopName}
-                                        onChange={(e) => setShopName(e.target.value)}
-                                        placeholder="ATELIER VANE"
-                                        required
-                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                    />
-                                </div>
+                        {/* BIO */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                PERSONAL BIO
+                            </label>
+                            <textarea
+                                value={personalBio}
+                                onChange={(e) => setPersonalBio(e.target.value)}
+                                placeholder="TELL CLIENTS ABOUT YOUR EXPERTISE AND PASSION FOR BESPOKE CRAFT..."
+                                rows={3}
+                                className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] resize-none"
+                            />
+                        </div>
 
-                                {/* SHOP BIO */}
-                                <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                        SHOP BIO
-                                    </label>
-                                    <textarea
-                                        value={shopBio}
-                                        onChange={(e) => setShopBio(e.target.value)}
-                                        placeholder="DESCRIBE YOUR HERITAGE..."
-                                        rows={3}
-                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] resize-none"
-                                    />
+                        {/* WHATSAPP NUMBER */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                WHATSAPP NUMBER
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <div className="bg-[#B0BA99]/30 border border-[#9d6638]/40 rounded-xl px-4 py-3 flex items-center gap-2 text-xs font-bold text-[#4e220f] shrink-0">
+                                    <span>🇱🇰 +94</span>
                                 </div>
+                                <input
+                                    type="tel"
+                                    value={whatsapp}
+                                    onChange={(e) => setWhatsapp(e.target.value)}
+                                    placeholder="77 900 0000"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                                />
+                            </div>
+                        </div>
 
-                                {/* SHOP ADDRESS */}
-                                <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                        SHOP ADDRESS
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={shopAddress}
-                                            onChange={(e) => setShopAddress(e.target.value)}
-                                            placeholder="SAVILE ROW"
-                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                        />
-                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
+                        {/* GENDER & AGE */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                    GENDER
+                                </label>
+                                <select
+                                    value={gender}
+                                    onChange={(e) => setGender(e.target.value)}
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] appearance-none"
+                                >
+                                    <option value="" disabled>SELECT</option>
+                                    <option value="MALE">MALE</option>
+                                    <option value="FEMALE">FEMALE</option>
+                                    <option value="OTHER">OTHER</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                    AGE
+                                </label>
+                                <input
+                                    type="number"
+                                    value={age}
+                                    onChange={(e) => setAge(e.target.value)}
+                                    placeholder="28"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                                />
+                            </div>
+                        </div>
 
-                                {/* SHOP CONTACT */}
-                                <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                        SHOP CONTACT
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                        <div className="bg-[#B0BA99]/30 border border-[#9d6638]/40 rounded-xl px-4 py-3 flex items-center gap-2 text-xs font-bold text-[#4e220f] shrink-0">
-                                            <span>🇱🇰 +94</span>
-                                        </div>
-                                        <input
-                                            type="tel"
-                                            value={shopContact}
-                                            onChange={(e) => setShopContact(e.target.value)}
-                                            placeholder="77 712 3456"
-                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                        />
-                                    </div>
-                                </div>
+                        {/* CONTINUE TO STEP 2 BUTTON */}
+                        <button
+                            type="submit"
+                            className="w-full mt-6 rounded-xl bg-[#9d6638] hover:bg-[#4e220f] py-4 text-xs font-black uppercase tracking-[0.15em] text-[#f7f1de] shadow-md transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 cursor-pointer"
+                        >
+                            <span>NEXT: SHOP DETAILS</span>
+                            <span>&rarr;</span>
+                        </button>
+                    </form>
+                )}
 
-                                {/* REGISTRATION NUMBER */}
-                                <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                        REGISTRATION NUMBER
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={registrationNumber}
-                                        onChange={(e) => setRegistrationNumber(e.target.value)}
-                                        placeholder="REG-123456789"
-                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                    />
-                                </div>
+                {/* STEP 2: SHOP DETAILS & ACCOUNT CREATION */}
+                {step === 2 && (
+                    <form onSubmit={handleSubmit} className="bg-[#f7f1de] border border-[#9d6638]/30 rounded-3xl p-6 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl space-y-5">
+                        <div className="border-b border-[#9d6638]/20 pb-4 mb-2 flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#9d6638] block">
+                                STEP 02 — SHOP &amp; ACCOUNT DETAILS
+                            </span>
+                            <span className="text-xs font-bold text-[#4e220f]/60">2 of 2</span>
+                        </div>
 
-                                {/* ACCOUNT EMAIL & PASSWORD */}
-                                <div className="pt-3 border-t border-[#9d6638]/20 space-y-4">
-                                    <div>
-                                        <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                            ACCOUNT EMAIL
-                                        </label>
-                                        <input
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="tailor@example.com"
-                                            required
-                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
-                                            PASSWORD
-                                        </label>
-                                        <input
-                                            type="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="••••••••••••"
-                                            required
-                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
-                                        />
-                                    </div>
+                        {/* SHOP NAME */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                SHOP NAME *
+                            </label>
+                            <input
+                                type="text"
+                                value={shopName}
+                                onChange={(e) => setShopName(e.target.value)}
+                                placeholder="ATELIER SAVILE ROW"
+                                required
+                                className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                            />
+                        </div>
+
+                        {/* SHOP BIO */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                SHOP BIO / HERITAGE
+                            </label>
+                            <textarea
+                                value={shopBio}
+                                onChange={(e) => setShopBio(e.target.value)}
+                                placeholder="DESCRIBE YOUR SHOP HERITAGE, SPECIALTIES, AND SUITING STYLES..."
+                                rows={3}
+                                className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] resize-none"
+                            />
+                        </div>
+
+                        {/* SHOP ADDRESS */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                SHOP ADDRESS
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={shopAddress}
+                                    onChange={(e) => setShopAddress(e.target.value)}
+                                    placeholder="SAVILE ROW, MAIN ATELIER"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                                />
+                                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* SUBMIT BUTTON */}
+                        {/* SHOP CONTACT */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                SHOP CONTACT NUMBER
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <div className="bg-[#B0BA99]/30 border border-[#9d6638]/40 rounded-xl px-4 py-3 flex items-center gap-2 text-xs font-bold text-[#4e220f] shrink-0">
+                                    <span>🇱🇰 +94</span>
+                                </div>
+                                <input
+                                    type="tel"
+                                    value={shopContact}
+                                    onChange={(e) => setShopContact(e.target.value)}
+                                    placeholder="77 712 3456"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                                />
+                            </div>
+                        </div>
+
+                        {/* REGISTRATION NUMBER */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                BUSINESS REGISTRATION NUMBER
+                            </label>
+                            <input
+                                type="text"
+                                value={registrationNumber}
+                                onChange={(e) => setRegistrationNumber(e.target.value)}
+                                placeholder="REG-123456789"
+                                className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                            />
+                        </div>
+
+                        {/* ACCOUNT CREDENTIALS */}
+                        <div className="pt-3 border-t border-[#9d6638]/20 space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                    ACCOUNT EMAIL *
+                                </label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="tailor@example.com"
+                                    required
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
+                                    PASSWORD *
+                                </label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••••••"
+                                    required
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
+                                />
+                            </div>
+                        </div>
+
+                        {/* NAVIGATION / SUBMIT BUTTONS */}
+                        <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setStep(1)}
+                                className="w-full sm:w-1/3 rounded-xl border border-[#9d6638]/40 bg-[#f7f1de] py-4 text-xs font-black uppercase tracking-wider text-[#4e220f] hover:bg-[#B0BA99]/30 transition-all cursor-pointer text-center"
+                            >
+                                &larr; BACK
+                            </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full mt-6 rounded-xl bg-[#9d6638] hover:bg-[#4e220f] py-4 text-xs font-black uppercase tracking-[0.15em] text-[#f7f1de] shadow-md transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+                                className="w-full sm:w-2/3 rounded-xl bg-[#9d6638] hover:bg-[#4e220f] py-4 text-xs font-black uppercase tracking-[0.15em] text-[#f7f1de] shadow-md transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                             >
-                                <span>{loading ? "CREATING SELLER PROFILE..." : "SUBMIT AND CONTINUE"}</span>
+                                <span>{loading ? "CREATING SELLER PROFILE..." : "COMPLETE REGISTRATION"}</span>
                                 <span>&rarr;</span>
                             </button>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                )}
 
                 {/* BOTTOM BACK BUTTON */}
                 <div className="mt-8 text-center">

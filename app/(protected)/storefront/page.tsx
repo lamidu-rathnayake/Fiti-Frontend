@@ -122,66 +122,6 @@ export default function StorefrontPage() {
 
     return (
         <div className="min-h-screen bg-[#07080A] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
-            {/* TOP NAVIGATION HEADER */}
-            <header className="w-full border-b border-zinc-900/90 bg-[#0A0B0E]/95 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
-                    {/* Left: Back button & Atelier Logo */}
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="px-3 py-1.5 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
-                            title="Go back to previous page"
-                        >
-                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
-                            <span className="hidden sm:inline">Back</span>
-                        </button>
-
-                        <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative h-9 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
-                                <img
-                                    src="/logoo.png"
-                                    alt="FITI Atelier Digital Logo"
-                                    className="h-7 w-auto object-contain"
-                                />
-                            </div>
-                            <span className="font-extrabold tracking-widest text-sm text-white uppercase font-heading hidden sm:inline-block">
-                                ATELIER DIGITAL
-                            </span>
-                        </Link>
-                    </div>
-
-                    {/* Middle Navigation Links */}
-                    <nav className="hidden lg:flex items-center space-x-8 text-xs font-bold tracking-wider text-zinc-400">
-                        <Link href="/storefront" className="text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]">
-                            Storefront
-                        </Link>
-                        <Link href={homeUrl} className="hover:text-[#F5CA53] transition-colors">
-                            Dashboard
-                        </Link>
-                        <Link href="/orders" className="hover:text-[#F5CA53] transition-colors">
-                            Orders
-                        </Link>
-                        <Link href="/tailors" className="hover:text-[#F5CA53] transition-colors">
-                            Tailors
-                        </Link>
-                    </nav>
-
-                    {/* Right Action Buttons */}
-                    <div className="flex items-center space-x-3">
-                        <button
-                            onClick={async () => {
-                                await logout();
-                                router.push("/login");
-                            }}
-                            className="px-3.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
-                            title="Sign out"
-                        >
-                            <span>Logout</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-
             {/* MAIN CATALOG */}
             <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-12 flex-1 space-y-10">
                 {/* Header Banner & Live Search Input */}
@@ -233,11 +173,10 @@ export default function StorefrontPage() {
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all shrink-0 ${
-                                selectedCategory === cat
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all shrink-0 ${selectedCategory === cat
                                     ? "bg-[#F5CA53] text-black shadow-[0_0_12px_rgba(245,202,83,0.3)]"
                                     : "bg-[#121318] border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
-                            }`}
+                                }`}
                         >
                             {cat}
                         </button>

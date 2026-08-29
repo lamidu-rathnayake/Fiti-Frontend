@@ -180,69 +180,7 @@ export default function TailorHomePage() {
     const shopDisplayName = selectedShop?.shop_name || "Your Shop";
 
     return (
-        <div className="min-h-screen bg-[#0A0B0E] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
-            {/* TOP NAVIGATION HEADER */}
-            <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="px-3.5 py-2 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
-                            title="Go back to previous page"
-                        >
-                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
-                            <span className="hidden sm:inline">Back</span>
-                        </button>
-
-                        <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative h-10 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
-                                <img src="/logoo.png" alt="FITI Bespoke Atelier Logo" className="h-8 w-auto object-contain" />
-                            </div>
-                            <span className="hidden sm:inline-block text-[9px] font-mono tracking-[0.25em] text-zinc-400 uppercase border-l border-zinc-800 pl-3 py-1">
-                                Bespoke Atelier
-                            </span>
-                        </Link>
-                    </div>
-
-                    <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
-                        <Link href="/storefront" className="hover:text-[#F5CA53] transition-colors">Storefront</Link>
-                        <Link href="/tailor/home" className="text-[#F5CA53] font-bold relative pb-1 border-b-2 border-[#F5CA53]">Dashboard</Link>
-                        <Link href="/orders" className="hover:text-[#F5CA53] transition-colors">Orders</Link>
-                        <Link href="/tailors" className="hover:text-[#F5CA53] transition-colors">Tailors</Link>
-                    </nav>
-
-                    <div className="flex items-center space-x-4 text-zinc-400">
-                        {/* Search */}
-                        <div className="relative hidden lg:block w-48 lg:w-56">
-                            <svg className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#F5CA53]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <input
-                                type="text"
-                                placeholder="Search orders, clients..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-9 pr-3 py-1.5 bg-[#141519] border border-zinc-800 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#F5CA53]/60 transition-all"
-                            />
-                        </div>
-                        <Link href="/orders">
-                            <svg className="w-5 h-5 hover:text-white cursor-pointer transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                        </Link>
-                        <button
-                            onClick={async () => { await logout(); router.push("/login"); }}
-                            className="px-3.5 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
-                            title="Sign out of session"
-                        >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            <span>Logout</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
+        <div className="text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
 
             {/* DASHBOARD BODY WITH SIDEBAR & MAIN SECTION */}
             <div className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-10 flex-1 flex gap-10">
@@ -746,16 +684,6 @@ export default function TailorHomePage() {
                 </main>
             </div>
 
-            {/* FOOTER */}
-            <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E]">
-                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-8">
-                    <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                        <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                        <Link href="/contact" className="hover:text-white transition-colors">Contact Support</Link>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 }

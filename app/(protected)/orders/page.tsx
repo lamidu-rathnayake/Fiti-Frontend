@@ -362,8 +362,8 @@ export default function OrdersPage() {
                                 <span
                                     key={type}
                                     className={`px-4 py-1.5 rounded-full text-xs font-mono font-medium transition-all ${isSelected
-                                            ? "bg-[#F5CA53] text-black font-bold shadow-md shadow-[#F5CA53]/20"
-                                            : "bg-[#18191E] text-zinc-400 border border-zinc-800"
+                                        ? "bg-[#F5CA53] text-black font-bold shadow-md shadow-[#F5CA53]/20"
+                                        : "bg-[#18191E] text-zinc-400 border border-zinc-800"
                                         }`}
                                 >
                                     {type}
@@ -382,8 +382,8 @@ export default function OrdersPage() {
                                 <span
                                     key={fit}
                                     className={`px-4 py-1.5 rounded-full text-xs font-mono font-medium transition-all ${isSelected
-                                            ? "bg-[#F5CA53] text-black font-bold shadow-md shadow-[#F5CA53]/20"
-                                            : "bg-[#18191E] text-zinc-400 border border-zinc-800"
+                                        ? "bg-[#F5CA53] text-black font-bold shadow-md shadow-[#F5CA53]/20"
+                                        : "bg-[#18191E] text-zinc-400 border border-zinc-800"
                                         }`}
                                 >
                                     {fit}
@@ -402,15 +402,15 @@ export default function OrdersPage() {
                     <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-2">MATERIAL SOURCING</label>
                     <div className="grid grid-cols-2 gap-3">
                         <div className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${order.materialSourcing === "Providing Fabric"
-                                ? "bg-[#F5CA53] text-black border-[#F5CA53] font-bold shadow-lg shadow-[#F5CA53]/20"
-                                : "bg-[#18191E] border-zinc-800 text-zinc-400"
+                            ? "bg-[#F5CA53] text-black border-[#F5CA53] font-bold shadow-lg shadow-[#F5CA53]/20"
+                            : "bg-[#18191E] border-zinc-800 text-zinc-400"
                             }`}>
                             <svg className="w-5 h-5 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
                             <span className="text-[11px] font-mono">Providing Fabric</span>
                         </div>
                         <div className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${order.materialSourcing === "Need Sourcing"
-                                ? "bg-[#F5CA53] text-black border-[#F5CA53] font-bold shadow-lg shadow-[#F5CA53]/20"
-                                : "bg-[#18191E] border-zinc-800 text-zinc-400"
+                            ? "bg-[#F5CA53] text-black border-[#F5CA53] font-bold shadow-lg shadow-[#F5CA53]/20"
+                            : "bg-[#18191E] border-zinc-800 text-zinc-400"
                             }`}>
                             <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                             <span className="text-[11px] font-mono">Need Sourcing</span>
@@ -529,51 +529,6 @@ export default function OrdersPage() {
                 </div>
             )}
 
-            {/* TOP NAVIGATION HEADER */}
-            <header className="w-full border-b border-zinc-900/90 bg-[#0A0B0E]/95 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="px-3 py-1.5 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
-                            title="Go back to previous page"
-                        >
-                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
-                            <span className="hidden sm:inline">Back</span>
-                        </button>
-
-                        <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative h-9 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
-                                <img src="/logoo.png" alt="FITI Atelier Digital Logo" className="h-7 w-auto object-contain" />
-                            </div>
-                            <span className="font-extrabold tracking-widest text-sm text-white uppercase font-heading hidden sm:inline-block">
-                                ATELIER DIGITAL
-                            </span>
-                        </Link>
-                    </div>
-
-                    <nav className="hidden lg:flex items-center space-x-8 text-xs font-bold tracking-wider text-zinc-400">
-                        <Link href="/storefront" className="hover:text-[#F5CA53] transition-colors">Storefront</Link>
-                        <Link href={homeUrl} className="hover:text-[#F5CA53] transition-colors">Dashboard</Link>
-                        <Link href="/orders" className="text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]">Orders</Link>
-                        <Link href="/tailors" className="hover:text-[#F5CA53] transition-colors">Tailors</Link>
-                    </nav>
-
-                    <div className="flex items-center space-x-3">
-                        <button
-                            onClick={async () => {
-                                await logout();
-                                router.push("/login");
-                            }}
-                            className="px-3.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
-                            title="Sign out"
-                        >
-                            <span>Logout</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-
             {/* MAIN CONTENT */}
             <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-12 flex-1 space-y-8">
                 {isTailorView ? (
@@ -597,8 +552,8 @@ export default function OrdersPage() {
                             <button
                                 onClick={() => scrollTo("requests")}
                                 className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${highlightedSection === "requests"
-                                        ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
-                                        : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
+                                    ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
+                                    : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
                                     }`}
                             >
                                 Requests ({requests.length})
@@ -606,8 +561,8 @@ export default function OrdersPage() {
                             <button
                                 onClick={() => scrollTo("pending")}
                                 className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${highlightedSection === "pending"
-                                        ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
-                                        : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
+                                    ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
+                                    : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
                                     }`}
                             >
                                 Pending ({pendingOrders.length})
@@ -615,8 +570,8 @@ export default function OrdersPage() {
                             <button
                                 onClick={() => scrollTo("ongoing")}
                                 className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${highlightedSection === "ongoing"
-                                        ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
-                                        : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
+                                    ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
+                                    : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
                                     }`}
                             >
                                 On Going ({ongoingOrders.length})
@@ -868,18 +823,6 @@ export default function OrdersPage() {
                     </>
                 )}
             </main>
-
-            {/* FOOTER */}
-            <footer className="w-full border-t border-zinc-900/90 bg-[#07080A] py-8 px-4 sm:px-8 relative z-20">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <span className="font-extrabold text-sm tracking-widest text-white uppercase font-heading">ATELIER DIGITAL</span>
-                    <div className="flex gap-6 text-[10px] font-mono uppercase font-bold text-zinc-400">
-                        <Link href="/privacy" className="hover:text-[#F5CA53] transition-colors">Privacy Policy</Link>
-                        <Link href="/terms" className="hover:text-[#F5CA53] transition-colors">Terms of Service</Link>
-                        <Link href="/contact" className="hover:text-[#F5CA53] transition-colors">Contact Support</Link>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 }

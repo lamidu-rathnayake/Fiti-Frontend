@@ -12,6 +12,7 @@ import { auth } from "@/lib/firebase/config";
 import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
 import { addShopImage, createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
+import { reverseGeocode } from "@/lib/geocoding";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
     ssr: false,
@@ -77,7 +78,10 @@ export default function OnboardingPage() {
         }
     }, [authLoading, router, user, dbRole]);
 
-    const updateField = (field: keyof typeof form, value: any) => {
+    const updateField = <Field extends keyof typeof form>(
+        field: Field,
+        value: (typeof form)[Field],
+    ) => {
         setForm((current) => ({ ...current, [field]: value }));
     };
 
@@ -345,6 +349,34 @@ export default function OnboardingPage() {
                                         </button>
                                     </div>
                                 </fieldset>
+                                
+                                <div className="grid gap-6 sm:grid-cols-2 relative z-10">
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="block text-[10px] font-black tracking-widest text-earth-text uppercase">
+                                            PERSONAL LOCATION <span className="text-earth-text/60 font-medium">(OPTIONAL)</span>
+                                        </label>
+                                        <p className="text-xs text-earth-text/70 mb-3 font-medium">Drag the pin to your home or current location.</p>
+                                        <div className="rounded-xl overflow-hidden border border-accent/40">
+                                            <LocationPicker
+                                                onChange={async (loc: { lat: number, lng: number }) => {
+                                                    setForm((current) => ({
+                                                        ...current,
+                                                        latitude: loc.lat,
+                                                        longitude: loc.lng,
+                                                    }));
+                                                    const location = await reverseGeocode(loc.lat, loc.lng);
+                                                    if (location) {
+                                                        setForm((current) => ({
+                                                            ...current,
+                                                            address: location.address,
+                                                            city: location.city,
+                                                        }));
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                </div>
+                                </div>
 
                                 <div className="grid gap-6 sm:grid-cols-2 relative z-10 mt-8 pt-8 border-t border-accent/20">
                                     <div className="space-y-2">
@@ -400,16 +432,6 @@ export default function OnboardingPage() {
                                             placeholder="45 Temple Street"
                                             className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg disabled:opacity-50"
                                         />
-                                    </div>
-
-                                    <div className="space-y-2 sm:col-span-2">
-                                        <label className="block text-[10px] font-black tracking-widest text-earth-text uppercase">
-                                            PERSONAL LOCATION <span className="text-earth-text/60 font-medium">(OPTIONAL)</span>
-                                        </label>
-                                        <p className="text-xs text-earth-text/70 mb-3 font-medium">Drag the pin to your home or current location.</p>
-                                        <div className="rounded-xl overflow-hidden border border-accent/40">
-                                            <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, latitude: loc.lat, longitude: loc.lng })); }} />
-                                        </div>
                                     </div>
 
                                     <div className="space-y-2 sm:col-span-2">
@@ -507,7 +529,7 @@ export default function OnboardingPage() {
                                                 />
                                                 <label htmlFor="usePersonalAddress" className="text-sm text-earth-text leading-snug cursor-pointer font-medium">
                                                     <span className="font-bold block mb-0.5 text-earth-text">My shop uses my personal address</span>
-                                                    <span className="text-xs text-earth-text/70">We'll automatically use the contact info and map location you provided above for your shop.</span>
+                                                    <span className="text-xs text-earth-text/70">We&apos;ll automatically use the contact info and map location you provided above for your shop.</span>
                                                 </label>
                                             </div>
                                         </div>
@@ -556,7 +578,23 @@ export default function OnboardingPage() {
                                                         SHOP LOCATION <span className="text-earth-text/60 font-medium">(OPTIONAL)</span>
                                                     </label>
                                                     <div className="rounded-xl overflow-hidden border border-accent/40">
-                                                        <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, shopLatitude: loc.lat, shopLongitude: loc.lng })); }} />
+                                                        <LocationPicker
+                                                            onChange={async (loc: { lat: number, lng: number }) => {
+                                                                setForm((current) => ({
+                                                                    ...current,
+                                                                    shopLatitude: loc.lat,
+                                                                    shopLongitude: loc.lng,
+                                                                }));
+                                                                const location = await reverseGeocode(loc.lat, loc.lng);
+                                                                if (location) {
+                                                                    setForm((current) => ({
+                                                                        ...current,
+                                                                        shopAddress: location.address,
+                                                                        shopCity: location.city,
+                                                                    }));
+                                                                }
+                                                            }}
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>

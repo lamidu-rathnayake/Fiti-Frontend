@@ -7,11 +7,23 @@ import Image from "next/image";
 import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
+import dynamic from "next/dynamic";
+
 import { auth } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
 import { createShop } from "@/lib/api/endpoints/shops";
+import { reverseGeocode } from "@/lib/geocoding";
 import { FitiApiError } from "../../lib/api/client";
+
+const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
+    ssr: false,
+    loading: () => (
+        <div className="h-36 w-full bg-card-bg/20 animate-pulse rounded-xl border border-accent/30 flex items-center justify-center text-earth-text/60 font-semibold text-xs uppercase tracking-wider">
+            Loading map...
+        </div>
+    )
+});
 
 function registrationErrorMessage(error: unknown): string {
     if (error instanceof FitiApiError) return error.detail;
@@ -33,6 +45,8 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
     const [lastName, setLastName] = useState("");
     const [address, setAddress] = useState("");
     const [city, setCity] = useState("");
+    const [latitude, setLatitude] = useState<number | null>(null);
+    const [longitude, setLongitude] = useState<number | null>(null);
     const [whatsapp, setWhatsapp] = useState("");
     const [gender, setGender] = useState("");
     const [age, setAge] = useState("");
@@ -65,6 +79,8 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                 phone: whatsapp.trim() ? `+94${whatsapp.replace(/\D/g, "")}` : null,
                 city: city.trim() || null,
                 address: address.trim() || null,
+                latitude: latitude || null,
+                longitude: longitude || null,
             });
 
             setRole("client");
@@ -163,6 +179,24 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
                             </div>
+                        </div>
+
+                        {/* MAP LOCATION PICKER */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-earth-text uppercase mb-2">
+                                PIN LOCATION ON MAP (OPTIONAL)
+                            </label>
+                            <LocationPicker
+                                onChange={async ({ lat, lng }) => {
+                                    setLatitude(lat);
+                                    setLongitude(lng);
+                                    const location = await reverseGeocode(lat, lng);
+                                    if (location) {
+                                        setAddress(location.address);
+                                        setCity(location.city);
+                                    }
+                                }}
+                            />
                         </div>
 
                         {/* ADDRESS WITH ICON */}
@@ -355,6 +389,8 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     const [lastName, setLastName] = useState("");
     const [address, setAddress] = useState("");
     const [city, setCity] = useState("");
+    const [latitude, setLatitude] = useState<number | null>(null);
+    const [longitude, setLongitude] = useState<number | null>(null);
     const [personalBio, setPersonalBio] = useState("");
     const [whatsapp, setWhatsapp] = useState("");
     const [gender, setGender] = useState("");
@@ -409,6 +445,8 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                 phone: whatsapp.trim() ? `+94${whatsapp.replace(/\D/g, "")}` : null,
                 city: city.trim() || null,
                 address: address.trim() || null,
+                latitude: latitude || null,
+                longitude: longitude || null,
             });
 
             await createShop({
@@ -419,6 +457,8 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                 city: city.trim() || null,
                 contact_number: shopContact.trim() ? `+94${shopContact.replace(/\D/g, "")}` : null,
                 registration_number: registrationNumber.trim() || null,
+                latitude: latitude || null,
+                longitude: longitude || null,
             });
 
             setRole("tailor");
@@ -562,6 +602,24 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
                             </div>
+                        </div>
+
+                        {/* MAP LOCATION PICKER */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-earth-text uppercase mb-2">
+                                PIN LOCATION ON MAP (OPTIONAL)
+                            </label>
+                            <LocationPicker
+                                onChange={async ({ lat, lng }) => {
+                                    setLatitude(lat);
+                                    setLongitude(lng);
+                                    const location = await reverseGeocode(lat, lng);
+                                    if (location) {
+                                        setAddress(location.address);
+                                        setCity(location.city);
+                                    }
+                                }}
+                            />
                         </div>
 
                         {/* ADDRESS */}

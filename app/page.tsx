@@ -301,58 +301,7 @@ export default function HomePage() {
                 </section>
 
                 {/* Interactive fabric guide */}
-                <section id="fabrics" className="px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
-                    <div className="mx-auto max-w-[1320px]">
-                        <div className="reveal mb-12 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-                            <div>
-                                <p className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-[#9d6638]">The cloth ledger</p>
-                                <h2 className="landing-display mt-3 text-5xl leading-none sm:text-7xl">Begin with the feel.</h2>
-                            </div>
-                            <p className="max-w-md text-sm leading-6 text-[#4e220f]/65">Explore a few cloth directions, then tell your tailor whether you will provide the material or want the atelier to source it.</p>
-                        </div>
-
-                        <div className="reveal-scale grid overflow-hidden border border-[#4e220f]/25 bg-[#B0BA99] lg:grid-cols-[0.78fr_1.22fr]">
-                            <div className="order-2 lg:order-1">
-                                {FABRICS.map((item, index) => {
-                                    const isSelected = selectedFabric === index;
-                                    return (
-                                        <button
-                                            key={item.name}
-                                            type="button"
-                                            onClick={() => setSelectedFabric(index)}
-                                            aria-pressed={isSelected}
-                                            className={`group flex w-full items-center gap-4 border-b border-[#4e220f]/25 p-5 text-left transition-colors last:border-b-0 lg:p-7 ${isSelected ? "bg-[#4e220f] text-[#f7f1de]" : "hover:bg-[#f7f1de]/45"}`}
-                                        >
-                                            <span className="h-9 w-9 shrink-0 rounded-full border border-[#4e220f]/30" style={{ backgroundColor: item.color }} />
-                                            <span className="min-w-0 flex-1">
-                                                <span className="block text-sm font-extrabold">{item.name}</span>
-                                                <span className={`mt-1 block text-[10px] uppercase tracking-[0.12em] ${isSelected ? "text-[#f7f1de]/55" : "text-[#4e220f]/55"}`}>{item.use}</span>
-                                            </span>
-                                            <span className={`text-xs font-bold ${isSelected ? "text-[#B0BA99]" : "text-[#9d6638]"}`}>{item.weight}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="relative order-1 min-h-[430px] overflow-hidden lg:order-2 lg:min-h-[610px]">
-                                <Image
-                                    key={fabric.image}
-                                    src={fabric.image}
-                                    alt={`${fabric.name} tailoring reference`}
-                                    fill
-                                    sizes="(min-width: 1024px) 55vw, 100vw"
-                                    className="fabric-img object-cover"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#4e220f]/90 via-transparent to-transparent" />
-                                <div className="absolute inset-x-0 bottom-0 p-7 text-[#f7f1de] sm:p-10">
-                                    <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#B0BA99]">{fabric.use} · {fabric.weight}</p>
-                                    <h3 className="landing-display mt-2 text-4xl sm:text-6xl">{fabric.name}</h3>
-                                    <p className="mt-3 max-w-lg text-sm leading-6 text-[#f7f1de]/70">{fabric.description}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+             
 
                 {/* Frequently asked questions */}
                 <section id="faq" className="border-y border-[#4e220f]/20 bg-[#B0BA99]/40 px-5 py-24 sm:px-8 lg:px-12">

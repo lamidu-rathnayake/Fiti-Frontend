@@ -55,8 +55,8 @@ export default function ProtectedLayout({
                 <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
                     {/* Left: Hamburger & Atelier Logo */}
                     <div className="flex items-center gap-4">
-                        <button 
-                            onClick={() => setIsSidebarOpen(true)} 
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
                             className="p-1 -ml-1 hover:bg-[#141519] rounded-lg transition-colors text-zinc-400 hover:text-[#F5CA53]"
                             title="Menu"
                         >
@@ -64,7 +64,7 @@ export default function ProtectedLayout({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
                         </button>
-                        
+
                         <Link href="/" className="flex items-center gap-3 group">
                             <div className="relative h-9 px-3 py-1 flex items-center justify-center transition-all duration-300 group-hover:scale-105 ">
                                 <img
@@ -78,18 +78,24 @@ export default function ProtectedLayout({
 
                     {/* Middle Navigation Links */}
                     <nav className="hidden lg:flex items-center space-x-8 text-xs font-bold tracking-wider text-zinc-400">
-                        <Link href="/storefront" className={pathname === '/storefront' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
-                            Storefront
-                        </Link>
+                        {dbRole !== "tailor" && (
+                            <Link href="/client/storefront" className={pathname === '/client/storefront' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                                Storefront
+                            </Link>
+                        )}
                         <Link href={homeUrl} className={pathname === homeUrl ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
-                            Dashboard
+                            {dbRole !== "tailor" ? "Home" : "Dashboard"}
                         </Link>
                         <Link href={`/${dbRole}/orders`} className={pathname === `/${dbRole}/orders` ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
                             Orders
                         </Link>
-                        <Link href="/tailors" className={pathname === '/tailors' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
-                            Tailors
-                        </Link>
+
+                        {/*show tailors if only a client*/}
+                        {dbRole !== "tailor" && (
+                            <Link href="/client/tailors" className={pathname === '/client/tailors' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                                Tailors
+                            </Link>
+                        )}
                     </nav>
 
                     {/* Right User Actions & Search Bar */}
@@ -143,8 +149,8 @@ export default function ProtectedLayout({
             </footer>
 
             {/* NAV SIDEBAR COMPONENT */}
-            <NavSidebar 
-                isOpen={isSidebarOpen} 
+            <NavSidebar
+                isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
             />
         </div>

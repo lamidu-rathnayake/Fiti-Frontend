@@ -185,59 +185,59 @@ export default function ClientHomePage() {
                                 )
                                 .slice(0, 3)
                                 .map((shop) => (
-                                <div key={shop.shop_id} className="bg-[#121318] border border-zinc-800/80 hover:border-[#F5CA53]/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_25px_rgba(245,202,83,0.12)] group">
-                                    <div className="flex gap-3">
-                                        <div className="w-14 h-14 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shrink-0">
-                                            <img
-                                                src={shop.images && shop.images.length > 0 ? shop.images[0].image_url : "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=200&q=80"}
-                                                alt={shop.shop_name}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                            />
+                                    <div key={shop.shop_id} className="bg-[#121318] border border-zinc-800/80 hover:border-[#F5CA53]/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_25px_rgba(245,202,83,0.12)] group">
+                                        <div className="flex gap-3">
+                                            <div className="w-14 h-14 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shrink-0">
+                                                <img
+                                                    src={shop.images && shop.images.length > 0 ? shop.images[0].image_url : "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=200&q=80"}
+                                                    alt={shop.shop_name}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                                />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-sm font-extrabold text-white group-hover:text-[#F5CA53] transition-colors font-heading">
+                                                        {shop.shop_name}
+                                                    </h3>
+                                                    <span className="text-[10px] font-bold text-[#F5CA53] flex items-center gap-1">
+                                                        <span>&#9733;</span> {shop.average_rating ? shop.average_rating.toFixed(1) : "4.9"}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                                                    {shop.shop_bio || shop.specialty || "Master tailors specializing in modern silhouettes and sharp architectural cuts."}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-sm font-extrabold text-white group-hover:text-[#F5CA53] transition-colors font-heading">
-                                                    {shop.shop_name}
-                                                </h3>
-                                                <span className="text-[10px] font-bold text-[#F5CA53] flex items-center gap-1">
-                                                    <span>&#9733;</span> {shop.average_rating ? shop.average_rating.toFixed(1) : "4.9"}
+
+                                        <div className="space-y-3 pt-3 mt-4 border-t border-zinc-800/80">
+                                            <div className="flex items-center justify-between text-[10px]">
+                                                <span className="font-mono text-zinc-500 flex items-center gap-1">
+                                                    <span>📍</span> {shop.city}
+                                                </span>
+                                                <span className="font-mono tracking-wider uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold border border-zinc-700">
+                                                    BESPOKE
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                                                {shop.shop_bio || shop.specialty || "Master tailors specializing in modern silhouettes and sharp architectural cuts."}
-                                            </p>
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        router.push("/tailors");
+                                                    }}
+                                                    className="w-full py-2 rounded-xl bg-[#18191E] border border-[#F5CA53]/50 hover:bg-[#F5CA53]/10 text-[#F5CA53] text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
+                                                >
+                                                    <span>💬 Text</span>
+                                                </button>
+                                                <Link
+                                                    href="/client/request"
+                                                    className="w-full text-center py-2 rounded-xl bg-[#F5CA53] text-black text-[11px] font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(245,202,83,0.2)] hover:scale-[1.01] transition-transform block"
+                                                >
+                                                    Book &rarr;
+                                                </Link>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div className="space-y-3 pt-3 mt-4 border-t border-zinc-800/80">
-                                        <div className="flex items-center justify-between text-[10px]">
-                                            <span className="font-mono text-zinc-500 flex items-center gap-1">
-                                                <span>📍</span> {shop.city}
-                                            </span>
-                                            <span className="font-mono tracking-wider uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold border border-zinc-700">
-                                                BESPOKE
-                                            </span>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    router.push("/tailors");
-                                                }}
-                                                className="w-full py-2 rounded-xl bg-[#18191E] border border-[#F5CA53]/50 hover:bg-[#F5CA53]/10 text-[#F5CA53] text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
-                                            >
-                                                <span>💬 Text</span>
-                                            </button>
-                                            <Link
-                                                href="/client/request"
-                                                className="w-full text-center py-2 rounded-xl bg-[#F5CA53] text-black text-[11px] font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(245,202,83,0.2)] hover:scale-[1.01] transition-transform block"
-                                            >
-                                                Book &rarr;
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
+                                ))
                         ) : (
                             <div className="col-span-3 flex flex-col items-center justify-center py-12 text-center space-y-4">
                                 <div className="w-14 h-14 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mx-auto">
@@ -269,72 +269,6 @@ export default function ClientHomePage() {
                             </div>
                         )}
                     </div>
-                </div>
-
-                {/* FEATURE SHOWCASE CARDS (3 COLUMNS) */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 pt-4">
-                    {/* Card 1: The Bespoke Process (Wide Dark Image Card) */}
-                    <Link
-                        href="/tailors"
-                        className="md:col-span-6 bg-[#121318] border border-zinc-800/80 hover:border-[#F5CA53]/60 rounded-2xl p-6 sm:p-8 flex flex-col justify-end relative overflow-hidden group min-h-[220px] transition-all"
-                    >
-                        <div className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80')` }} />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0B0E] via-[#0A0B0E]/60 to-transparent" />
-
-                        <div className="relative z-10">
-                            <h3 className="text-lg font-extrabold text-white mb-2 font-heading group-hover:text-[#F5CA53] transition-colors flex items-center gap-2">
-                                <span>The Bespoke Process</span>
-                                <span>&rarr;</span>
-                            </h3>
-                            <p className="text-xs text-zinc-300 leading-relaxed max-w-md">
-                                Experience the journey from a single thread to a masterpiece designed exclusively for you.
-                            </p>
-                        </div>
-                    </Link>
-
-                    {/* Card 2: Authentic Heritage (Solid Gold Card) */}
-                    <Link
-                        href="/tailors"
-                        className="md:col-span-3 bg-[#F5CA53] hover:bg-[#f7d369] rounded-2xl p-6 flex flex-col justify-between text-black shadow-[0_0_25px_rgba(245,202,83,0.2)] group hover:scale-[1.01] transition-transform min-h-[220px]"
-                    >
-                        <div className="w-10 h-10 rounded-full border border-black/20 bg-black/10 flex items-center justify-center text-black">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                            </svg>
-                        </div>
-
-                        <div>
-                            <h3 className="text-base font-extrabold font-heading mb-1 text-black">
-                                Authentic Heritage &rarr;
-                            </h3>
-                            <span className="text-[10px] font-mono tracking-widest uppercase font-bold text-black/70 block">
-                                CERTIFIED ARTISANS
-                            </span>
-                        </div>
-                    </Link>
-
-                    {/* Card 3: Consultation (Dark Card with Icon) */}
-                    <button
-                        onClick={() => {
-                            router.push("/tailors");
-                        }}
-                        className="md:col-span-3 bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 flex flex-col justify-between items-center text-center group hover:border-[#F5CA53]/50 transition-all min-h-[220px]"
-                    >
-                        <div className="w-12 h-12 rounded-full border border-zinc-700 bg-zinc-800/80 flex items-center justify-center text-[#F5CA53] mt-2 group-hover:scale-110 transition-transform">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                        </div>
-
-                        <div className="mb-2">
-                            <h3 className="text-base font-extrabold text-white font-heading mb-1 group-hover:text-[#F5CA53] transition-colors">
-                                Consultation 💬
-                            </h3>
-                            <p className="text-xs text-zinc-400">
-                                Click to text a master tailor for advice
-                            </p>
-                        </div>
-                    </button>
                 </div>
             </main>
 

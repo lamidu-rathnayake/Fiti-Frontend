@@ -12,6 +12,7 @@
 
 export type FabricStatus = "client_provided" | "tailor_provided";
 export type ServiceType = "online" | "physical_visit";
+export type ClothingRequestType = "direct" | "bidding";
 export type Gender = "male" | "female" | "unisex";
 export type ClothingRequestStatus = "open" | "closed" | "cancelled";
 export type OrderStatus = "pending" | "in_progress" | "completed" | "cancelled";
@@ -22,6 +23,7 @@ export type OrderStatus = "pending" | "in_progress" | "completed" | "cancelled";
 export interface ClothingRequestPayload {
     client_id: string;
     service_type?: ServiceType;
+    request_type?: ClothingRequestType;
     target_date?: string | null;
     target_budget?: number | null;
     clothing_category?: string | null;
@@ -53,6 +55,7 @@ export interface ClothingRequest {
     request_id: number;
     client_id: string;
     service_type: ServiceType;
+    request_type: ClothingRequestType;
     target_date: string | null;
     target_budget: number | null;
     clothing_category: string | null;

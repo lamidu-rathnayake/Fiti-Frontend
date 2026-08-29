@@ -81,9 +81,14 @@ export default function ProtectedLayout({
 
                         {/*show tailors if only a client*/}
                         {dbRole !== "tailor" && (
-                            <Link href="/client/tailors" className={pathname === '/client/tailors' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
-                                Tailors
-                            </Link>
+                            <>
+                                <Link href="/client/tailors" className={pathname === '/client/tailors' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                                    Tailors
+                                </Link>
+                                <Link href="/client/biddingRequest" className={pathname === '/client/biddingRequest' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                                    Broadcast
+                                </Link>
+                            </>
                         )}
                     </nav>
 

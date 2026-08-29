@@ -10,7 +10,7 @@ export default function ShopProfilePage() {
     const params = useParams();
     const router = useRouter();
     const shopId = params.shopId as string;
-    
+
     const [shop, setShop] = useState<Shop | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -47,7 +47,7 @@ export default function ShopProfilePage() {
             <div className="min-h-screen bg-[#07080A] flex flex-col items-center justify-center space-y-4">
                 <h2 className="text-xl font-bold text-white font-heading">Shop Not Found</h2>
                 <p className="text-zinc-500 text-sm">The atelier you are looking for does not exist.</p>
-                <button 
+                <button
                     onClick={() => router.back()}
                     className="px-6 py-2 bg-[#18191E] border border-zinc-700 text-zinc-300 rounded-xl hover:border-[#F5CA53] hover:text-[#F5CA53] transition-all"
                 >
@@ -57,20 +57,20 @@ export default function ShopProfilePage() {
         );
     }
 
-    const coverImage = shop.images && shop.images.length > 0 
-        ? shop.images[0].image_url 
+    const coverImage = shop.images && shop.images.length > 0
+        ? shop.images[0].image_url
         : "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1200&q=80";
 
     return (
         <div className="min-h-screen bg-[#07080A] text-white selection:bg-[#F5CA53] selection:text-black">
             {/* HERO / COVER SECTION */}
             <div className="w-full h-64 sm:h-80 relative overflow-hidden">
-                <div 
+                <div
                     className="absolute inset-0 bg-cover bg-center opacity-40"
                     style={{ backgroundImage: `url('${coverImage}')` }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#07080A] via-[#07080A]/60 to-transparent" />
-                
+
                 <div className="absolute bottom-0 left-0 w-full p-6 sm:p-12 max-w-7xl mx-auto flex flex-col sm:flex-row items-end justify-between gap-4">
                     <div>
                         <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-[#F5CA53] mb-2 block">
@@ -87,12 +87,12 @@ export default function ShopProfilePage() {
                             </span>
                         </p>
                     </div>
-                    
+
                     <Link
-                        href={`/client/request?shop_id=${shop.shop_id}`}
+                        href={`/client/directRequest?shop_id=${shop.shop_id}`}
                         className="px-8 py-3 bg-[#F5CA53] text-black font-extrabold text-xs uppercase tracking-wider rounded-xl hover:bg-[#f7d369] transition-all shadow-[0_0_20px_rgba(245,202,83,0.25)] shrink-0"
                     >
-                        Request Commission &rarr;
+                        Clothing Request &rarr;
                     </Link>
                 </div>
             </div>
@@ -168,8 +168,8 @@ export default function ShopProfilePage() {
                                 <p className="text-xs text-zinc-500 mb-4 flex-1">
                                     A fully tailored two-piece suit crafted from premium wool blends. Includes 2 fitting sessions.
                                 </p>
-                                <Link 
-                                    href={`/client/request?shop_id=${shop.shop_id}&service=bespoke_suit`}
+                                <Link
+                                    href={`/client/directRequest?shop_id=${shop.shop_id}&service=bespoke_suit`}
                                     className="w-full py-2.5 bg-[#18191E] text-zinc-300 text-center rounded-xl text-xs font-bold hover:bg-[#F5CA53] hover:text-black transition-colors border border-zinc-700 hover:border-[#F5CA53]"
                                 >
                                     Book This Service
@@ -188,8 +188,8 @@ export default function ShopProfilePage() {
                                 <p className="text-xs text-zinc-500 mb-4 flex-1">
                                     Crisp, perfect-fitting cotton shirts customized to your collar and cuff preferences.
                                 </p>
-                                <Link 
-                                    href={`/client/request?shop_id=${shop.shop_id}&service=custom_shirt`}
+                                <Link
+                                    href={`/client/directRequest?shop_id=${shop.shop_id}&service=custom_shirt`}
                                     className="w-full py-2.5 bg-[#18191E] text-zinc-300 text-center rounded-xl text-xs font-bold hover:bg-[#F5CA53] hover:text-black transition-colors border border-zinc-700 hover:border-[#F5CA53]"
                                 >
                                     Book This Service
@@ -211,8 +211,8 @@ export default function ShopProfilePage() {
                                         <div className="text-lg font-black text-[#F5CA53]">LKR 2,000</div>
                                     </div>
                                 </div>
-                                <Link 
-                                    href={`/client/request?shop_id=${shop.shop_id}&service=alteration`}
+                                <Link
+                                    href={`/client/directRequest?shop_id=${shop.shop_id}&service=alteration`}
                                     className="w-full py-2.5 bg-[#18191E] text-zinc-300 text-center rounded-xl text-xs font-bold hover:bg-[#F5CA53] hover:text-black transition-colors border border-zinc-700 hover:border-[#F5CA53]"
                                 >
                                     Book Alteration

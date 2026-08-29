@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { getClientProfile, updateClientProfile } from "@/lib/api/endpoints/profiles";
-import { reverseGeocode } from "@/lib/geocoding";
+import { reverseGeocode, geocode } from "@/lib/geocoding";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
     ssr: false,
@@ -111,14 +111,35 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
                 }
             }
         } else {
-            // For custom text address without coords, we just update the text 
-            // (a real geocoding api would convert text to coords here)
-            setSelectedAddress(newAddress);
-            if (user?.uid) {
-                try {
-                    await updateClientProfile(user.uid, { address: newAddress });
-                } catch (e) {
-                    console.error("Failed to update profile", e);
+            // Geocode the entered text to get coordinates and city
+            const geoResult = await geocode(newAddress);
+            if (geoResult && geoResult.lat && geoResult.lng) {
+                const parsedCoords = { lat: geoResult.lat, lng: geoResult.lng };
+                setLocation(parsedCoords);
+                setSelectedAddress(geoResult.address);
+                onLocationChange(parsedCoords);
+
+                if (user?.uid) {
+                    try {
+                        await updateClientProfile(user.uid, {
+                            latitude: parsedCoords.lat,
+                            longitude: parsedCoords.lng,
+                            address: geoResult.address,
+                            city: geoResult.city
+                        });
+                    } catch (e) {
+                        console.error("Failed to update profile", e);
+                    }
+                }
+            } else {
+                // Fallback if geocoding fails, just update text
+                setSelectedAddress(newAddress);
+                if (user?.uid) {
+                    try {
+                        await updateClientProfile(user.uid, { address: newAddress });
+                    } catch (e) {
+                        console.error("Failed to update profile", e);
+                    }
                 }
             }
         }
@@ -180,48 +201,82 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
             </div>
 
             {isLocationModalOpen && (
-                <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-[#121318] border border-zinc-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
-                        <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-                            <div>
-                                <span className="text-[10px] font-mono tracking-[0.25em] text-[#F5CA53] uppercase block">
-                                    LOCATION SELECTION
-                                </span>
-                                <h3 className="text-lg font-extrabold text-white font-heading">
-                                    Change Delivery &amp; Atelier Area
-                                </h3>
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div 
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+                        onClick={() => setIsLocationModalOpen(false)}
+                    />
+                    
+                    {/* Modal Content */}
+                    <div className="bg-[#121318] border border-zinc-800 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative z-10 flex flex-col">
+                        
+                        {/* Header */}
+                        <div className="px-6 sm:px-8 py-6 border-b border-zinc-800/80 bg-zinc-900/30 flex items-start justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 rounded-full bg-[#F5CA53]/10 flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5 text-[#F5CA53]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-white tracking-tight">
+                                        Update Location
+                                    </h3>
+                                    <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                                        Enter your delivery and atelier search area
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider block">
-                                Enter Manual Address or Area:
-                            </label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={customAddressInput}
-                                    onChange={(e) => setCustomAddressInput(e.target.value)}
-                                    placeholder="e.g. Main Road, Colombo 12"
-                                    className="flex-1 px-4 py-2.5 bg-[#1A1B22] border border-zinc-800 focus:border-[#F5CA53] rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none transition-all"
-                                />
-                                <button
-                                    onClick={() => handleApplyLocation(customAddressInput || "Main Road, Colombo 12")}
-                                    className="px-5 py-2.5 bg-[#F5CA53] hover:bg-[#f7d369] text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md"
-                                >
-                                    Apply
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end gap-3 pt-2">
                             <button
                                 onClick={() => setIsLocationModalOpen(false)}
-                                className="px-4 py-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 font-bold text-xs rounded-xl transition-all"
+                                className="w-8 h-8 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6 sm:p-8">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                                        Address or Area
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={customAddressInput}
+                                            onChange={(e) => setCustomAddressInput(e.target.value)}
+                                            placeholder="e.g. Main Road, Colombo 12"
+                                            className="w-full pl-11 pr-4 py-3.5 bg-[#1A1B22] border border-zinc-800 focus:border-[#F5CA53] rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none transition-all shadow-inner"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <p className="text-[11px] text-zinc-500 mt-2 font-medium">
+                                        Please provide a recognizable street or city name for best results.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-6 sm:px-8 py-5 border-t border-zinc-800/80 bg-zinc-900/30 flex justify-end gap-3">
+                            <button
+                                onClick={() => setIsLocationModalOpen(false)}
+                                className="px-5 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
                             >
                                 Cancel
                             </button>
+                            <button
+                                onClick={() => handleApplyLocation(customAddressInput || "Main Road, Colombo 12")}
+                                className="px-6 py-2.5 bg-[#F5CA53] text-black text-xs font-extrabold uppercase tracking-wider rounded-xl hover:bg-white transition-all shadow-[0_0_15px_rgba(245,202,83,0.2)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                            >
+                                Confirm Location
+                            </button>
                         </div>
+
                     </div>
                 </div>
             )}

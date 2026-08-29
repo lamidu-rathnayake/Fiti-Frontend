@@ -39,6 +39,7 @@ export default function ClientProfilePage() {
     const [neck, setNeck] = useState<string>("");
     const [inseam, setInseam] = useState<string>("");
     const [length, setLength] = useState<string>("");
+    const [notes, setNotes] = useState<string>("");
 
     // Auth States
     const [currentPassword, setCurrentPassword] = useState("");
@@ -86,6 +87,7 @@ export default function ClientProfilePage() {
                     setNeck(measRes.neck?.toString() || "");
                     setInseam(measRes.inseam?.toString() || "");
                     setLength(measRes.length?.toString() || "");
+                    setNotes(measRes.notes || "");
                 }
             } catch (err) {
                 console.error("Failed to load profile data", err);
@@ -159,6 +161,7 @@ export default function ClientProfilePage() {
                 neck: neck ? parseFloat(neck) : undefined,
                 inseam: inseam ? parseFloat(inseam) : undefined,
                 length: length ? parseFloat(length) : undefined,
+                notes: notes || null,
             });
             setMessage({ type: "success", text: "Measurements saved securely." });
         } catch (err) {
@@ -396,6 +399,10 @@ export default function ClientProfilePage() {
                                     <div>
                                         <label className="text-[10px] font-mono tracking-widest text-[#F5CA53] uppercase block mb-1">Full Length</label>
                                         <input type="number" step="0.1" placeholder="e.g. 40" value={length} onChange={e => setLength(e.target.value)} className="w-full px-4 py-3 bg-black/40 border border-zinc-800 focus:border-[#F5CA53] rounded-xl text-sm text-white focus:outline-none transition-all text-center font-mono" />
+                                    </div>
+                                    <div className="col-span-2 mt-2">
+                                        <label className="text-[10px] font-mono tracking-widest text-[#F5CA53] uppercase block mb-1">Fit Preferences & Notes</label>
+                                        <textarea rows={3} placeholder="e.g. I prefer a slim fit on the waist, and extra breathing room around the chest..." value={notes} onChange={e => setNotes(e.target.value)} className="w-full px-4 py-3 bg-black/40 border border-zinc-800 focus:border-[#F5CA53] rounded-xl text-sm text-white focus:outline-none transition-all resize-none font-mono" />
                                     </div>
                                 </div>
 

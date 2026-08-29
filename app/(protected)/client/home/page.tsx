@@ -11,67 +11,11 @@ import type { Shop } from "@/lib/api/types/shop";
 
 import MapWithOverlay from "@/components/map/MapWithOverlay";
 
-const LOCATION_PRESETS = [
-    { label: "Main Road, Colombo 12", lat: 6.9385, lng: 79.8542 },
-    { label: "Cinnamon Gardens, Colombo 07", lat: 6.9102, lng: 79.8653 },
-    { label: "Nugegoda Highlevel Rd", lat: 6.8745, lng: 79.8864 },
-    { label: "Kandy City Center", lat: 7.2906, lng: 80.6337 },
-    { label: "Galle Fort, Galle", lat: 6.0305, lng: 80.2170 },
-    { label: "Pettah Commercial Zone", lat: 6.9355, lng: 79.8510 },
-];
-
 export default function ClientHomePage() {
-    const { user, logout } = useAuth();
-    const router = useRouter();
-    const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-    const [selectedAddress, setSelectedAddress] = useState<string>("Main Road, Colombo 12");
+    const { user } = useAuth();
     const [nearbyShops, setNearbyShops] = useState<Shop[]>([]);
     const [loadingShops, setLoadingShops] = useState(true);
-    const [locationInitialized, setLocationInitialized] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-
-    // Manual location selection modal states
-    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-    const [customAddressInput, setCustomAddressInput] = useState("");
-
-    useEffect(() => {
-        const initLocation = async () => {
-            if (user) {
-                try {
-                    const profile = await getClientProfile(user.uid);
-                    if (profile.latitude && profile.longitude) {
-                        const savedLoc = { lat: profile.latitude, lng: profile.longitude };
-                        setLocation(savedLoc);
-                        loadNearbyShops(savedLoc.lat, savedLoc.lng);
-                        setLocationInitialized(true);
-                        return;
-                    }
-                } catch {
-                    // Fall back to default location
-                }
-            }
-
-            if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                        setLocation(loc);
-                        loadNearbyShops(loc.lat, loc.lng);
-                        setLocationInitialized(true);
-                    },
-                    () => {
-                        loadNearbyShops(6.9271, 79.8612);
-                        setLocationInitialized(true);
-                    }
-                );
-            } else {
-                loadNearbyShops(6.9271, 79.8612);
-                setLocationInitialized(true);
-            }
-        };
-
-        initLocation();
-    }, [user]);
 
     const loadNearbyShops = async (lat: number, lng: number) => {
         setLoadingShops(true);
@@ -83,17 +27,6 @@ export default function ClientHomePage() {
         } finally {
             setLoadingShops(false);
         }
-    };
-
-    const handleApplyLocation = (newAddress: string, coords?: { lat: number; lng: number }) => {
-        setSelectedAddress(newAddress);
-        if (coords) {
-            setLocation(coords);
-            loadNearbyShops(coords.lat, coords.lng);
-        } else if (location) {
-            loadNearbyShops(location.lat, location.lng);
-        }
-        setIsLocationModalOpen(false);
     };
 
     return (
@@ -111,15 +44,7 @@ export default function ClientHomePage() {
                 </div>
 
                 <MapWithOverlay
-                    location={location}
-                    locationInitialized={locationInitialized}
-                    selectedAddress={selectedAddress}
-                    onLocationChange={setLocation}
-                    onAddressChange={setSelectedAddress}
-                    onChangeLocationClick={() => {
-                        setCustomAddressInput(selectedAddress);
-                        setIsLocationModalOpen(true);
-                    }}
+                    onLocationChange={(loc) => loadNearbyShops(loc.lat, loc.lng)}
                 />
 
 
@@ -223,12 +148,7 @@ export default function ClientHomePage() {
                                     </p>
                                 </div>
                                 <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setIsLocationModalOpen(true)}
-                                        className="px-4 py-2 bg-[#F5CA53] text-black text-xs font-bold uppercase tracking-wider rounded-xl transition-all hover:scale-[1.02] shadow-[0_0_12px_rgba(245,202,83,0.2)]"
-                                    >
-                                        Change Location
-                                    </button>
+
                                     <Link
                                         href="/tailors"
                                         className="px-4 py-2 bg-[#18191E] border border-zinc-800 text-zinc-300 text-xs font-bold uppercase tracking-wider rounded-xl hover:border-zinc-600 transition-all"
@@ -241,81 +161,6 @@ export default function ClientHomePage() {
                     </div>
                 </div>
             </main>
-
-            {/* MANUAL LOCATION SELECTION MODAL */}
-            {isLocationModalOpen && (
-                <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-[#121318] border border-zinc-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
-                        <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-                            <div>
-                                <span className="text-[10px] font-mono tracking-[0.25em] text-[#F5CA53] uppercase block">
-                                    LOCATION SELECTION
-                                </span>
-                                <h3 className="text-lg font-extrabold text-white font-heading">
-                                    Change Delivery &amp; Atelier Area
-                                </h3>
-                            </div>
-                            <button
-                                onClick={() => setIsLocationModalOpen(false)}
-                                className="w-8 h-8 rounded-full border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white flex items-center justify-center text-sm transition-all"
-                            >
-                                &times;
-                            </button>
-                        </div>
-
-                        {/* Custom Address Input */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider block">
-                                Enter Manual Address or Area:
-                            </label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={customAddressInput}
-                                    onChange={(e) => setCustomAddressInput(e.target.value)}
-                                    placeholder="e.g. Main Road, Colombo 12"
-                                    className="flex-1 px-4 py-2.5 bg-[#1A1B22] border border-zinc-800 focus:border-[#F5CA53] rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none transition-all"
-                                />
-                                <button
-                                    onClick={() => handleApplyLocation(customAddressInput || "Main Road, Colombo 12")}
-                                    className="px-5 py-2.5 bg-[#F5CA53] hover:bg-[#f7d369] text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md"
-                                >
-                                    Apply
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Popular Preset Quick Chips */}
-                        <div className="space-y-3 pt-2 border-t border-zinc-800/80">
-                            <span className="text-[10px] font-mono tracking-widest text-zinc-400 uppercase block">
-                                Popular Atelier Hubs (Quick Pick):
-                            </span>
-                            <div className="flex flex-wrap gap-2">
-                                {LOCATION_PRESETS.map((preset) => (
-                                    <button
-                                        key={preset.label}
-                                        onClick={() => handleApplyLocation(preset.label, { lat: preset.lat, lng: preset.lng })}
-                                        className="px-3 py-2 bg-[#1A1B22] border border-zinc-800 hover:border-[#F5CA53]/60 hover:bg-[#F5CA53]/10 text-zinc-300 hover:text-[#F5CA53] text-xs font-medium rounded-xl transition-all text-left flex items-center gap-1.5"
-                                    >
-                                        <span>📍</span>
-                                        <span>{preset.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Modal Action Footer */}
-                        <div className="flex justify-end gap-3 pt-2">
-                            <button
-                                onClick={() => setIsLocationModalOpen(false)}
-                                className="px-4 py-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 font-bold text-xs rounded-xl transition-all"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
         </>
     );

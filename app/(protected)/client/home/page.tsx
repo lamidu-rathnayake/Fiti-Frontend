@@ -117,8 +117,7 @@ export default function ClientHomePage() {
                     </h1>
                 </div>
 
-                {/* MAP / ATELIER LOCATION HERO DISPLAY */}
-                <div className="w-full h-80 sm:h-96 rounded-2xl bg-[#0F1014] border border-zinc-800/90 relative overflow-hidden shadow-2xl group">
+                <div className="w-full h-80 sm:h-96 rounded-2xl bg-[#0F1014] border border-zinc-800/90 relative overflow-hidden shadow-2xl group mt-4">
                     {/* Dark Custom Map View */}
                     {locationInitialized && (
                         <div className="w-full h-full relative z-0">
@@ -131,42 +130,57 @@ export default function ClientHomePage() {
                             />
                         </div>
                     )}
-
-                    {/* FLOATING CURRENT SELECTION OVERLAY CARD */}
-                    <div className="absolute bottom-6 left-6 z-[500] max-w-sm w-full bg-[#121318]/95 border border-zinc-800/90 rounded-2xl p-4 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-4">
-                        <div>
-                            <span className="text-[9px] font-mono tracking-[0.2em] uppercase text-zinc-400 block mb-1">
-                                CURRENT SELECTION
-                            </span>
-                            <p className="text-sm font-extrabold text-white leading-tight font-heading">
-                                {selectedAddress}
-                            </p>
-                        </div>
-
-                        <button
-                            onClick={() => {
-                                setCustomAddressInput(selectedAddress);
-                                setIsLocationModalOpen(true);
-                            }}
-                            className="px-4 py-2 bg-[#F5CA53] hover:bg-[#f7d369] text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(245,202,83,0.3)] shrink-0 transform hover:scale-105"
-                        >
-                            CHANGE
-                        </button>
-                    </div>
                 </div>
+
+                {/* CURRENT SELECTION OVERLAY CARD - Detached for mobile/desktop responsiveness */}
+                <div className="w-full bg-[#121318]/95 border border-zinc-800/90 rounded-2xl p-4 shadow-2xl backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 mb-6">
+                    <div>
+                        <span className="text-[9px] font-mono tracking-[0.2em] uppercase text-zinc-400 block mb-1">
+                            CURRENT SELECTION
+                        </span>
+                        <p className="text-sm font-extrabold text-white leading-tight font-heading">
+                            {selectedAddress}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            setCustomAddressInput(selectedAddress);
+                            setIsLocationModalOpen(true);
+                        }}
+                        className="px-4 py-3 sm:py-2 bg-[#F5CA53] hover:bg-[#f7d369] text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(245,202,83,0.3)] shrink-0 transform hover:scale-105 w-full sm:w-auto"
+                    >
+                        CHANGE LOCATION
+                    </button>
+                </div>
+
 
                 {/* NEARBY BEST STORES SECTION */}
                 <div className="space-y-4 pt-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
                             <div className="w-1 h-4 bg-[#F5CA53] rounded-full" />
                             <h2 className="text-base font-extrabold text-white tracking-wide font-heading">
                                 Nearby Best Stores
                             </h2>
                         </div>
-                        <Link href="/tailors" className="text-xs font-mono tracking-widest text-zinc-400 hover:text-[#F5CA53] uppercase transition-colors">
-                            View All &rarr;
-                        </Link>
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                            <div className="relative flex-1 sm:w-64">
+                                <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search tailors, cities..."
+                                    className="w-full pl-9 pr-3 py-2 bg-[#121318] border border-zinc-800/80 focus:border-[#F5CA53]/50 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none transition-all"
+                                />
+                            </div>
+                            <Link href="/tailors" className="text-xs font-mono tracking-widest text-zinc-400 hover:text-[#F5CA53] uppercase transition-colors shrink-0">
+                                View All &rarr;
+                            </Link>
+                        </div>
                     </div>
 
                     {/* 3 STORE CARDS GRID */}
@@ -185,54 +199,42 @@ export default function ClientHomePage() {
                                 )
                                 .slice(0, 3)
                                 .map((shop) => (
-                                    <div key={shop.shop_id} className="bg-[#121318] border border-zinc-800/80 hover:border-[#F5CA53]/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_25px_rgba(245,202,83,0.12)] group">
-                                        <div className="flex gap-3">
-                                            <div className="w-14 h-14 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shrink-0">
-                                                <img
-                                                    src={shop.images && shop.images.length > 0 ? shop.images[0].image_url : "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=200&q=80"}
-                                                    alt={shop.shop_name}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                                />
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center justify-between">
-                                                    <h3 className="text-sm font-extrabold text-white group-hover:text-[#F5CA53] transition-colors font-heading">
-                                                        {shop.shop_name}
-                                                    </h3>
-                                                    <span className="text-[10px] font-bold text-[#F5CA53] flex items-center gap-1">
-                                                        <span>&#9733;</span> {shop.average_rating ? shop.average_rating.toFixed(1) : "4.9"}
-                                                    </span>
-                                                </div>
-                                                <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                                                    {shop.shop_bio || shop.specialty || "Master tailors specializing in modern silhouettes and sharp architectural cuts."}
-                                                </p>
+                                    <div key={shop.shop_id} className="bg-[#121318] border border-zinc-800/60 rounded-[20px] overflow-hidden flex flex-col transition-all duration-300 hover:border-[#F5CA53]/40 hover:shadow-xl hover:shadow-[#F5CA53]/5 group">
+                                        {/* Top Image Banner */}
+                                        <div className="h-32 w-full bg-zinc-900 relative overflow-hidden shrink-0">
+                                            <img
+                                                src={shop.images && shop.images.length > 0 ? shop.images[0].image_url : "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=600&q=80"}
+                                                alt={shop.shop_name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                            />
+                                            <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-zinc-700/50 shadow-lg">
+                                                <span className="text-[10px] font-bold text-[#F5CA53] flex items-center gap-1">
+                                                    <span>&#9733;</span> {shop.average_rating && shop.average_rating > 0 ? shop.average_rating.toFixed(1) : "New"}
+                                                </span>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-3 pt-3 mt-4 border-t border-zinc-800/80">
-                                            <div className="flex items-center justify-between text-[10px]">
-                                                <span className="font-mono text-zinc-500 flex items-center gap-1">
-                                                    <span>📍</span> {shop.city}
-                                                </span>
-                                                <span className="font-mono tracking-wider uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold border border-zinc-700">
-                                                    BESPOKE
+                                        {/* Card Content */}
+                                        <div className="p-5 flex flex-col flex-1">
+                                            <h3 className="text-base font-extrabold text-white group-hover:text-[#F5CA53] transition-colors font-heading truncate">
+                                                {shop.shop_name}
+                                            </h3>
+                                            <p className="text-[11px] text-zinc-400 mt-1.5 line-clamp-2 leading-relaxed flex-1">
+                                                {shop.shop_bio || shop.specialty || "Master tailors specializing in modern silhouettes and sharp architectural cuts."}
+                                            </p>
+
+                                            <div className="mt-4 pt-4 border-t border-zinc-800/60 flex items-center justify-between text-[10px] font-mono text-zinc-500">
+                                                <span className="flex items-center gap-1.5 truncate text-zinc-400">
+                                                    <span className="truncate">{shop.city || "Various Locations"}</span>
                                                 </span>
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        router.push("/tailors");
-                                                    }}
-                                                    className="w-full py-2 rounded-xl bg-[#18191E] border border-[#F5CA53]/50 hover:bg-[#F5CA53]/10 text-[#F5CA53] text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
-                                                >
-                                                    <span>💬 Text</span>
-                                                </button>
+                                            <div className="pt-4 mt-auto">
                                                 <Link
-                                                    href="/client/request"
-                                                    className="w-full text-center py-2 rounded-xl bg-[#F5CA53] text-black text-[11px] font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(245,202,83,0.2)] hover:scale-[1.01] transition-transform block"
+                                                    href={`/client/shop/${shop.shop_id}`}
+                                                    className="w-full text-center py-2.5 rounded-xl bg-[#1A1B22] border border-zinc-800 text-zinc-300 hover:border-[#F5CA53]/50 text-[11px] font-bold uppercase tracking-wider transition-all block group-hover:bg-[#F5CA53] group-hover:text-black group-hover:border-[#F5CA53]"
                                                 >
-                                                    Book &rarr;
+                                                    View Profile &rarr;
                                                 </Link>
                                             </div>
                                         </div>

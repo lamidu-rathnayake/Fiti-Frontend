@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { getClientProfile, updateClientProfile } from "@/lib/api/endpoints/profiles";
+import { reverseGeocode } from "@/lib/geocoding";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
     ssr: false,
@@ -29,32 +30,16 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
     const [customAddressInput, setCustomAddressInput] = useState("");
 
     const fetchAddress = async (lat: number, lng: number): Promise<{ address: string; city: string } | null> => {
-        try {
-            setSelectedAddress("Resolving address...");
-            
-            // Using Nominatim for highly detailed village/street level precision
-            // (The infinite loop bug that caused rate limiting is now fixed)
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-                { headers: { "User-Agent": "Fiti-Atelier-App/1.0" } }
-            );
-            const data = await response.json();
-            
-            if (data && data.address) {
-                // Get the most specific local name available (village, road, suburb, or neighbourhood)
-                const localName = data.address.village || data.address.road || data.address.suburb || data.address.neighbourhood || "Unknown Area";
-                const city = data.address.city || data.address.town || data.address.state || "Unknown City";
-                
-                const finalAddress = localName === city ? city : `${localName}, ${city}`;
-                setSelectedAddress(finalAddress);
-                return { address: finalAddress, city: city };
-            }
-            setSelectedAddress(`Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
-            return null;
-        } catch (error) {
+        setSelectedAddress("Resolving address...");
+        const location = await reverseGeocode(lat, lng);
+
+        if (!location) {
             setSelectedAddress(`Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
             return null;
         }
+
+        setSelectedAddress(location.address);
+        return location;
     };
 
     useEffect(() => {

@@ -7,30 +7,41 @@
     
     /* -------------------------------------------------------------
      * STRICT ATELIER COLOR PALETTE TOKENS
-     * 1. Text: black or #4e220f
-     * 2. Background: #f7f1de
-     * 3. Cards & Components: #B0BA99
-     * 4. Others (Accents/Buttons/Borders/Hover): #9d6638
+     * 1. Text: #4e220f (Earth Brown), #363634 (Slate Muted), #394027 (Olive Muted)
+     * 2. Background: #f7f1de (Cream), #E4E1D7 (Warm Beige Canvas)
+     * 3. Cards & Components: #B0BA99 (Sage Green / Card Background)
+     * 4. Accents/Buttons/Borders: #9d6638 (Gold-Brown Accent)
      * ------------------------------------------------------------- */
     --text-primary: #4e220f;
+    --text-muted-dark: #363634;
+    --text-olive-dark: #394027;
     --bg-primary: #f7f1de;
+    --bg-warm-beige: #E4E1D7;
     --card-bg: #B0BA99;
     --accent-primary: #9d6638;
+    --accent-hover: #4e220f;
 }
 
 @theme {
     --font-serif: var(--font-serif);
     --font-heading: var(--font-heading);
     --font-sans: var(--font-sans);
+    
+    /* Tailwind CSS v4 Theme Colors */
     --color-earth-text: #4e220f;
+    --color-muted-dark: #363634;
+    --color-olive-dark: #394027;
     --color-cream-bg: #f7f1de;
+    --color-warm-beige: #E4E1D7;
     --color-card-bg: #B0BA99;
+    --color-sage: #B0BA99;
     --color-accent: #9d6638;
+    --color-accent-hover: #4e220f;
 }
 
 /* Global body styling with user specified colors */
 body {
-    background-color: #f7f1de;
+    background-color: #E4E1D7;
     color: #4e220f;
 }
 
@@ -39,7 +50,7 @@ body {
     width: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #f7f1de;
+    background: #E4E1D7;
 }
 ::-webkit-scrollbar-thumb {
     background: #9d6638;
@@ -47,6 +58,135 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
     background: #4e220f;
+}
+
+/* Selection Highlight */
+::selection {
+    background-color: #9d6638;
+    color: #f7f1de;
+}
+
+/* -------------------------------------------------------------
+ * ATELIER BRANDING & UI UTILITY CLASSES (Auth & Landing)
+ * ------------------------------------------------------------- */
+
+/* Page Background Containers */
+.bg-cream-canvas {
+    background-color: #f7f1de;
+}
+
+.bg-warm-canvas {
+    background-color: #E4E1D7;
+}
+
+.bg-sage-card {
+    background-color: #B0BA99;
+}
+
+/* Atelier Cards & Containers */
+.atelier-card {
+    background-color: #B0BA99;
+    border: 1px solid rgba(157, 102, 56, 0.4);
+    color: #4e220f;
+}
+
+.atelier-card-cream {
+    background-color: #f7f1de;
+    border: 1px solid rgba(157, 102, 56, 0.4);
+    color: #4e220f;
+}
+
+/* Atelier Buttons */
+.atelier-btn-primary {
+    background-color: #9d6638;
+    color: #f7f1de;
+    font-weight: 700;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.atelier-btn-primary:hover {
+    background-color: #4e220f;
+    color: #f7f1de;
+}
+
+.atelier-btn-secondary {
+    background-color: #B0BA99;
+    color: #4e220f;
+    border: 1px solid rgba(157, 102, 56, 0.4);
+    font-weight: 700;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.atelier-btn-secondary:hover {
+    background-color: #9d6638;
+    color: #f7f1de;
+}
+
+/* Atelier Input Styling */
+.atelier-input {
+    background-color: rgba(228, 225, 215, 0.6);
+    border: 1px solid rgba(157, 102, 56, 0.4);
+    color: #4e220f;
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+.atelier-input:focus {
+    border-color: #4e220f;
+    outline: none;
+    background-color: #f7f1de;
+}
+
+/* Auth Page Overlay & Card Utilities */
+.auth-page-wrapper {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow: hidden;
+    font-family: var(--font-sans);
+    background-color: #E4E1D7;
+}
+
+.auth-bg-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.auth-bg-overlay-dark {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(78, 34, 15, 0.25);
+    backdrop-filter: blur(3px);
+}
+
+.auth-card-floating {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 64rem;
+    background-color: transparent;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    min-height: 580px;
+}
+
+.auth-torn-paper-side {
+    background-color: #f7f1de;
+    color: #4e220f;
+    position: relative;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 20;
 }
 
 /* -------------------------------------------------------------
@@ -143,7 +283,7 @@ body {
 .delay-500 { transition-delay: 500ms; }
 
 /* -------------------------------------------------------------
- * DESIGN UTILITY CLASSES (Matching requested strict palette)
+ * DESIGN UTILITY CLASSES
  * ------------------------------------------------------------- */
 
 /* Custom Text Gradient */
@@ -283,7 +423,7 @@ body {
 
 .fiti-landing {
     font-family: var(--font-sans);
-    background-color: #f7f1de;
+    background-color: #E4E1D7;
     color: #4e220f;
 }
 

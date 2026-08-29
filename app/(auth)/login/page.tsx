@@ -110,7 +110,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-8 overflow-hidden font-sans selection:bg-[#9d6638] selection:text-[#f7f1de]">
+        <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-8 overflow-hidden font-sans selection:bg-accent selection:text-cream-bg">
             {/* FULL BACKGROUND PHOTO */}
             <div className="absolute inset-0 z-0">
                 <Image
@@ -120,18 +120,18 @@ export default function LoginPage() {
                     className="object-cover brightness-[0.4] scale-105"
                     priority
                 />
-                <div className="absolute inset-0 bg-[#4e220f]/20 backdrop-blur-[3px]" />
+                <div className="absolute inset-0 bg-earth-text/20 backdrop-blur-[3px]" />
             </div>
 
             {/* FLOATING CARD CONTAINER */}
             <div className="relative z-10 w-full max-w-5xl bg-transparent rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
                 
                 {/* LEFT COLUMN: TORN PAPER FORM SECTION */}
-                <div className="lg:col-span-6 bg-[#f7f1de] relative p-8 sm:p-12 flex flex-col justify-between z-20">
+                <div className="lg:col-span-6 bg-cream-bg relative p-8 sm:p-12 flex flex-col justify-between z-20">
                     
                     {/* TORN PAPER JAGGED SVG EDGE (Right border on desktop) */}
                     <svg
-                        className="absolute top-0 -right-7 h-full w-8 z-30 text-[#f7f1de] fill-current hidden lg:block pointer-events-none drop-shadow-[4px_0_6px_rgba(0,0,0,0.15)]"
+                        className="absolute top-0 -right-7 h-full w-8 z-30 text-cream-bg fill-current hidden lg:block pointer-events-none drop-shadow-[4px_0_6px_rgba(0,0,0,0.15)]"
                         viewBox="0 0 30 600"
                         preserveAspectRatio="none"
                     >
@@ -155,14 +155,14 @@ export default function LoginPage() {
                             <button
                                 type="button"
                                 onClick={() => router.push("/")}
-                                className="text-xs font-bold text-[#9d6638] hover:text-[#4e220f] transition flex items-center gap-1"
+                                className="text-xs font-bold text-accent hover:text-earth-text transition flex items-center gap-1"
                             >
                                 &larr; Home
                             </button>
                         </div>
 
                         {/* Title */}
-                        <h1 className="text-3xl sm:text-4xl font-black tracking-wider text-[#4e220f] uppercase mb-6 text-center">
+                        <h1 className="text-3xl sm:text-4xl font-black tracking-wider text-earth-text uppercase mb-6 text-center">
                             SIGN IN
                         </h1>
 
@@ -183,7 +183,7 @@ export default function LoginPage() {
                                 type="button"
                                 onClick={handleGoogleLogin}
                                 disabled={loading}
-                                className="w-full max-w-md rounded-full bg-[#f7f1de] border border-[#9d6638]/40 hover:bg-[#B0BA99]/30 text-[#4e220f] font-bold text-xs py-3.5 px-6 shadow-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
+                                className="w-full max-w-md rounded-full bg-cream-bg border border-accent/40 hover:bg-card-bg/30 text-earth-text font-bold text-xs py-3.5 px-6 shadow-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
                             >
                                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                                     <path
@@ -210,9 +210,9 @@ export default function LoginPage() {
                         {/* OR Divider Line */}
                         <div className="relative flex items-center justify-center my-6 max-w-md mx-auto">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-[#9d6638]/30" />
+                                <div className="w-full border-t border-accent/30" />
                             </div>
-                            <span className="relative bg-[#f7f1de] px-3 text-[10px] font-bold tracking-widest text-[#4e220f]/70 uppercase">
+                            <span className="relative bg-cream-bg px-3 text-[10px] font-bold tracking-widest text-earth-text/70 uppercase">
                                 OR WITH EMAIL
                             </span>
                         </div>
@@ -221,7 +221,7 @@ export default function LoginPage() {
                         <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
                             {/* Email Pill Input */}
                             <div className="relative flex items-center">
-                                <span className="absolute left-4 text-[#9d6638]">
+                                <span className="absolute left-4 text-accent">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
@@ -235,13 +235,13 @@ export default function LoginPage() {
                                     autoComplete="email"
                                     required
                                     disabled={loading}
-                                    className="w-full rounded-full bg-[#B0BA99]/30 border border-[#9d6638]/40 pl-12 pr-5 py-3.5 text-sm text-[#4e220f] placeholder:text-[#4e220f]/60 focus:bg-[#f7f1de] focus:border-[#9d6638] focus:outline-none transition duration-200 shadow-inner"
+                                    className="w-full rounded-full bg-card-bg/30 border border-accent/40 pl-12 pr-5 py-3.5 text-sm text-earth-text placeholder:text-earth-text/60 focus:bg-cream-bg focus:border-accent focus:outline-none transition duration-200 shadow-inner"
                                 />
                             </div>
 
                             {/* Password Pill Input */}
                             <div className="relative flex items-center">
-                                <span className="absolute left-4 text-[#9d6638]">
+                                <span className="absolute left-4 text-accent">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
@@ -255,12 +255,12 @@ export default function LoginPage() {
                                     autoComplete="current-password"
                                     required
                                     disabled={loading}
-                                    className="w-full rounded-full bg-[#B0BA99]/30 border border-[#9d6638]/40 pl-12 pr-12 py-3.5 text-sm text-[#4e220f] placeholder:text-[#4e220f]/60 focus:bg-[#f7f1de] focus:border-[#9d6638] focus:outline-none transition duration-200 shadow-inner"
+                                    className="w-full rounded-full bg-card-bg/30 border border-accent/40 pl-12 pr-12 py-3.5 text-sm text-earth-text placeholder:text-earth-text/60 focus:bg-cream-bg focus:border-accent focus:outline-none transition duration-200 shadow-inner"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 text-xs font-bold text-[#9d6638] hover:text-[#4e220f] uppercase"
+                                    className="absolute right-4 text-xs font-bold text-accent hover:text-earth-text uppercase"
                                 >
                                     {showPassword ? "Hide" : "Show"}
                                 </button>
@@ -273,11 +273,11 @@ export default function LoginPage() {
                                     type="checkbox"
                                     checked={agreeTerms}
                                     onChange={(e) => setAgreeTerms(e.target.checked)}
-                                    className="w-4 h-4 rounded border-[#9d6638] text-[#9d6638] focus:ring-[#9d6638] accent-[#9d6638] cursor-pointer"
+                                    className="w-4 h-4 rounded border-accent text-accent focus:ring-accent accent-accent cursor-pointer"
                                 />
-                                <label htmlFor="agree-terms" className="text-xs text-[#4e220f] cursor-pointer">
+                                <label htmlFor="agree-terms" className="text-xs text-earth-text cursor-pointer">
                                     I agree to FITI&apos;s{" "}
-                                    <Link href="/terms" className="underline font-medium hover:text-[#9d6638]">
+                                    <Link href="/terms" className="underline font-medium hover:text-accent">
                                         terms of service
                                     </Link>
                                     .
@@ -289,7 +289,7 @@ export default function LoginPage() {
                                 <button
                                     type="submit"
                                     disabled={loading || !agreeTerms}
-                                    className="w-full rounded-full bg-[#9d6638] hover:bg-[#4e220f] active:scale-95 text-[#f7f1de] font-extrabold text-xs uppercase tracking-widest px-10 py-3.5 transition-all shadow-md disabled:opacity-50"
+                                    className="w-full rounded-full bg-accent hover:bg-earth-text active:scale-95 text-cream-bg font-extrabold text-xs uppercase tracking-widest px-10 py-3.5 transition-all shadow-md disabled:opacity-50"
                                 >
                                     {loading ? "AUTHENTICATING..." : "SIGN IN"}
                                 </button>
@@ -297,9 +297,9 @@ export default function LoginPage() {
                         </form>
                     </div>
 
-                    <p className="text-[11px] text-[#4e220f]/70 mt-6">
+                    <p className="text-[11px] text-earth-text/70 mt-6">
                         Need an account?{" "}
-                        <Link href="/register" className="text-[#9d6638] font-bold hover:underline">
+                        <Link href="/register" className="text-accent font-bold hover:underline">
                             Register here
                         </Link>
                     </p>
@@ -314,13 +314,13 @@ export default function LoginPage() {
                         className="object-cover brightness-90 scale-105"
                         priority
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#4e220f]/80 via-transparent to-black/30" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-earth-text/80 via-transparent to-black/30" />
 
-                    <div className="absolute bottom-12 right-12 text-right text-[#f7f1de] max-w-sm">
+                    <div className="absolute bottom-12 right-12 text-right text-cream-bg max-w-sm">
                         <h2 className="text-4xl font-black tracking-tight leading-none drop-shadow-lg uppercase">
                             FITI ATELIER
                         </h2>
-                        <p className="text-xl font-bold tracking-wider text-[#B0BA99] mt-2 uppercase drop-shadow-md">
+                        <p className="text-xl font-bold tracking-wider text-card-bg mt-2 uppercase drop-shadow-md">
                             CRAFTED TO FIT
                         </p>
                     </div>

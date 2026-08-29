@@ -27,18 +27,18 @@ export default function RoleRegistrationPage({
     }
 
     return (
-        <main className="min-h-screen bg-[#f7f1de] text-[#4e220f] flex items-center justify-center p-4 selection:bg-[#9d6638] selection:text-[#f7f1de] font-sans">
-            <div className="w-full max-w-md bg-[#f7f1de] border border-[#9d6638]/40 rounded-3xl p-8 text-center shadow-2xl">
-                <h1 className="text-2xl font-bold tracking-tight text-[#4e220f] uppercase">
+        <main className="min-h-screen bg-warm-beige text-earth-text flex items-center justify-center p-4 selection:bg-accent selection:text-cream-bg font-sans">
+            <div className="w-full max-w-md bg-cream-bg border border-accent/40 rounded-3xl p-8 text-center shadow-2xl">
+                <h1 className="text-2xl font-bold tracking-tight text-earth-text uppercase">
                     Invalid Role Selected
                 </h1>
-                <p className="mt-2 text-xs text-[#4e220f]/70">
+                <p className="mt-2 text-xs text-earth-text/70">
                     Please choose a valid registration role to proceed.
                 </p>
                 <button
                     type="button"
                     onClick={() => router.push("/register")}
-                    className="mt-6 rounded-full bg-[#9d6638] px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#f7f1de] transition hover:bg-[#4e220f]"
+                    className="mt-6 rounded-full bg-accent px-6 py-3 text-xs font-bold uppercase tracking-wider text-cream-bg transition hover:bg-earth-text"
                 >
                     Back to Role Selection
                 </button>

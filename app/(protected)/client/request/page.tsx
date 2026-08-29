@@ -12,34 +12,40 @@ export default function NewTailoringRequestPage() {
     const { user, logout, setRole } = useAuth();
 
     const [garmentType, setGarmentType] = useState("TWO-PIECE SUIT");
-    const [fabricChoice, setFabricChoice] = useState("BIELLA ITALIAN WOOL");
+    const [fabricChoice, setFabricChoice] = useState("tailor_provided");
+    const [gender, setGender] = useState<"male" | "female" | "unisex">("male");
+    const [serviceType, setServiceType] = useState<"online" | "physical_visit">("online");
     const [notes, setNotes] = useState("");
-    const [city, setCity] = useState("Colombo");
+    const [city, setCity] = useState("");
+    const [targetBudget, setTargetBudget] = useState("");
+    const [targetDate, setTargetDate] = useState("");
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
+        setError(null);
         try {
             await createClothingRequest({
                 client_id: user?.uid || "guest_client",
                 clothing_category: garmentType,
-                description: `${notes} (Fabric: ${fabricChoice})`,
-                request_location: city,
-                service_type: "online",
-                fabric_status: "tailor_provided",
+                description: notes || undefined,
+                request_location: city || undefined,
+                service_type: serviceType,
+                fabric_status: fabricChoice as "client_provided" | "tailor_provided",
+                gender: gender,
+                target_budget: targetBudget ? parseFloat(targetBudget) : undefined,
+                target_date: targetDate || undefined,
             });
             setSubmitted(true);
             setTimeout(() => {
                 router.push("/client/home");
-            }, 1500);
-        } catch {
-            // Proceed gracefully on network failure
-            setSubmitted(true);
-            setTimeout(() => {
-                router.push("/client/home");
-            }, 1500);
+            }, 1800);
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Failed to submit request.";
+            setError(msg);
         } finally {
             setSubmitting(false);
         }
@@ -111,7 +117,7 @@ export default function NewTailoringRequestPage() {
                             }}
                             className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
                         >
-                            Seller Dash
+                            Tailor Dash
                         </button>
                         <button
                             onClick={async () => {
@@ -148,11 +154,20 @@ export default function NewTailoringRequestPage() {
                         </div>
                         <h2 className="text-xl font-bold text-white font-heading">Request Dispatched!</h2>
                         <p className="text-xs text-zinc-400">
-                            Local ateliers in {city} are reviewing your specification. Redirecting to your dashboard...
+                            Local ateliers{city ? ` in ${city}` : ""} are reviewing your specification. Redirecting to your dashboard...
                         </p>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 sm:p-10 shadow-2xl space-y-6">
+
+                        {/* Error Banner */}
+                        {error && (
+                            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium">
+                                {error}
+                            </div>
+                        )}
+
+                        {/* GARMENT TYPE */}
                         <div>
                             <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">
                                 GARMENT TYPE
@@ -167,25 +182,130 @@ export default function NewTailoringRequestPage() {
                                 <option value="OVERCOAT / TRENCH">OVERCOAT / TRENCH</option>
                                 <option value="BESPOKE SHIRT">BESPOKE SHIRT</option>
                                 <option value="ALTERATION &amp; REPAIR">ALTERATION &amp; REPAIR</option>
+                                <option value="DRESS">DRESS</option>
+                                <option value="SAREE BLOUSE">SAREE BLOUSE</option>
                             </select>
                         </div>
 
+                        {/* GENDER */}
                         <div>
                             <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">
-                                FABRIC PREFERENCE
+                                FIT PREFERENCE
                             </label>
-                            <select
-                                value={fabricChoice}
-                                onChange={(e) => setFabricChoice(e.target.value)}
-                                className="w-full bg-[#18191E] border border-zinc-800 rounded-xl p-3.5 text-xs font-bold text-white uppercase focus:border-[#F5CA53] outline-none transition-all"
-                            >
-                                <option value="BIELLA ITALIAN WOOL">BIELLA ITALIAN WOOL (SUPER 150s)</option>
-                                <option value="MIDNIGHT VELVET">MIDNIGHT VELVET</option>
-                                <option value="EGYPTIAN COTTON">EGYPTIAN COTTON (SHIRTING)</option>
-                                <option value="CLIENT PROVIDED FABRIC">I WILL PROVIDE MY OWN FABRIC</option>
-                            </select>
+                            <div className="grid grid-cols-3 gap-3">
+                                {([
+                                    { val: "male", label: "Men's Fit" },
+                                    { val: "female", label: "Women's Fit" },
+                                    { val: "unisex", label: "Unisex" },
+                                ] as { val: "male" | "female" | "unisex"; label: string }[]).map(({ val, label }) => (
+                                    <button
+                                        key={val}
+                                        type="button"
+                                        onClick={() => setGender(val)}
+                                        className={`py-3 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${gender === val
+                                            ? "bg-[#F5CA53] text-black border-[#F5CA53] shadow-[0_0_12px_rgba(245,202,83,0.3)]"
+                                            : "bg-[#18191E] text-zinc-400 border-zinc-800 hover:border-zinc-600"
+                                            }`}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
+                        {/* FABRIC PREFERENCE */}
+                        <div>
+                            <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">
+                                FABRIC / MATERIAL
+                            </label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setFabricChoice("tailor_provided")}
+                                    className={`py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all flex flex-col items-center gap-1 ${fabricChoice === "tailor_provided"
+                                        ? "bg-[#F5CA53] text-black border-[#F5CA53] shadow-[0_0_12px_rgba(245,202,83,0.3)]"
+                                        : "bg-[#18191E] text-zinc-400 border-zinc-800"
+                                        }`}
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    Tailor Sources Fabric
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFabricChoice("client_provided")}
+                                    className={`py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all flex flex-col items-center gap-1 ${fabricChoice === "client_provided"
+                                        ? "bg-[#F5CA53] text-black border-[#F5CA53] shadow-[0_0_12px_rgba(245,202,83,0.3)]"
+                                        : "bg-[#18191E] text-zinc-400 border-zinc-800"
+                                        }`}
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                    I Provide Fabric
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* SERVICE TYPE */}
+                        <div>
+                            <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">
+                                SERVICE TYPE
+                            </label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setServiceType("online")}
+                                    className={`py-3 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${serviceType === "online"
+                                        ? "bg-[#F5CA53] text-black border-[#F5CA53]"
+                                        : "bg-[#18191E] text-zinc-400 border-zinc-800 hover:border-zinc-600"
+                                        }`}
+                                >
+                                    Online / Remote
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setServiceType("physical_visit")}
+                                    className={`py-3 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${serviceType === "physical_visit"
+                                        ? "bg-[#F5CA53] text-black border-[#F5CA53]"
+                                        : "bg-[#18191E] text-zinc-400 border-zinc-800 hover:border-zinc-600"
+                                        }`}
+                                >
+                                    Physical Visit
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* TARGET BUDGET & DATE (two-column) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">
+                                    TARGET BUDGET (LKR)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={targetBudget}
+                                    onChange={(e) => setTargetBudget(e.target.value)}
+                                    placeholder="e.g. 25000"
+                                    min={0}
+                                    className="w-full bg-[#18191E] border border-zinc-800 rounded-xl p-3.5 text-xs font-bold text-white focus:border-[#F5CA53] outline-none transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">
+                                    TARGET COMPLETION DATE
+                                </label>
+                                <input
+                                    type="date"
+                                    value={targetDate}
+                                    onChange={(e) => setTargetDate(e.target.value)}
+                                    className="w-full bg-[#18191E] border border-zinc-800 rounded-xl p-3.5 text-xs font-bold text-white focus:border-[#F5CA53] outline-none transition-all [color-scheme:dark]"
+                                />
+                            </div>
+                        </div>
+
+                        {/* PREFERRED CITY / LOCATION */}
                         <div>
                             <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">
                                 PREFERRED CITY / LOCATION
@@ -199,6 +319,7 @@ export default function NewTailoringRequestPage() {
                             />
                         </div>
 
+                        {/* SPECIAL INSTRUCTIONS & FIT NOTES */}
                         <div>
                             <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">
                                 SPECIAL INSTRUCTIONS &amp; FIT NOTES
@@ -206,7 +327,7 @@ export default function NewTailoringRequestPage() {
                             <textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
-                                placeholder="Describe fit, lapel preference (Peak vs Notch), event date..."
+                                placeholder="Describe fit, lapel preference (Peak vs Notch), event date, any special requirements..."
                                 rows={4}
                                 className="w-full bg-[#18191E] border border-zinc-800 rounded-xl p-3.5 text-xs font-medium text-white focus:border-[#F5CA53] outline-none resize-none transition-all"
                             />
@@ -214,9 +335,20 @@ export default function NewTailoringRequestPage() {
 
                         <button
                             type="submit"
-                            className="w-full py-4 rounded-xl bg-[#F5CA53] hover:bg-[#f7d369] text-xs font-black uppercase tracking-[0.15em] text-black shadow-[0_0_20px_rgba(245,202,83,0.3)] transition-all hover:scale-[1.01]"
+                            disabled={submitting}
+                            className="w-full py-4 rounded-xl bg-[#F5CA53] hover:bg-[#f7d369] disabled:opacity-60 text-xs font-black uppercase tracking-[0.15em] text-black shadow-[0_0_20px_rgba(245,202,83,0.3)] transition-all hover:scale-[1.01]"
                         >
-                            DISPATCH REQUEST TO ATELIERS &rarr;
+                            {submitting ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                    </svg>
+                                    Dispatching...
+                                </span>
+                            ) : (
+                                "DISPATCH REQUEST TO ATELIERS →"
+                            )}
                         </button>
                     </form>
                 )}
@@ -229,9 +361,9 @@ export default function NewTailoringRequestPage() {
                         ATELIER DIGITAL
                     </span>
                     <div className="flex gap-6 text-[10px] font-mono uppercase font-bold text-zinc-400">
-                        <Link href="#privacy">Privacy</Link>
-                        <Link href="#terms">Terms</Link>
-                        <Link href="#contact">Contact</Link>
+                        <Link href="/privacy">Privacy</Link>
+                        <Link href="/terms">Terms</Link>
+                        <Link href="/contact">Contact</Link>
                     </div>
                 </div>
             </footer>

@@ -361,170 +361,34 @@ export default function ClientHomePage() {
                                 </div>
                             ))
                         ) : (
-                            <>
-                                {/* Default Atelier Shop Display */}
-                                <div className="bg-[#121318] border border-zinc-800/80 hover:border-[#F5CA53]/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_25px_rgba(245,202,83,0.12)] group">
-                                    <div className="flex gap-3">
-                                        <div className="w-14 h-14 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shrink-0">
-                                            <img
-                                                src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=200&q=80"
-                                                alt="Carnage Tailors"
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-sm font-extrabold text-white group-hover:text-[#F5CA53] transition-colors font-heading">
-                                                    Carnage Tailors
-                                                </h3>
-                                                <span className="text-[10px] font-bold text-[#F5CA53] flex items-center gap-1">
-                                                    <span>&#9733;</span> 4.9
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                                                Master tailors specializing in modern silhouettes and sharp architectural cuts.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3 pt-3 mt-4 border-t border-zinc-800/80">
-                                        <div className="flex items-center justify-between text-[10px]">
-                                            <span className="font-mono text-zinc-500 flex items-center gap-1">
-                                                <span>📍</span> Colombo 12
-                                            </span>
-                                            <span className="font-mono tracking-wider uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold border border-zinc-700">
-                                                BESPOKE
-                                            </span>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setChatContactName("Master Marcus Silva");
-                                                    setIsChatDrawerOpen(true);
-                                                }}
-                                                className="w-full py-2 rounded-xl bg-[#18191E] border border-[#F5CA53]/50 hover:bg-[#F5CA53]/10 text-[#F5CA53] text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
-                                            >
-                                                <span>💬 Text</span>
-                                            </button>
-                                            <Link
-                                                href="/client/request"
-                                                className="w-full text-center py-2 rounded-xl bg-[#F5CA53] text-black text-[11px] font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(245,202,83,0.2)] hover:scale-[1.01] transition-transform block"
-                                            >
-                                                Book &rarr;
-                                            </Link>
-                                        </div>
-                                    </div>
+                            <div className="col-span-3 flex flex-col items-center justify-center py-12 text-center space-y-4">
+                                <div className="w-14 h-14 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mx-auto">
+                                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
                                 </div>
-
-                                <div className="bg-[#121318] border border-zinc-800/80 hover:border-[#F5CA53]/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_25px_rgba(245,202,83,0.12)] group">
-                                    <div className="flex gap-3">
-                                        <div className="w-14 h-14 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shrink-0">
-                                            <img
-                                                src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=200&q=80"
-                                                alt="Hercules Tailors"
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-sm font-extrabold text-white group-hover:text-[#F5CA53] transition-colors font-heading">
-                                                    Hercules Tailors
-                                                </h3>
-                                                <span className="text-[10px] font-bold text-[#F5CA53] flex items-center gap-1">
-                                                    <span>&#9733;</span> 4.7
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                                                Heritage fabrics meet contemporary Italian cuts for the modern gentleman.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3 pt-3 mt-4 border-t border-zinc-800/80">
-                                        <div className="flex items-center justify-between text-[10px]">
-                                            <span className="font-mono text-zinc-500 flex items-center gap-1">
-                                                <span>📍</span> Nugegoda
-                                            </span>
-                                            <span className="font-mono tracking-wider uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold border border-zinc-700">
-                                                MADE-TO-MEASURE
-                                            </span>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setChatContactName("Master Devinda Cooray");
-                                                    setIsChatDrawerOpen(true);
-                                                }}
-                                                className="w-full py-2 rounded-xl bg-[#18191E] border border-[#F5CA53]/50 hover:bg-[#F5CA53]/10 text-[#F5CA53] text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
-                                            >
-                                                <span>💬 Text</span>
-                                            </button>
-                                            <Link
-                                                href="/client/request"
-                                                className="w-full text-center py-2 rounded-xl bg-[#F5CA53] text-black text-[11px] font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(245,202,83,0.2)] hover:scale-[1.01] transition-transform block"
-                                            >
-                                                Book &rarr;
-                                            </Link>
-                                        </div>
-                                    </div>
+                                <div>
+                                    <p className="text-sm font-bold text-white font-heading">No tailors found nearby</p>
+                                    <p className="text-xs text-zinc-500 mt-1 max-w-xs">
+                                        Try changing your location or expanding the search radius to discover bespoke ateliers.
+                                    </p>
                                 </div>
-
-                                <div className="bg-[#121318] border border-zinc-800/80 hover:border-[#F5CA53]/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_25px_rgba(245,202,83,0.12)] group">
-                                    <div className="flex gap-3">
-                                        <div className="w-14 h-14 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shrink-0">
-                                            <img
-                                                src="https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?auto=format&fit=crop&w=200&q=80"
-                                                alt="House of Tailors"
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="text-sm font-extrabold text-white group-hover:text-[#F5CA53] transition-colors font-heading">
-                                                    House of Tailors
-                                                </h3>
-                                                <span className="text-[10px] font-bold text-[#F5CA53] flex items-center gap-1">
-                                                    <span>&#9733;</span> 4.8
-                                                </span>
-                                            </div>
-                                            <p className="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                                                Quiet luxury with a focus on sustainable fine wools and artisanal finishes.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3 pt-3 mt-4 border-t border-zinc-800/80">
-                                        <div className="flex items-center justify-between text-[10px]">
-                                            <span className="font-mono text-zinc-500 flex items-center gap-1">
-                                                <span>📍</span> Colombo 07
-                                            </span>
-                                            <span className="font-mono tracking-wider uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold border border-zinc-700">
-                                                LIMITED RUN
-                                            </span>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setChatContactName("Master Alexander Vane");
-                                                    setIsChatDrawerOpen(true);
-                                                }}
-                                                className="w-full py-2 rounded-xl bg-[#18191E] border border-[#F5CA53]/50 hover:bg-[#F5CA53]/10 text-[#F5CA53] text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
-                                            >
-                                                <span>💬 Text</span>
-                                            </button>
-                                            <Link
-                                                href="/client/request"
-                                                className="w-full text-center py-2 rounded-xl bg-[#F5CA53] text-black text-[11px] font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(245,202,83,0.2)] hover:scale-[1.01] transition-transform block"
-                                            >
-                                                Book &rarr;
-                                            </Link>
-                                        </div>
-                                    </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setIsLocationModalOpen(true)}
+                                        className="px-4 py-2 bg-[#F5CA53] text-black text-xs font-bold uppercase tracking-wider rounded-xl transition-all hover:scale-[1.02] shadow-[0_0_12px_rgba(245,202,83,0.2)]"
+                                    >
+                                        Change Location
+                                    </button>
+                                    <Link
+                                        href="/tailors"
+                                        className="px-4 py-2 bg-[#18191E] border border-zinc-800 text-zinc-300 text-xs font-bold uppercase tracking-wider rounded-xl hover:border-zinc-600 transition-all"
+                                    >
+                                        View All Tailors
+                                    </Link>
                                 </div>
-                            </>
+                            </div>
                         )}
                     </div>
                 </div>

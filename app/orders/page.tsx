@@ -12,6 +12,7 @@ import {
     cancelRequest,
     submitBid,
 } from "@/lib/api/endpoints/orders";
+import { listTailorShops } from "@/lib/api/endpoints/shops";
 import type { ClothingRequest, Order } from "@/lib/api/types/order";
 
 export interface OrderDetail {
@@ -126,14 +127,16 @@ export default function OrdersPage() {
     };
 
     const mapOrderToOrderDetail = (ord: Order): OrderDetail => {
-        const statusLabel = ord.status === "in_progress" ? "IN FITTING" : ord.status.replace(/_/g, " ").toUpperCase();
+        // Backend uses `order_status` — not `status`
+        const orderStatus = ord.order_status;
+        const statusLabel = orderStatus === "in_progress" ? "IN FITTING" : (orderStatus || "pending").replace(/_/g, " ").toUpperCase();
         return {
             id: `ORD-${ord.order_id}`,
             rawId: ord.order_id,
             title: `Order #${ord.order_id}`,
             client: `Client #${ord.shop_request_id}`,
             date: ord.created_at ? new Date(ord.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—",
-            targetDate: "TBD",
+            targetDate: ord.completed_date ? new Date(ord.completed_date).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : "TBD",
             budget: ord.accepted_price ? `LKR ${Number(ord.accepted_price).toLocaleString()}` : "Pending",
             garmentType: "Suit",
             fitPreference: "Not specified",
@@ -148,7 +151,7 @@ export default function OrdersPage() {
             designNotes: "No additional design notes on file for this order.",
             images: [],
             status: statusLabel,
-            progress: ord.status === "completed" ? 100 : ord.status === "in_progress" ? 60 : 20,
+            progress: orderStatus === "completed" ? 100 : orderStatus === "in_progress" ? 60 : 20,
         };
     };
 
@@ -156,12 +159,27 @@ export default function OrdersPage() {
     const fetchTailorData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const shopId = 1; // TODO: replace with the tailor's actual shop id once available on the auth/profile record
+            // Resolve real shop ID from the backend instead of using hardcoded 1
+            let shopId: number | null = null;
+            if (user) {
+                try {
+                    const tailorShops = await listTailorShops(user.uid);
+                    if (tailorShops && tailorShops.length > 0) {
+                        shopId = tailorShops[0].shop_id;
+                    }
+                } catch {
+                    // Could not resolve shop — proceed without shop-specific data
+                }
+            }
+
+            const openReqsPromise = listOpenRequests();
+            const shopReqsPromise = shopId !== null ? listShopRequests(shopId) : Promise.resolve([]);
+            const shopOrdersPromise = shopId !== null ? listShopOrders(shopId) : Promise.resolve([]);
 
             const [openReqs, shopReqs, shopOrders] = await Promise.allSettled([
-                listOpenRequests(),
-                listShopRequests(shopId),
-                listShopOrders(shopId),
+                openReqsPromise,
+                shopReqsPromise,
+                shopOrdersPromise,
             ]);
 
             const loadedRequests: OrderDetail[] =
@@ -177,7 +195,8 @@ export default function OrdersPage() {
                 const pending: OrderDetail[] = [];
                 shopOrders.value.forEach((ord) => {
                     const mapped = mapOrderToOrderDetail(ord);
-                    if (ord.status === "in_progress") {
+                    // Backend uses order_status field
+                    if (ord.order_status === "in_progress") {
                         ongoing.push(mapped);
                     } else {
                         pending.push(mapped);
@@ -199,7 +218,7 @@ export default function OrdersPage() {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [user]);
 
     const fetchClientData = useCallback(async () => {
         setIsLoading(true);
@@ -215,8 +234,9 @@ export default function OrdersPage() {
                         client: user.displayName || user.email?.split("@")[0] || "Client",
                         tailor: "Verified Atelier Shop",
                         date: new Date(o.created_at).toLocaleDateString(),
-                        status: o.status.replace(/_/g, " ").toUpperCase(),
-                        progress: o.status === "completed" ? 100 : o.status === "in_progress" ? 60 : 25,
+                        // Backend uses order_status (not status)
+                        status: (o.order_status || "pending").replace(/_/g, " ").toUpperCase(),
+                        progress: o.order_status === "completed" ? 100 : o.order_status === "in_progress" ? 60 : 25,
                         price: o.accepted_price ? `LKR ${Number(o.accepted_price).toLocaleString()}` : "Pending",
                     }));
                 }
@@ -274,7 +294,7 @@ export default function OrdersPage() {
     // ---- Tailor actions (persist to the API, then refresh from it) ----
     const handleAccept = async (req: OrderDetail) => {
         try {
-            const numericBudget = Number(req.budget.replace(/[^0-9]/g, "")) || undefined;
+            const numericBudget = Number(req.budget.replace(/[^0-9]/g, "")) || 10000;
             await submitBid({
                 shop_request_id: req.rawId,
                 bid_amount: numericBudget,
@@ -558,7 +578,7 @@ export default function OrdersPage() {
                             }}
                             className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
                         >
-                            Seller Dash
+                            Tailor Dash
                         </button>
                         <button
                             onClick={async () => {

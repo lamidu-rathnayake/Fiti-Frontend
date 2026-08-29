@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/firebase/AuthContext";
+import { updateTailorProfile } from "@/lib/api/endpoints/profiles";
 
 export default function LocationPage() {
     const router = useRouter();
-    const [currentLocation, setCurrentLocation] = useState("London, UK");
+    const { user } = useAuth();
+    const [currentLocation, setCurrentLocation] = useState("Colombo, Sri Lanka");
     const [isDetecting, setIsDetecting] = useState(false);
     const [manualCity, setManualCity] = useState("");
     const [manualCountry, setManualCountry] = useState("");
@@ -45,16 +48,29 @@ export default function LocationPage() {
                     setCurrentLocation(formatted);
                     localStorage.setItem("tailorLocation", formatted);
                     setStatusMessage(`Location updated to ${formatted}`);
+
+                    // Persist city + GPS coordinates to backend
+                    if (user) {
+                        updateTailorProfile(user.uid, {
+                            city,
+                            latitude,
+                            longitude,
+                        }).catch(console.error);
+                    }
                     
                     setTimeout(() => {
                         router.push("/tailor/home");
                     }, 1200);
                 } catch (e) {
-                    // Fallback simulated based on coords
+                    // Fallback based on coords
                     const fallbackLoc = `Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`;
                     setCurrentLocation(fallbackLoc);
                     localStorage.setItem("tailorLocation", fallbackLoc);
                     setStatusMessage(`GPS Located: ${fallbackLoc}`);
+                    // Still persist coordinates to backend
+                    if (user) {
+                        updateTailorProfile(user.uid, { latitude, longitude }).catch(console.error);
+                    }
                     setTimeout(() => router.push("/tailor/home"), 1200);
                 } finally {
                     setIsDetecting(false);
@@ -79,6 +95,12 @@ export default function LocationPage() {
 
         setCurrentLocation(formatted);
         localStorage.setItem("tailorLocation", formatted);
+
+        // Persist city to backend
+        if (user) {
+            updateTailorProfile(user.uid, { city: manualCity.trim() }).catch(console.error);
+        }
+
         router.push("/tailor/home");
     };
 
@@ -86,6 +108,11 @@ export default function LocationPage() {
     const handleSelectPreset = (preset: string) => {
         setCurrentLocation(preset);
         localStorage.setItem("tailorLocation", preset);
+        // Persist city to backend (extract city part before the comma)
+        if (user) {
+            const cityPart = preset.split(",")[0].trim();
+            updateTailorProfile(user.uid, { city: cityPart }).catch(console.error);
+        }
         router.push("/tailor/home");
     };
 

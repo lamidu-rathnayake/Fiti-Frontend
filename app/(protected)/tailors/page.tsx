@@ -123,66 +123,7 @@ export default function TailorsPage() {
     });
 
     return (
-        <div className="min-h-screen bg-[#07080A] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
-            {/* TOP NAVIGATION HEADER */}
-            <header className="w-full border-b border-zinc-900/90 bg-[#0A0B0E]/95 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
-                    {/* Left: Back button & Atelier Logo */}
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="px-3 py-1.5 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
-                            title="Go back to previous page"
-                        >
-                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
-                            <span className="hidden sm:inline">Back</span>
-                        </button>
-
-                        <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative h-9 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
-                                <img
-                                    src="/logoo.png"
-                                    alt="FITI Atelier Digital Logo"
-                                    className="h-7 w-auto object-contain"
-                                />
-                            </div>
-                            <span className="font-extrabold tracking-widest text-sm text-white uppercase font-heading hidden sm:inline-block">
-                                ATELIER DIGITAL
-                            </span>
-                        </Link>
-                    </div>
-
-                    {/* Middle Navigation Links */}
-                    <nav className="hidden lg:flex items-center space-x-8 text-xs font-bold tracking-wider text-zinc-400">
-                        <Link href="/storefront" className="hover:text-[#F5CA53] transition-colors">
-                            Storefront
-                        </Link>
-                        <Link href={homeUrl} className="hover:text-[#F5CA53] transition-colors">
-                            Dashboard
-                        </Link>
-                        <Link href="/orders" className="hover:text-[#F5CA53] transition-colors">
-                            Orders
-                        </Link>
-                        <Link href="/tailors" className="text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]">
-                            Tailors
-                        </Link>
-                    </nav>
-
-                    {/* Right Action Buttons */}
-                    <div className="flex items-center space-x-3">
-                        <button
-                            onClick={async () => {
-                                await logout();
-                                router.push("/login");
-                            }}
-                            className="px-3.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
-                            title="Sign out"
-                        >
-                            <span>Logout</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
+        <div className="text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
 
             {/* MAIN DIRECTORY */}
             <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-12 flex-1 space-y-10">
@@ -301,20 +242,6 @@ export default function TailorsPage() {
                     </div>
                 )}
             </main>
-
-            {/* FOOTER */}
-            <footer className="w-full border-t border-zinc-900/90 bg-[#07080A] py-8 px-4 sm:px-8 relative z-20">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <span className="font-extrabold text-sm tracking-widest text-white uppercase font-heading">
-                        ATELIER DIGITAL
-                    </span>
-                    <div className="flex gap-6 text-[10px] font-mono uppercase font-bold text-zinc-400">
-                        <Link href="/privacy" className="hover:text-[#F5CA53] transition-colors">Privacy Policy</Link>
-                        <Link href="/terms" className="hover:text-[#F5CA53] transition-colors">Terms of Service</Link>
-                        <Link href="/contact" className="hover:text-[#F5CA53] transition-colors">Contact Support</Link>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 }

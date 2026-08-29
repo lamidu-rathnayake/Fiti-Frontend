@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
@@ -22,7 +23,7 @@ function registrationErrorMessage(error: unknown): string {
     return error instanceof Error ? error.message : "Registration failed. Please try again.";
 }
 
-// ── CLIENT REGISTRATION FORM (EXACT MATCHING SCREENSHOT) ─────────────────────
+// ── CLIENT REGISTRATION FORM ─────────────────────
 
 export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
     const router = useRouter();
@@ -76,30 +77,39 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
     };
 
     return (
-        <div className="min-h-screen bg-[#0A0B0E] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
-            {/* Top Navigation Bar */}
-            <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
-                    <Link href="/" className="text-xl sm:text-2xl font-black tracking-widest text-[#F5CA53] hover:opacity-90 transition-opacity">
-                        FITI
+        <div className="min-h-screen relative flex flex-col justify-between overflow-hidden font-sans selection:bg-[#9d6638] selection:text-[#f7f1de]">
+            {/* FULL BACKGROUND PHOTO */}
+            <div className="absolute inset-0 z-0">
+                <Image
+                    src="/images/orders/cashmere_belted_coat.jpg"
+                    alt="Cashmere Atelier Background"
+                    fill
+                    className="object-cover brightness-[0.4] scale-105"
+                    priority
+                />
+                <div className="absolute inset-0 bg-[#4e220f]/20 backdrop-blur-[3px]" />
+            </div>
+
+            {/* TOP HEADER */}
+            <header className="relative z-20 w-full py-5 px-6 sm:px-12">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <Link href="/" className="group">
+                        <Image
+                            src="/logo_dark.png"
+                            alt="FITI Atelizer"
+                            width={220}
+                            height={70}
+                            className="h-14 sm:h-16 w-auto object-contain group-hover:scale-105 transition-transform"
+                            priority
+                        />
                     </Link>
 
-                    <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
-                        <Link href="/storefront" className="hover:text-[#F5CA53] transition-colors">Storefront</Link>
-                        <Link href="/" className="hover:text-[#F5CA53] transition-colors">Dashboard</Link>
-                        <Link href="/orders" className="hover:text-[#F5CA53] transition-colors">Orders</Link>
-                        <Link href="/tailors" className="hover:text-[#F5CA53] transition-colors">Tailors</Link>
-                    </nav>
-
-                    <div className="flex items-center space-x-5 text-zinc-400">
-                        <svg className="w-5 h-5 hover:text-white cursor-pointer transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                        <svg className="w-5 h-5 hover:text-white cursor-pointer transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <Link href="/login" className="w-8 h-8 rounded-full border border-zinc-700 bg-zinc-800 flex items-center justify-center overflow-hidden hover:border-[#F5CA53] transition-colors">
-                            <span className="text-xs font-bold text-zinc-300">C</span>
+                    <div className="flex items-center gap-4">
+                        <Link
+                            href="/login"
+                            className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[#f7f1de] bg-[#9d6638] hover:bg-[#4e220f] rounded-full transition-all shadow-md"
+                        >
+                            Sign In
                         </Link>
                     </div>
                 </div>
@@ -107,17 +117,12 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
 
             {/* MAIN CONTENT AREA */}
             <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-12 relative z-10">
-                {/* Background Ambient Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#F5CA53]/10 blur-[160px] rounded-full pointer-events-none" />
-
-                <div className="max-w-xl w-full mx-auto bg-[#131418]/90 border border-zinc-800/90 rounded-[28px] p-8 sm:p-12 shadow-2xl relative overflow-hidden backdrop-blur-xl">
-                    {/* Top Ambient Glow */}
-                    <div className="absolute top-0 right-1/2 translate-x-1/2 w-64 h-20 bg-[#F5CA53]/15 blur-2xl pointer-events-none" />
+                <div className="max-w-xl w-full mx-auto bg-[#f7f1de] border border-[#9d6638]/30 rounded-3xl p-8 sm:p-12 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] relative overflow-hidden backdrop-blur-xl">
 
                     {/* CARD TITLE WITH VERTICAL ACCENT */}
-                    <div className="flex items-center gap-3 mb-8 border-b border-zinc-800/80 pb-5">
-                        <div className="w-1.5 h-7 bg-[#F5CA53] rounded-full" />
-                        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                    <div className="flex items-center gap-3 mb-8 border-b border-[#9d6638]/20 pb-5">
+                        <div className="w-1.5 h-7 bg-[#9d6638] rounded-full" />
+                        <h1 className="text-2xl sm:text-3xl font-black text-[#4e220f] tracking-tight uppercase">
                             Client Registration
                         </h1>
                     </div>
@@ -133,20 +138,20 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                         {/* FIRST NAME & LAST NAME */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     FIRST NAME
                                 </label>
                                 <input
                                     type="text"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
-                                    placeholder="AHAMED"
+                                    placeholder="First Name"
                                     required
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     LAST NAME
                                 </label>
                                 <input
@@ -155,14 +160,14 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     onChange={(e) => setLastName(e.target.value)}
                                     placeholder="PERERA"
                                     required
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                 />
                             </div>
                         </div>
 
                         {/* ADDRESS WITH ICON */}
                         <div>
-                            <label className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2">
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                 ADDRESS
                             </label>
                             <div className="relative">
@@ -171,9 +176,9 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     value={address}
                                     onChange={(e) => setAddress(e.target.value)}
                                     placeholder="45 TEMPLE ROAD, MAHARAGAMA"
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 pr-10 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                 />
-                                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
+                                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -184,7 +189,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
 
                         {/* CITY */}
                         <div>
-                            <label className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2">
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                 CITY
                             </label>
                             <input
@@ -192,17 +197,17 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                 value={city}
                                 onChange={(e) => setCity(e.target.value)}
                                 placeholder="COLOMBO"
-                                className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                             />
                         </div>
 
                         {/* WHATSAPP NUMBER */}
                         <div>
-                            <label className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2">
+                            <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                 WHATSAPP NUMBER
                             </label>
                             <div className="flex items-center gap-2">
-                                <div className="bg-[#18191E] border border-zinc-800 rounded-xl px-4 py-3.5 flex items-center gap-2 text-xs font-bold text-zinc-300 shrink-0">
+                                <div className="bg-[#B0BA99]/30 border border-[#9d6638]/40 rounded-xl px-4 py-3 flex items-center gap-2 text-xs font-bold text-[#4e220f] shrink-0">
                                     <span>🇱🇰 +94</span>
                                 </div>
                                 <input
@@ -210,7 +215,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     value={whatsapp}
                                     onChange={(e) => setWhatsapp(e.target.value)}
                                     placeholder="77 123 4567"
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                 />
                             </div>
                         </div>
@@ -218,13 +223,13 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                         {/* GENDER & AGE */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     GENDER
                                 </label>
                                 <select
                                     value={gender}
                                     onChange={(e) => setGender(e.target.value)}
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53] appearance-none"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] appearance-none"
                                 >
                                     <option value="" disabled>SELECT</option>
                                     <option value="MALE">MALE</option>
@@ -233,7 +238,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     AGE
                                 </label>
                                 <div className="relative">
@@ -242,9 +247,9 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                         value={age}
                                         onChange={(e) => setAge(e.target.value)}
                                         placeholder="25"
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 pr-10 text-sm font-semibold tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                     />
-                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
+                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a2 2 0 002 2h12a2 2 0 002-2l-3-9m-13 0h16" />
                                         </svg>
@@ -254,9 +259,9 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                         </div>
 
                         {/* EMAIL & PASSWORD FOR ACCOUNT CREATION */}
-                        <div className="pt-3 border-t border-zinc-800/80 space-y-4">
+                        <div className="pt-3 border-t border-[#9d6638]/20 space-y-4">
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     EMAIL ADDRESS
                                 </label>
                                 <input
@@ -265,12 +270,12 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="you@example.com"
                                     required
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     PASSWORD
                                 </label>
                                 <input
@@ -279,15 +284,15 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••••••"
                                     required
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                 />
                             </div>
                         </div>
 
                         {/* STATUS TAG */}
                         <div className="flex items-center gap-2 pt-2">
-                            <span className="w-2 h-2 rounded-full bg-[#F5CA53] animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F5CA53]">
+                            <span className="w-2 h-2 rounded-full bg-[#9d6638] animate-pulse" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#9d6638]">
                                 ENSURING A PRECISION FIT
                             </span>
                         </div>
@@ -296,7 +301,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full mt-4 rounded-xl bg-[#F5CA53] hover:bg-[#f7d369] py-4 text-xs font-black uppercase tracking-[0.15em] text-black shadow-[0_0_20px_rgba(245,202,83,0.3)] transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+                            className="w-full mt-4 rounded-xl bg-[#9d6638] hover:bg-[#4e220f] py-4 text-xs font-black uppercase tracking-[0.15em] text-[#f7f1de] shadow-md transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                         >
                             <span>{loading ? "CREATING PROFILE..." : "SUBMIT AND CONTINUE"}</span>
                             <span>&rarr;</span>
@@ -307,7 +312,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                         <button
                             type="button"
                             onClick={() => onBack ? onBack() : router.push("/register")}
-                            className="text-xs text-zinc-500 hover:text-zinc-300 font-bold uppercase tracking-wider transition-colors"
+                            className="text-xs text-[#4e220f]/70 hover:text-[#9d6638] font-bold uppercase tracking-wider transition-colors"
                         >
                             &larr; Choose Different Role
                         </button>
@@ -315,22 +320,22 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                 </div>
             </main>
 
-            {/* Bottom Footer */}
-            <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-7 px-6 sm:px-12 relative z-20">
+            {/* BOTTOM FOOTER */}
+            <footer className="w-full border-t border-[#9d6638]/20 bg-[#f7f1de]/90 py-5 px-6 sm:px-12 relative z-20 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
-                        <span className="text-sm font-black tracking-widest text-[#F5CA53]">
+                        <span className="text-sm font-black tracking-widest text-[#4e220f]">
                             FITI
                         </span>
-                        <span className="text-[11px] text-zinc-500">
+                        <span className="text-[11px] text-[#4e220f]/70">
                             &copy; {new Date().getFullYear()} FITI Bespoke. All rights reserved.
                         </span>
                     </div>
 
-                    <div className="flex items-center space-x-6 text-xs text-zinc-400">
-                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                        <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-                        <Link href="/contact" className="hover:text-white transition-colors">Contact Support</Link>
+                    <div className="flex items-center space-x-6 text-xs text-[#4e220f]/80">
+                        <Link href="/privacy" className="hover:text-[#9d6638] transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-[#9d6638] transition-colors">Terms of Service</Link>
+                        <Link href="/contact" className="hover:text-[#9d6638] transition-colors">Contact Support</Link>
                     </div>
                 </div>
             </footer>
@@ -338,7 +343,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
     );
 }
 
-// ── SELLER / TAILOR REGISTRATION FORM (EXACT MATCHING SCREENSHOT) ────────────
+// ── SELLER / TAILOR REGISTRATION FORM ────────────
 
 export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     const router = useRouter();
@@ -413,44 +418,53 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     };
 
     return (
-        <div className="min-h-screen bg-[#0A0B0E] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
-            {/* Top Navigation Bar */}
-            <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
-                    <Link href="/" className="text-xl sm:text-2xl font-black tracking-widest text-[#F5CA53] hover:opacity-90 transition-opacity">
-                        FITI
+        <div className="min-h-screen relative flex flex-col justify-between overflow-hidden font-sans selection:bg-[#9d6638] selection:text-[#f7f1de]">
+            {/* FULL BACKGROUND PHOTO */}
+            <div className="absolute inset-0 z-0">
+                <Image
+                    src="/images/orders/cashmere_belted_coat.jpg"
+                    alt="Cashmere Atelier Background"
+                    fill
+                    className="object-cover brightness-[0.4] scale-105"
+                    priority
+                />
+                <div className="absolute inset-0 bg-[#4e220f]/20 backdrop-blur-[3px]" />
+            </div>
+
+            {/* TOP HEADER */}
+            <header className="relative z-20 w-full py-5 px-6 sm:px-12">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                    <Link href="/" className="group">
+                        <Image
+                            src="/logo_dark.png"
+                            alt="FITI Atelier"
+                            width={220}
+                            height={70}
+                            className="h-14 sm:h-16 w-auto object-contain group-hover:scale-105 transition-transform"
+                            priority
+                        />
                     </Link>
 
-                    <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
-                        <Link href="/storefront" className="hover:text-[#F5CA53] transition-colors">Storefront</Link>
-                        <Link href="/" className="hover:text-[#F5CA53] transition-colors">Dashboard</Link>
-                        <Link href="/orders" className="hover:text-[#F5CA53] transition-colors">Orders</Link>
-                        <Link href="/tailors" className="hover:text-[#F5CA53] transition-colors">Tailors</Link>
-                    </nav>
-
-                    <div className="flex items-center space-x-5 text-zinc-400">
-                        <svg className="w-5 h-5 hover:text-white cursor-pointer transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                        <svg className="w-5 h-5 hover:text-white cursor-pointer transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <Link href="/login" className="w-8 h-8 rounded-full border border-zinc-700 bg-zinc-800 flex items-center justify-center overflow-hidden hover:border-[#F5CA53] transition-colors">
-                            <span className="text-xs font-bold text-zinc-300">S</span>
+                    <div className="flex items-center gap-4">
+                        <Link
+                            href="/login"
+                            className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[#f7f1de] bg-[#9d6638] hover:bg-[#4e220f] rounded-full transition-all shadow-md"
+                        >
+                            Sign In
                         </Link>
                     </div>
                 </div>
             </header>
 
             {/* MAIN CONTENT CONTAINER */}
-            <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-10 relative z-10">
+            <main className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-8 relative z-10">
                 {/* PAGE HEADER */}
-                <div className="mb-10 max-w-2xl">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-[#F5CA53] tracking-tight mb-2">
-                        Seller Registration
+                <div className="mb-8 max-w-2xl bg-[#f7f1de]/90 p-6 rounded-2xl border border-[#9d6638]/30 shadow-lg backdrop-blur-md">
+                    <h1 className="text-3xl sm:text-4xl font-black text-[#4e220f] tracking-wider uppercase mb-2">
+                        SELLER REGISTRATION
                     </h1>
-                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed font-normal">
-                        Begin your journey as a master artisan in our digital atelier. Provide your details to establish your bespoke presence.
+                    <p className="text-xs sm:text-sm text-[#4e220f]/80 leading-relaxed font-medium">
+                        Begin your journey as a master artisan in our digital atelier. Establish your bespoke presence today.
                     </p>
                 </div>
 
@@ -465,9 +479,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
                         {/* LEFT COLUMN: PERSONAL DETAILS */}
-                        <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-[28px] p-8 sm:p-10 shadow-2xl relative overflow-hidden backdrop-blur-xl space-y-5">
-                            <div className="border-b border-zinc-800/80 pb-4 mb-2">
-                                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53] block">
+                        <div className="bg-[#f7f1de] border border-[#9d6638]/30 rounded-3xl p-8 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] relative overflow-hidden backdrop-blur-xl space-y-5">
+                            <div className="border-b border-[#9d6638]/20 pb-4 mb-2">
+                                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#9d6638] block">
                                     PERSONAL DETAILS
                                 </span>
                             </div>
@@ -475,7 +489,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                             {/* FIRST NAME & LAST NAME */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                         FIRST NAME
                                     </label>
                                     <input
@@ -484,11 +498,11 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         onChange={(e) => setFirstName(e.target.value)}
                                         placeholder="ALEXANDER"
                                         required
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                         LAST NAME
                                     </label>
                                     <input
@@ -497,14 +511,14 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         onChange={(e) => setLastName(e.target.value)}
                                         placeholder="VANE"
                                         required
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                     />
                                 </div>
                             </div>
 
                             {/* ADDRESS */}
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     ADDRESS
                                 </label>
                                 <div className="relative">
@@ -513,9 +527,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         value={address}
                                         onChange={(e) => setAddress(e.target.value)}
                                         placeholder="12 MAYFAIR"
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 pr-10 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                     />
-                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
+                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         </svg>
@@ -525,7 +539,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
 
                             {/* CITY */}
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     CITY
                                 </label>
                                 <input
@@ -533,13 +547,13 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     value={city}
                                     onChange={(e) => setCity(e.target.value)}
                                     placeholder="LONDON"
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                 />
                             </div>
 
                             {/* BIO */}
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     BIO
                                 </label>
                                 <textarea
@@ -547,17 +561,17 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     onChange={(e) => setPersonalBio(e.target.value)}
                                     placeholder="TELL US ABOUT YOUR STYLE PREFERENCES..."
                                     rows={3}
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53] resize-none"
+                                    className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] resize-none"
                                 />
                             </div>
 
                             {/* WHATSAPP NUMBER */}
                             <div>
-                                <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                     WHATSAPP NUMBER
                                 </label>
                                 <div className="flex items-center gap-2">
-                                    <div className="bg-[#18191E] border border-zinc-800 rounded-xl px-4 py-3.5 flex items-center gap-2 text-xs font-bold text-zinc-300 shrink-0">
+                                    <div className="bg-[#B0BA99]/30 border border-[#9d6638]/40 rounded-xl px-4 py-3 flex items-center gap-2 text-xs font-bold text-[#4e220f] shrink-0">
                                         <span>🇱🇰 +94</span>
                                     </div>
                                     <input
@@ -565,7 +579,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         value={whatsapp}
                                         onChange={(e) => setWhatsapp(e.target.value)}
                                         placeholder="77 900 0000"
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                     />
                                 </div>
                             </div>
@@ -573,13 +587,13 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                             {/* GENDER & AGE */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                         GENDER
                                     </label>
                                     <select
                                         value={gender}
                                         onChange={(e) => setGender(e.target.value)}
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53] appearance-none"
+                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] appearance-none"
                                     >
                                         <option value="" disabled>SELECT</option>
                                         <option value="MALE">MALE</option>
@@ -588,7 +602,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                         AGE
                                     </label>
                                     <div className="relative">
@@ -597,9 +611,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                             value={age}
                                             onChange={(e) => setAge(e.target.value)}
                                             placeholder="25"
-                                            className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 pr-10 text-sm font-semibold tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                         />
-                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
+                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a2 2 0 002 2h12a2 2 0 002-2l-3-9m-13 0h16" />
                                             </svg>
@@ -610,17 +624,17 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                         </div>
 
                         {/* RIGHT COLUMN: SHOP DETAILS */}
-                        <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-[28px] p-8 sm:p-10 shadow-2xl relative overflow-hidden backdrop-blur-xl space-y-5 flex flex-col justify-between min-h-[620px]">
+                        <div className="bg-[#f7f1de] border border-[#9d6638]/30 rounded-3xl p-8 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] relative overflow-hidden backdrop-blur-xl space-y-5 flex flex-col justify-between min-h-[620px]">
                             <div className="space-y-5">
-                                <div className="border-b border-zinc-800/80 pb-4 mb-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53] block">
+                                <div className="border-b border-[#9d6638]/20 pb-4 mb-2">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#9d6638] block">
                                         SHOP DETAILS
                                     </span>
                                 </div>
 
                                 {/* SHOP NAME */}
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                         SHOP NAME
                                     </label>
                                     <input
@@ -629,13 +643,13 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         onChange={(e) => setShopName(e.target.value)}
                                         placeholder="ATELIER VANE"
                                         required
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                     />
                                 </div>
 
                                 {/* SHOP BIO */}
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                         SHOP BIO
                                     </label>
                                     <textarea
@@ -643,13 +657,13 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         onChange={(e) => setShopBio(e.target.value)}
                                         placeholder="DESCRIBE YOUR HERITAGE..."
                                         rows={3}
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53] resize-none"
+                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de] resize-none"
                                     />
                                 </div>
 
                                 {/* SHOP ADDRESS */}
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                         SHOP ADDRESS
                                     </label>
                                     <div className="relative">
@@ -658,9 +672,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                             value={shopAddress}
                                             onChange={(e) => setShopAddress(e.target.value)}
                                             placeholder="SAVILE ROW"
-                                            className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 pr-10 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                         />
-                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
+                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9d6638]">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                             </svg>
@@ -670,11 +684,11 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
 
                                 {/* SHOP CONTACT */}
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                         SHOP CONTACT
                                     </label>
                                     <div className="flex items-center gap-2">
-                                        <div className="bg-[#18191E] border border-zinc-800 rounded-xl px-4 py-3.5 flex items-center gap-2 text-xs font-bold text-zinc-300 shrink-0">
+                                        <div className="bg-[#B0BA99]/30 border border-[#9d6638]/40 rounded-xl px-4 py-3 flex items-center gap-2 text-xs font-bold text-[#4e220f] shrink-0">
                                             <span>🇱🇰 +94</span>
                                         </div>
                                         <input
@@ -682,14 +696,14 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                             value={shopContact}
                                             onChange={(e) => setShopContact(e.target.value)}
                                             placeholder="77 712 3456"
-                                            className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                         />
                                     </div>
                                 </div>
 
                                 {/* REGISTRATION NUMBER */}
                                 <div>
-                                    <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                    <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                         REGISTRATION NUMBER
                                     </label>
                                     <input
@@ -697,14 +711,14 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         value={registrationNumber}
                                         onChange={(e) => setRegistrationNumber(e.target.value)}
                                         placeholder="REG-123456789"
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                        className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                     />
                                 </div>
 
                                 {/* ACCOUNT EMAIL & PASSWORD */}
-                                <div className="pt-3 border-t border-zinc-800/80 space-y-4">
+                                <div className="pt-3 border-t border-[#9d6638]/20 space-y-4">
                                     <div>
-                                        <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                        <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                             ACCOUNT EMAIL
                                         </label>
                                         <input
@@ -713,11 +727,11 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="tailor@example.com"
                                             required
-                                            className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
+                                        <label className="block text-[10px] font-black tracking-widest text-[#4e220f] uppercase mb-2">
                                             PASSWORD
                                         </label>
                                         <input
@@ -726,7 +740,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="••••••••••••"
                                             required
-                                            className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm font-semibold text-zinc-200 outline-none transition focus:border-[#F5CA53]"
+                                            className="w-full rounded-xl border border-[#9d6638]/40 bg-[#B0BA99]/30 px-4 py-3 text-sm font-semibold text-[#4e220f] placeholder-[#4e220f]/50 outline-none transition focus:border-[#9d6638] focus:bg-[#f7f1de]"
                                         />
                                     </div>
                                 </div>
@@ -736,7 +750,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full mt-6 rounded-xl bg-[#F5CA53] hover:bg-[#f7d369] py-4 text-xs font-black uppercase tracking-[0.15em] text-black shadow-[0_0_20px_rgba(245,202,83,0.3)] transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
+                                className="w-full mt-6 rounded-xl bg-[#9d6638] hover:bg-[#4e220f] py-4 text-xs font-black uppercase tracking-[0.15em] text-[#f7f1de] shadow-md transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                             >
                                 <span>{loading ? "CREATING SELLER PROFILE..." : "SUBMIT AND CONTINUE"}</span>
                                 <span>&rarr;</span>
@@ -745,70 +759,35 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                     </div>
                 </form>
 
-                {/* BOTTOM 3-IMAGE GALLERY */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-                    <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-black/40 h-52 group cursor-pointer shadow-lg">
-                        <img
-                            src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80"
-                            alt="Master Tailor at Cutting Table"
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-90"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
-                        <div className="relative z-20 h-full p-5 flex items-end">
-                            <span className="text-xs font-bold text-white tracking-wide">
-                                Master Artisan Craftsmanship
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-black/40 h-52 group cursor-pointer shadow-lg">
-                        <img
-                            src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=800&q=80"
-                            alt="Bespoke Suit Showroom"
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-90"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
-                        <div className="relative z-20 h-full p-5 flex items-end">
-                            <span className="text-xs font-bold text-white tracking-wide">
-                                Digital Showroom &amp; Tailor Shop
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="relative overflow-hidden rounded-2xl border border-zinc-800 bg-black/40 h-52 group cursor-pointer shadow-lg">
-                        <img
-                            src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80"
-                            alt="Premium Fabric Weave"
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-90"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
-                        <div className="relative z-20 h-full p-5 flex items-end">
-                            <span className="text-xs font-bold text-white tracking-wide">
-                                Curated Luxury Wool &amp; Silks
-                            </span>
-                        </div>
-                    </div>
+                {/* BOTTOM BACK BUTTON */}
+                <div className="mt-8 text-center">
+                    <button
+                        type="button"
+                        onClick={() => onBack ? onBack() : router.push("/register")}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[#9d6638]/40 bg-[#f7f1de] text-[#4e220f] hover:text-[#9d6638] hover:border-[#9d6638] text-xs font-black uppercase tracking-[0.15em] transition-all hover:bg-[#B0BA99]/30"
+                    >
+                        <span>&larr;</span>
+                        <span>CHOOSE DIFFERENT ROLE</span>
+                    </button>
                 </div>
             </main>
 
-            {/* Bottom Footer */}
-            <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-8 px-6 sm:px-12 relative z-20 mt-12">
+            {/* BOTTOM FOOTER */}
+            <footer className="w-full border-t border-[#9d6638]/20 bg-[#f7f1de]/90 py-5 px-6 sm:px-12 relative z-20 backdrop-blur-md mt-12">
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
-                        <span className="text-sm font-black tracking-widest text-[#F5CA53]">
+                        <span className="text-sm font-black tracking-widest text-[#4e220f]">
                             FITI
                         </span>
-                        <span className="text-[11px] text-zinc-500">
-                            &copy; {new Date().getFullYear()} FITI Digital Atelier. All rights reserved.
+                        <span className="text-[11px] text-[#4e220f]/70">
+                            &copy; {new Date().getFullYear()} FITI Bespoke. All rights reserved.
                         </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                        <Link href="/" className="hover:text-white transition-colors">Bespoke Process</Link>
-                        <Link href="/" className="hover:text-white transition-colors">Our Heritage</Link>
-                        <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-                        <Link href="/contact" className="hover:text-white transition-colors">Contact Support</Link>
+                    <div className="flex items-center space-x-6 text-xs text-[#4e220f]/80">
+                        <Link href="/privacy" className="hover:text-[#9d6638] transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-[#9d6638] transition-colors">Terms of Service</Link>
+                        <Link href="/contact" className="hover:text-[#9d6638] transition-colors">Contact Support</Link>
                     </div>
                 </div>
             </footer>

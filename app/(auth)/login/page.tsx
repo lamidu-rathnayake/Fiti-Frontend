@@ -145,9 +145,9 @@ export default function LoginPage() {
                                 <Image
                                     src="/logo_light.png"
                                     alt="FITI Atelier"
-                                    width={140}
-                                    height={44}
-                                    className="h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+                                    width={220}
+                                    height={70}
+                                    className="h-14 sm:h-16 w-auto object-contain group-hover:scale-105 transition-transform"
                                     priority
                                 />
                             </Link>
@@ -183,7 +183,7 @@ export default function LoginPage() {
                                 type="button"
                                 onClick={handleGoogleLogin}
                                 disabled={loading}
-                                className="w-full max-w-md rounded-full bg-white border border-[#9d6638]/40 hover:bg-[#B0BA99]/20 text-[#4e220f] font-bold text-xs py-3.5 px-6 shadow-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
+                                className="w-full max-w-md rounded-full bg-[#f7f1de] border border-[#9d6638]/40 hover:bg-[#B0BA99]/30 text-[#4e220f] font-bold text-xs py-3.5 px-6 shadow-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
                             >
                                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                                     <path

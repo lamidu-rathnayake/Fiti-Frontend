@@ -4,20 +4,22 @@
     --font-heading: var(--font-heading, "Manrope", sans-serif);
     --font-serif: var(--font-heading, "Manrope", sans-serif);
     --font-sans: var(--font-sans, "Inter", sans-serif);
-    --gold-primary: #F5CA53;
-    --gold-light: #FFE28A;
-    --gold-dark: #C5A059;
-    --bg-dark: #0A0B0E;
-    --bg-card: #131418;
+    
+    /* User Specified Palette Tokens */
+    --text-primary: #4e220f;
+    --bg-primary: #f7f1de;
+    --card-bg: #B0BA99;
+    --accent-primary: #9d6638;
 }
 
 @theme {
     --font-serif: var(--font-serif);
     --font-heading: var(--font-heading);
     --font-sans: var(--font-sans);
-    --color-gold-500: #F5CA53;
-    --color-gold-400: #FFE28A;
-    --color-gold-600: #C5A059;
+    --color-earth-text: #4e220f;
+    --color-[#f7f1de]: #f7f1de;
+    --color-[#B0BA99]: #B0BA99;
+    --color-[#9d6638]: #9d6638;
 }
 
 /* Custom Scrollbar */
@@ -25,14 +27,14 @@
     width: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #0A0B0E;
+    background: #f7f1de;
 }
 ::-webkit-scrollbar-thumb {
-    background: #252833;
+    background: #9d6638;
     border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #F5CA53;
+    background: #4e220f;
 }
 
 /* -------------------------------------------------------------
@@ -88,6 +90,28 @@
     }
 }
 
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-32px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(32px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 @keyframes spinSlow {
     from {
         transform: rotate(0deg);
@@ -117,41 +141,101 @@
     animation: spinSlow 25s linear infinite;
 }
 
-/* -------------------------------------------------------------
- * DESIGN UTILITY CLASSES
- * ------------------------------------------------------------- */
+/* -----------------------------------------------------------
+ * SCROLL-REVEAL SYSTEM
+ * Elements start hidden; JS adds .is-visible to trigger them
+ * ----------------------------------------------------------- */
 
-/* Luxury Gold Text Gradient */
-.gold-gradient-text {
-    background: linear-gradient(135deg, #FFE28A 0%, #F5CA53 50%, #C5A059 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+        opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Luxury Card Glassmorphism */
+.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-left {
+    opacity: 0;
+    transform: translateX(-32px);
+    transition:
+        opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-left.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.reveal-right {
+    opacity: 0;
+    transform: translateX(32px);
+    transition:
+        opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-right.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.reveal-scale {
+    opacity: 0;
+    transform: scale(0.94);
+    transition:
+        opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-scale.is-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Stagger delay helpers */
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+/* -------------------------------------------------------------
+ * DESIGN UTILITY CLASSES (Matching requested colors)
+ * ------------------------------------------------------------- */
+
+/* Custom Text Gradient */
+.gold-gradient-text {
+    color: #4e220f;
+}
+
+/* Card Component Background */
 .glass-card {
-    background: rgba(19, 20, 24, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    background: #B0BA99;
+    border: 1px solid rgba(157, 102, 56, 0.3);
+    box-shadow: 0 12px 30px rgba(78, 34, 15, 0.08);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
-    border-color: rgba(245, 202, 83, 0.4);
-    box-shadow: 0 25px 60px rgba(245, 202, 83, 0.12), 0 0 30px rgba(0, 0, 0, 0.9);
+    border-color: #9d6638;
+    box-shadow: 0 16px 40px rgba(157, 102, 56, 0.2);
 }
 
-/* Shimmer Button Effect */
+/* Accent Button Effect */
 .btn-gold-shimmer {
     position: relative;
     overflow: hidden;
-    background: #F5CA53;
-    color: #0A0B0E;
+    background: #9d6638;
+    color: #f7f1de;
     font-weight: 800;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 4px 20px rgba(245, 202, 83, 0.25);
+    box-shadow: 0 4px 16px rgba(157, 102, 56, 0.3);
 }
 
 .btn-gold-shimmer::after {
@@ -161,7 +245,7 @@
     left: 0;
     width: 50%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(247, 241, 222, 0.4), transparent);
     transform: translateX(-100%);
 }
 
@@ -170,16 +254,17 @@
 }
 
 .btn-gold-shimmer:hover {
-    background: #FFE28A;
+    background: #4e220f;
+    color: #f7f1de;
     transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(245, 202, 83, 0.4);
+    box-shadow: 0 8px 24px rgba(78, 34, 15, 0.3);
 }
 
 .btn-gold-shimmer:active {
     transform: translateY(0);
 }
 
-/* Tailor Stitch Dashed Border */
+/* Stitch Dashed Border */
 .stitch-border {
     position: relative;
 }
@@ -188,7 +273,81 @@
     content: '';
     position: absolute;
     inset: 4px;
-    border: 1px dashed rgba(245, 202, 83, 0.3);
+    border: 1px dashed #9d6638;
     border-radius: inherit;
     pointer-events: none;
+}
+
+/* Stitch Rule Divider */
+.stitch-rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.stitch-rule::before,
+.stitch-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(
+        90deg,
+        #9d6638 0,
+        #9d6638 6px,
+        transparent 6px,
+        transparent 14px
+    );
+    opacity: 0.6;
+}
+
+/* FAQ Accordion */
+.faq-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.faq-body.open {
+    grid-template-rows: 1fr;
+}
+.faq-body > div {
+    overflow: hidden;
+}
+
+/* Hover Lift Card */
+.lift-card {
+    transition:
+        transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lift-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 48px rgba(78, 34, 15, 0.15);
+}
+
+/* Fabric Image Crossfade */
+.fabric-img {
+    transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Focus Ring */
+:focus-visible {
+    outline: 2px solid #9d6638;
+    outline-offset: 3px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .reveal,
+    .reveal-left,
+    .reveal-right,
+    .reveal-scale {
+        opacity: 1;
+        transform: none;
+    }
 }

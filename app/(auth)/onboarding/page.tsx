@@ -113,11 +113,11 @@ export default function OnboardingPage() {
             const uploadImageToCloudinary = async (file: File) => {
                 const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "demo";
                 const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "unsigned_preset";
-                
+
                 const formData = new FormData();
                 formData.append("file", file);
                 formData.append("upload_preset", uploadPreset);
-                
+
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
                     method: "POST",
                     body: formData,
@@ -220,30 +220,8 @@ export default function OnboardingPage() {
 
     return (
         <div className="min-h-screen bg-[#0A0B0E] text-white flex flex-col justify-between relative overflow-x-hidden selection:bg-[#F5CA53] selection:text-black font-sans">
-            {/* Top Navigation Bar */}
-            <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
-                    <a href="/" className="text-xl sm:text-2xl font-black tracking-widest text-[#F5CA53]">
-                        FITI
-                    </a>
-                    <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
-                        <a href="/" className="hover:text-[#F5CA53] transition-colors">Dashboard</a>
-                        <a href="/" className="hover:text-[#F5CA53] transition-colors">Orders</a>
-                        <a href="/" className="hover:text-[#F5CA53] transition-colors">Shops</a>
-                        <a href="/" className="hover:text-[#F5CA53] transition-colors">Tailoring</a>
-                    </nav>
-                    <div className="flex items-center space-x-4">
-                        <span className="text-xs text-zinc-400 font-mono hidden sm:inline">{user.email}</span>
-                        <button
-                            type="button"
-                            onClick={handleUseAnotherAccount}
-                            className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#F5CA53] border border-[#F5CA53]/60 rounded-xl hover:bg-[#F5CA53]/15 transition-all"
-                        >
-                            Sign Out
-                        </button>
-                    </div>
-                </div>
-            </header>
+            {/* Top logo needed */}
+
 
             {/* MAIN CONTENT AREA WITH 2-COLUMN SPLIT */}
             <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-10 relative z-10">
@@ -304,408 +282,406 @@ export default function OnboardingPage() {
                                 </p>
                             </div>
 
-                <form
-                    onSubmit={handleSubmit}
-                    className="space-y-6 rounded-3xl border border-zinc-800 bg-[#141414] p-6 shadow-2xl sm:p-8 relative overflow-hidden"
-                >
-                    {/* Subtle gold glow behind card content */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[50px] bg-[#F6CA57]/20 blur-[60px] pointer-events-none"></div>
-
-                    {error && (
-                        <div
-                            aria-live="polite"
-                            className="relative z-10 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center"
-                        >
-                            {error}
-                        </div>
-                    )}
-
-                    <fieldset className="relative z-10">
-                        <legend className="mb-4 text-[10px] font-black tracking-[0.2em] text-[#F5CA53] uppercase text-center w-full">
-                            Account Type
-                        </legend>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* CLIENT CARD */}
-                            <button
-                                type="button"
-                                aria-pressed={role === "client"}
-                                onClick={() => setSelectedRole("client")}
-                                disabled={submitting}
-                                className={`group text-left rounded-2xl border p-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
-                                    role === "client"
-                                        ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
-                                        : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
-                                }`}
+                            <form
+                                onSubmit={handleSubmit}
+                                className="space-y-6 rounded-3xl border border-zinc-800 bg-[#141414] p-6 shadow-2xl sm:p-8 relative overflow-hidden"
                             >
-                                <div>
-                                    <div className="w-10 h-10 rounded-full border border-[#F5CA53]/40 bg-[#F5CA53]/10 flex items-center justify-center text-[#F5CA53] mb-4">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                        </svg>
+                                {/* Subtle gold glow behind card content */}
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[50px] bg-[#F6CA57]/20 blur-[60px] pointer-events-none"></div>
+
+                                {error && (
+                                    <div
+                                        aria-live="polite"
+                                        className="relative z-10 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center"
+                                    >
+                                        {error}
                                     </div>
-                                    <p className="text-sm font-extrabold text-white mb-1">
-                                        Register as a Client
-                                    </p>
-                                    <p className="text-[11px] text-zinc-400 leading-relaxed">
-                                        Discover elite tailoring, curated fabrics, and personalized fits.
-                                    </p>
-                                </div>
-                                <div className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#F5CA53] flex items-center gap-1">
-                                    <span>{role === "client" ? "SELECTED ✓" : "SELECT CLIENT →"}</span>
-                                </div>
-                            </button>
+                                )}
 
-                            {/* SELLER / TAILOR CARD */}
-                            <button
-                                type="button"
-                                aria-pressed={role === "tailor"}
-                                onClick={() => setSelectedRole("tailor")}
-                                disabled={submitting}
-                                className={`group text-left rounded-2xl border p-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
-                                    role === "tailor"
-                                        ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
-                                        : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
-                                }`}
-                            >
-                                <div>
-                                    <div className="w-10 h-10 rounded-full border border-[#F5CA53]/40 bg-[#F5CA53]/10 flex items-center justify-center text-[#F5CA53] mb-4">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                        </svg>
+                                <fieldset className="relative z-10">
+                                    <legend className="mb-4 text-[10px] font-black tracking-[0.2em] text-[#F5CA53] uppercase text-center w-full">
+                                        Account Type
+                                    </legend>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* CLIENT CARD */}
+                                        <button
+                                            type="button"
+                                            aria-pressed={role === "client"}
+                                            onClick={() => setSelectedRole("client")}
+                                            disabled={submitting}
+                                            className={`group text-left rounded-2xl border p-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${role === "client"
+                                                    ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
+                                                    : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
+                                                }`}
+                                        >
+                                            <div>
+                                                <div className="w-10 h-10 rounded-full border border-[#F5CA53]/40 bg-[#F5CA53]/10 flex items-center justify-center text-[#F5CA53] mb-4">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                    </svg>
+                                                </div>
+                                                <p className="text-sm font-extrabold text-white mb-1">
+                                                    Register as a Client
+                                                </p>
+                                                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                                                    Discover elite tailoring, curated fabrics, and personalized fits.
+                                                </p>
+                                            </div>
+                                            <div className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#F5CA53] flex items-center gap-1">
+                                                <span>{role === "client" ? "SELECTED ✓" : "SELECT CLIENT →"}</span>
+                                            </div>
+                                        </button>
+
+                                        {/* SELLER / TAILOR CARD */}
+                                        <button
+                                            type="button"
+                                            aria-pressed={role === "tailor"}
+                                            onClick={() => setSelectedRole("tailor")}
+                                            disabled={submitting}
+                                            className={`group text-left rounded-2xl border p-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${role === "tailor"
+                                                    ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
+                                                    : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
+                                                }`}
+                                        >
+                                            <div>
+                                                <div className="w-10 h-10 rounded-full border border-[#F5CA53]/40 bg-[#F5CA53]/10 flex items-center justify-center text-[#F5CA53] mb-4">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                                    </svg>
+                                                </div>
+                                                <p className="text-sm font-extrabold text-white mb-1">
+                                                    Register as a Seller
+                                                </p>
+                                                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                                                    Join our artisan network and showcase your craftsmanship.
+                                                </p>
+                                            </div>
+                                            <div className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#F5CA53] flex items-center gap-1">
+                                                <span>{role === "tailor" ? "SELECTED ✓" : "SELECT SELLER →"}</span>
+                                            </div>
+                                        </button>
                                     </div>
-                                    <p className="text-sm font-extrabold text-white mb-1">
-                                        Register as a Seller
-                                    </p>
-                                    <p className="text-[11px] text-zinc-400 leading-relaxed">
-                                        Join our artisan network and showcase your craftsmanship.
-                                    </p>
-                                </div>
-                                <div className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#F5CA53] flex items-center gap-1">
-                                    <span>{role === "tailor" ? "SELECTED ✓" : "SELECT SELLER →"}</span>
-                                </div>
-                            </button>
-                        </div>
-                    </fieldset>
+                                </fieldset>
 
-                    <div className="grid gap-6 sm:grid-cols-2 relative z-10 mt-8 pt-8 border-t border-zinc-800">
-                        <div className="space-y-2">
-                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                Full Name
-                            </label>
-                            <input
-                                value={form.displayName}
-                                onChange={(event) => updateField("displayName", event.target.value)}
-                                required
-                                disabled={submitting}
-                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                Phone Number
-                            </label>
-                            <input
-                                type="tel"
-                                value={form.phone}
-                                onChange={(event) => updateField("phone", event.target.value)}
-                                disabled={submitting}
-                                placeholder="+94 77 123 4567"
-                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                City
-                            </label>
-                            <input
-                                value={form.city}
-                                onChange={(event) => updateField("city", event.target.value)}
-                                required
-                                disabled={submitting}
-                                placeholder="Colombo"
-                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                Address
-                            </label>
-                            <input
-                                value={form.address}
-                                onChange={(event) => updateField("address", event.target.value)}
-                                disabled={submitting}
-                                placeholder="45 Temple Street"
-                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
-                            />
-                        </div>
-
-                        <div className="space-y-2 sm:col-span-2">
-                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                Personal Location <span className="text-zinc-600 font-medium">(optional)</span>
-                            </label>
-                            <p className="text-xs text-zinc-500 mb-3">Drag the pin to your home or current location.</p>
-                            <div className="rounded-xl overflow-hidden border border-zinc-800">
-                                <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, latitude: loc.lat, longitude: loc.lng })); }} />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2 sm:col-span-2">
-                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                Profile Picture <span className="text-zinc-600 font-medium">(optional)</span>
-                            </label>
-                            <div className="flex items-center gap-3 mt-2">
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(event) => {
-                                        if (event.target.files?.[0]) {
-                                            setProfileImageFile(event.target.files[0]);
-                                        }
-                                    }}
-                                    disabled={submitting}
-                                    className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
-                                />
-                                {profileImageFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
-                            </div>
-                        </div>
-                    </div>
-
-                    {role === "tailor" && (
-                        <div className="grid gap-6 border-t border-zinc-800 pt-8 mt-8 sm:grid-cols-2 relative z-10">
-                            <div className="col-span-1 sm:col-span-2 text-center mb-2">
-                                <span className="inline-flex rounded-full bg-[#0D0D0D] border border-zinc-700 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                                    Shop Details
-                                </span>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                    Shop Name
-                                </label>
-                                <input
-                                    value={form.shopName}
-                                    onChange={(event) => updateField("shopName", event.target.value)}
-                                    required
-                                    disabled={submitting}
-                                    placeholder="Your shop name"
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                    Specialty
-                                </label>
-                                <input
-                                    value={form.specialty}
-                                    onChange={(event) => updateField("specialty", event.target.value)}
-                                    required
-                                    disabled={submitting}
-                                    placeholder="Bridal wear, tailoring..."
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                            </div>
-
-                            <div className="space-y-2 sm:col-span-2">
-                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                    Shop Bio <span className="text-zinc-600 font-medium">(optional)</span>
-                                </label>
-                                <textarea
-                                    value={form.shopBio}
-                                    onChange={(event) => updateField("shopBio", event.target.value)}
-                                    placeholder="Tell us about your shop..."
-                                    disabled={submitting}
-                                    rows={3}
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                                />
-                            </div>
-
-                            <div className="space-y-2 sm:col-span-2">
-                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                    Registration Number <span className="text-zinc-600 font-medium">(optional)</span>
-                                </label>
-                                <input
-                                    value={form.registrationNumber}
-                                    onChange={(event) => updateField("registrationNumber", event.target.value)}
-                                    placeholder="Business Registration Number"
-                                    disabled={submitting}
-                                    className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
-                                />
-                            </div>
-
-                            <div className="col-span-1 sm:col-span-2">
-                                <div className="flex items-start gap-3 py-4 border-y border-zinc-800 my-4">
-                                    <input
-                                        type="checkbox"
-                                        id="usePersonalAddress"
-                                        checked={usePersonalAddress}
-                                        onChange={(e) => setUsePersonalAddress(e.target.checked)}
-                                        className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-[#F6CA57] focus:ring-[#F6CA57] focus:ring-offset-zinc-950"
-                                    />
-                                    <label htmlFor="usePersonalAddress" className="text-sm text-zinc-300 leading-snug cursor-pointer">
-                                        <span className="font-semibold block mb-0.5 text-zinc-100">My shop uses my personal address</span>
-                                        <span className="text-xs text-zinc-500">We'll automatically use the contact info and map location you provided above for your shop.</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            {!usePersonalAddress && (
-                                <div className="col-span-1 sm:col-span-2 grid gap-6 sm:grid-cols-2 p-5 bg-[#0D0D0D] rounded-xl border border-zinc-800 shadow-inner">
+                                <div className="grid gap-6 sm:grid-cols-2 relative z-10 mt-8 pt-8 border-t border-zinc-800">
                                     <div className="space-y-2">
                                         <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                            Shop Phone
+                                            Full Name
+                                        </label>
+                                        <input
+                                            value={form.displayName}
+                                            onChange={(event) => updateField("displayName", event.target.value)}
+                                            required
+                                            disabled={submitting}
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                            Phone Number
                                         </label>
                                         <input
                                             type="tel"
-                                            value={form.shopPhone}
-                                            onChange={(event) => updateField("shopPhone", event.target.value)}
-                                            placeholder="+94 77 123 4567"
+                                            value={form.phone}
+                                            onChange={(event) => updateField("phone", event.target.value)}
                                             disabled={submitting}
-                                            className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                            placeholder="+94 77 123 4567"
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     </div>
+
                                     <div className="space-y-2">
                                         <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                            Shop City
+                                            City
                                         </label>
                                         <input
-                                            value={form.shopCity}
-                                            onChange={(event) => updateField("shopCity", event.target.value)}
+                                            value={form.city}
+                                            onChange={(event) => updateField("city", event.target.value)}
+                                            required
+                                            disabled={submitting}
                                             placeholder="Colombo"
-                                            disabled={submitting}
-                                            className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     </div>
-                                    <div className="space-y-2 sm:col-span-2">
+
+                                    <div className="space-y-2">
                                         <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                            Shop Address
+                                            Address
                                         </label>
                                         <input
-                                            value={form.shopAddress}
-                                            onChange={(event) => updateField("shopAddress", event.target.value)}
-                                            placeholder="123 Market Street"
+                                            value={form.address}
+                                            onChange={(event) => updateField("address", event.target.value)}
                                             disabled={submitting}
-                                            className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                            placeholder="45 Temple Street"
+                                            className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
                                         />
                                     </div>
+
                                     <div className="space-y-2 sm:col-span-2">
                                         <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                            Shop Location <span className="text-zinc-600 font-medium">(optional)</span>
+                                            Personal Location <span className="text-zinc-600 font-medium">(optional)</span>
                                         </label>
-                                        <div className="rounded-xl overflow-hidden border border-zinc-700">
-                                            <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, shopLatitude: loc.lat, shopLongitude: loc.lng })); }} />
+                                        <p className="text-xs text-zinc-500 mb-3">Drag the pin to your home or current location.</p>
+                                        <div className="rounded-xl overflow-hidden border border-zinc-800">
+                                            <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, latitude: loc.lat, longitude: loc.lng })); }} />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                            Profile Picture <span className="text-zinc-600 font-medium">(optional)</span>
+                                        </label>
+                                        <div className="flex items-center gap-3 mt-2">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(event) => {
+                                                    if (event.target.files?.[0]) {
+                                                        setProfileImageFile(event.target.files[0]);
+                                                    }
+                                                }}
+                                                disabled={submitting}
+                                                className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
+                                            />
+                                            {profileImageFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
                                         </div>
                                     </div>
                                 </div>
-                            )}
 
-                            <div className="space-y-2 sm:col-span-2">
-                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                    Shop Picture <span className="text-zinc-600 font-medium">(optional)</span>
-                                </label>
-                                <div className="mt-2 flex items-center gap-3">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(event) => {
-                                            if (event.target.files?.[0]) {
-                                                setShopImageFile(event.target.files[0]);
-                                            }
-                                        }}
-                                        disabled={submitting}
-                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
-                                    />
-                                    {shopImageFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
-                                </div>
-                            </div>
+                                {role === "tailor" && (
+                                    <div className="grid gap-6 border-t border-zinc-800 pt-8 mt-8 sm:grid-cols-2 relative z-10">
+                                        <div className="col-span-1 sm:col-span-2 text-center mb-2">
+                                            <span className="inline-flex rounded-full bg-[#0D0D0D] border border-zinc-700 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                                                Shop Details
+                                            </span>
+                                        </div>
 
-                            <div className="space-y-2 sm:col-span-2">
-                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                    NIC Front <span className="text-zinc-600 font-medium">(optional)</span>
-                                </label>
-                                <div className="mt-2 flex items-center gap-3">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(event) => {
-                                            if (event.target.files?.[0]) {
-                                                setNicFrontFile(event.target.files[0]);
-                                            }
-                                        }}
-                                        disabled={submitting}
-                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
-                                    />
-                                    {nicFrontFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
-                                </div>
-                            </div>
+                                        <div className="space-y-2">
+                                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                Shop Name
+                                            </label>
+                                            <input
+                                                value={form.shopName}
+                                                onChange={(event) => updateField("shopName", event.target.value)}
+                                                required
+                                                disabled={submitting}
+                                                placeholder="Your shop name"
+                                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                            />
+                                        </div>
 
-                            <div className="space-y-2 sm:col-span-2">
-                                <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
-                                    NIC Rear <span className="text-zinc-600 font-medium">(optional)</span>
-                                </label>
-                                <div className="mt-2 flex items-center gap-3">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(event) => {
-                                            if (event.target.files?.[0]) {
-                                                setNicRearFile(event.target.files[0]);
-                                            }
-                                        }}
+                                        <div className="space-y-2">
+                                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                Specialty
+                                            </label>
+                                            <input
+                                                value={form.specialty}
+                                                onChange={(event) => updateField("specialty", event.target.value)}
+                                                required
+                                                disabled={submitting}
+                                                placeholder="Bridal wear, tailoring..."
+                                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2 sm:col-span-2">
+                                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                Shop Bio <span className="text-zinc-600 font-medium">(optional)</span>
+                                            </label>
+                                            <textarea
+                                                value={form.shopBio}
+                                                onChange={(event) => updateField("shopBio", event.target.value)}
+                                                placeholder="Tell us about your shop..."
+                                                disabled={submitting}
+                                                rows={3}
+                                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2 sm:col-span-2">
+                                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                Registration Number <span className="text-zinc-600 font-medium">(optional)</span>
+                                            </label>
+                                            <input
+                                                value={form.registrationNumber}
+                                                onChange={(event) => updateField("registrationNumber", event.target.value)}
+                                                placeholder="Business Registration Number"
+                                                disabled={submitting}
+                                                className="w-full rounded-xl border border-zinc-800 bg-[#0D0D0D] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                            />
+                                        </div>
+
+                                        <div className="col-span-1 sm:col-span-2">
+                                            <div className="flex items-start gap-3 py-4 border-y border-zinc-800 my-4">
+                                                <input
+                                                    type="checkbox"
+                                                    id="usePersonalAddress"
+                                                    checked={usePersonalAddress}
+                                                    onChange={(e) => setUsePersonalAddress(e.target.checked)}
+                                                    className="mt-1 h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-[#F6CA57] focus:ring-[#F6CA57] focus:ring-offset-zinc-950"
+                                                />
+                                                <label htmlFor="usePersonalAddress" className="text-sm text-zinc-300 leading-snug cursor-pointer">
+                                                    <span className="font-semibold block mb-0.5 text-zinc-100">My shop uses my personal address</span>
+                                                    <span className="text-xs text-zinc-500">We'll automatically use the contact info and map location you provided above for your shop.</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {!usePersonalAddress && (
+                                            <div className="col-span-1 sm:col-span-2 grid gap-6 sm:grid-cols-2 p-5 bg-[#0D0D0D] rounded-xl border border-zinc-800 shadow-inner">
+                                                <div className="space-y-2">
+                                                    <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                        Shop Phone
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        value={form.shopPhone}
+                                                        onChange={(event) => updateField("shopPhone", event.target.value)}
+                                                        placeholder="+94 77 123 4567"
+                                                        disabled={submitting}
+                                                        className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                        Shop City
+                                                    </label>
+                                                    <input
+                                                        value={form.shopCity}
+                                                        onChange={(event) => updateField("shopCity", event.target.value)}
+                                                        placeholder="Colombo"
+                                                        disabled={submitting}
+                                                        className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 sm:col-span-2">
+                                                    <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                        Shop Address
+                                                    </label>
+                                                    <input
+                                                        value={form.shopAddress}
+                                                        onChange={(event) => updateField("shopAddress", event.target.value)}
+                                                        placeholder="123 Market Street"
+                                                        disabled={submitting}
+                                                        className="w-full rounded-xl border border-zinc-800 bg-[#141414] px-4 py-3 text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-[#F6CA57] focus:ring-1 focus:ring-[#F6CA57] disabled:cursor-not-allowed disabled:opacity-50"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2 sm:col-span-2">
+                                                    <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                        Shop Location <span className="text-zinc-600 font-medium">(optional)</span>
+                                                    </label>
+                                                    <div className="rounded-xl overflow-hidden border border-zinc-700">
+                                                        <LocationPicker onChange={(loc: { lat: number, lng: number }) => { setForm(current => ({ ...current, shopLatitude: loc.lat, shopLongitude: loc.lng })); }} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="space-y-2 sm:col-span-2">
+                                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                Shop Picture <span className="text-zinc-600 font-medium">(optional)</span>
+                                            </label>
+                                            <div className="mt-2 flex items-center gap-3">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(event) => {
+                                                        if (event.target.files?.[0]) {
+                                                            setShopImageFile(event.target.files[0]);
+                                                        }
+                                                    }}
+                                                    disabled={submitting}
+                                                    className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
+                                                />
+                                                {shopImageFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 sm:col-span-2">
+                                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                NIC Front <span className="text-zinc-600 font-medium">(optional)</span>
+                                            </label>
+                                            <div className="mt-2 flex items-center gap-3">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(event) => {
+                                                        if (event.target.files?.[0]) {
+                                                            setNicFrontFile(event.target.files[0]);
+                                                        }
+                                                    }}
+                                                    disabled={submitting}
+                                                    className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
+                                                />
+                                                {nicFrontFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 sm:col-span-2">
+                                            <label className="block text-[10px] font-bold tracking-widest text-[#F6CA57] uppercase">
+                                                NIC Rear <span className="text-zinc-600 font-medium">(optional)</span>
+                                            </label>
+                                            <div className="mt-2 flex items-center gap-3">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(event) => {
+                                                        if (event.target.files?.[0]) {
+                                                            setNicRearFile(event.target.files[0]);
+                                                        }
+                                                    }}
+                                                    disabled={submitting}
+                                                    className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
+                                                />
+                                                {nicRearFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex flex-col-reverse gap-3 border-t border-zinc-800 pt-8 mt-8 sm:flex-row sm:justify-between relative z-10">
+                                    <button
+                                        type="button"
+                                        onClick={handleUseAnotherAccount}
                                         disabled={submitting}
-                                        className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-full file:border-0 file:bg-zinc-800 file:px-4 file:py-2 file:text-[10px] file:font-bold file:tracking-widest file:text-[#F6CA57] file:uppercase hover:file:bg-zinc-700 transition-colors"
-                                    />
-                                    {nicRearFile && <span className="text-xs text-[#F6CA57] font-bold whitespace-nowrap">Selected ✓</span>}
+                                        className="rounded-xl border border-zinc-700 px-6 py-3 text-xs font-bold tracking-widest uppercase text-zinc-400 hover:bg-[#1a1a1a] hover:text-zinc-300 disabled:opacity-50 transition-colors"
+                                    >
+                                        Use Another Account
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={submitting}
+                                        className="rounded-xl bg-[#F6CA57] px-8 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-[0_0_15px_rgba(246,202,87,0.2)] transition-all hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(246,202,87,0.4)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                                    >
+                                        {submitting ? "Saving Profile..." : "Register"}
+                                    </button>
                                 </div>
-                            </div>
+                            </form>
                         </div>
-                    )}
-
-                    <div className="flex flex-col-reverse gap-3 border-t border-zinc-800 pt-8 mt-8 sm:flex-row sm:justify-between relative z-10">
-                        <button
-                            type="button"
-                            onClick={handleUseAnotherAccount}
-                            disabled={submitting}
-                            className="rounded-xl border border-zinc-700 px-6 py-3 text-xs font-bold tracking-widest uppercase text-zinc-400 hover:bg-[#1a1a1a] hover:text-zinc-300 disabled:opacity-50 transition-colors"
-                        >
-                            Use Another Account
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className="rounded-xl bg-[#F6CA57] px-8 py-3 text-xs font-bold uppercase tracking-widest text-black shadow-[0_0_15px_rgba(246,202,87,0.2)] transition-all hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(246,202,87,0.4)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-                        >
-                            {submitting ? "Saving Profile..." : "Register"}
-                        </button>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</main>
+                </div>
+            </main>
 
-{/* Bottom Footer */}
-<footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-7 px-6 sm:px-12 relative z-20">
-    <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
-            <span className="text-sm font-black tracking-widest text-[#F5CA53]">
-                FITI
-            </span>
-            <span className="text-[11px] text-zinc-500">
-                &copy; {new Date().getFullYear()} FITI Bespoke Fitness &amp; Tailoring. All rights reserved.
-            </span>
+            {/* Bottom Footer */}
+            <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-7 px-6 sm:px-12 relative z-20">
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
+                        <span className="text-sm font-black tracking-widest text-[#F5CA53]">
+                            FITI
+                        </span>
+                        <span className="text-[11px] text-zinc-500">
+                            &copy; {new Date().getFullYear()} FITI Bespoke Fitness &amp; Tailoring. All rights reserved.
+                        </span>
+                    </div>
+                    <div className="flex items-center space-x-6 text-xs text-zinc-400">
+                        <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+                        <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
+                        <a href="/contact" className="hover:text-white transition-colors">Contact Us</a>
+                        <a href="/about" className="hover:text-white transition-colors">About Us</a>
+                    </div>
+                </div>
+            </footer>
         </div>
-        <div className="flex items-center space-x-6 text-xs text-zinc-400">
-            <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="/contact" className="hover:text-white transition-colors">Contact Us</a>
-            <a href="/about" className="hover:text-white transition-colors">About Us</a>
-        </div>
-    </div>
-</footer>
-</div>
     );
 }

@@ -208,13 +208,13 @@ export default function HomePage() {
     const slide = HERO_SLIDES[currentSlide];
 
     return (
-        <div className="min-h-screen relative font-sans text-[#4e220f] selection:bg-[#9d6638] selection:text-[#f7f1de] bg-[#f7f1de]">
+        <div className="min-h-screen relative font-sans text-[#4e220f] selection:bg-[#9d6638] selection:text-[#f7f1de] bg-[#f7f1e1]">
 
             {/* -------------------------------------------------------------
              * FULL BACKGROUND PHOTO WITH DARK OVERLAY & BACKDROP BLUR
              * (Matches Login Page Background Style)
              * ------------------------------------------------------------- */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
+            {/* <div className="fixed inset-0 z-0 pointer-events-none">
                 <Image
                     src="/images/orders/navy_double_suit.jpg"
                     alt="FITI Bespoke Atelier Background"
@@ -223,7 +223,7 @@ export default function HomePage() {
                     priority
                 />
                 <div className="absolute inset-0 bg-[#4e220f]/30 backdrop-blur-[4px]" />
-            </div>
+            </div> */}
 
             {/* -------------------------------------------------------------
              * HEADER NAVIGATION BAR (FLOATING GLASS NAV WITH LOGO)

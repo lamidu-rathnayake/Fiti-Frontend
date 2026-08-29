@@ -9,14 +9,7 @@ import { getClientProfile } from "@/lib/api/endpoints/profiles";
 import { listNearbyShops } from "@/lib/api/endpoints/shops";
 import type { Shop } from "@/lib/api/types/shop";
 
-const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
-    ssr: false,
-    loading: () => (
-        <div className="w-full h-full bg-[#131418] animate-pulse flex items-center justify-center text-zinc-500 text-xs font-mono">
-            Loading Atelier Map...
-        </div>
-    ),
-});
+import MapWithOverlay from "@/components/map/MapWithOverlay";
 
 const LOCATION_PRESETS = [
     { label: "Main Road, Colombo 12", lat: 6.9385, lng: 79.8542 },
@@ -117,42 +110,17 @@ export default function ClientHomePage() {
                     </h1>
                 </div>
 
-                <div className="w-full h-80 sm:h-96 rounded-2xl bg-[#0F1014] border border-zinc-800/90 relative overflow-hidden shadow-2xl group mt-4">
-                    {/* Dark Custom Map View */}
-                    {locationInitialized && (
-                        <div className="w-full h-full relative z-0">
-                            <LocationPicker
-                                defaultLocation={location || undefined}
-                                onChange={(loc) => {
-                                    setLocation(loc);
-                                    setSelectedAddress(`Lat: ${loc.lat.toFixed(4)}, Lng: ${loc.lng.toFixed(4)}`);
-                                }}
-                            />
-                        </div>
-                    )}
-                </div>
-
-                {/* CURRENT SELECTION OVERLAY CARD - Detached for mobile/desktop responsiveness */}
-                <div className="w-full bg-[#121318]/95 border border-zinc-800/90 rounded-2xl p-4 shadow-2xl backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-4 mb-6">
-                    <div>
-                        <span className="text-[9px] font-mono tracking-[0.2em] uppercase text-zinc-400 block mb-1">
-                            CURRENT SELECTION
-                        </span>
-                        <p className="text-sm font-extrabold text-white leading-tight font-heading">
-                            {selectedAddress}
-                        </p>
-                    </div>
-
-                    <button
-                        onClick={() => {
-                            setCustomAddressInput(selectedAddress);
-                            setIsLocationModalOpen(true);
-                        }}
-                        className="px-4 py-3 sm:py-2 bg-[#F5CA53] hover:bg-[#f7d369] text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(245,202,83,0.3)] shrink-0 transform hover:scale-105 w-full sm:w-auto"
-                    >
-                        CHANGE LOCATION
-                    </button>
-                </div>
+                <MapWithOverlay
+                    location={location}
+                    locationInitialized={locationInitialized}
+                    selectedAddress={selectedAddress}
+                    onLocationChange={setLocation}
+                    onAddressChange={setSelectedAddress}
+                    onChangeLocationClick={() => {
+                        setCustomAddressInput(selectedAddress);
+                        setIsLocationModalOpen(true);
+                    }}
+                />
 
 
                 {/* NEARBY BEST STORES SECTION */}

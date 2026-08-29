@@ -8,7 +8,7 @@ import AtelierChatDrawer from "@/components/chat/AtelierChatDrawer";
 import { listShops } from "@/lib/api/endpoints/shops";
 
 export default function TailorsPage() {
-    const { role, logout, setRole } = useAuth();
+    const { role, logout } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialQuery = searchParams.get("q") || "";
@@ -178,26 +178,6 @@ export default function TailorsPage() {
 
                     {/* Right Action Buttons */}
                     <div className="flex items-center space-x-3">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("client");
-                                router.push("/client/home");
-                            }}
-                            className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            Client Dash
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("tailor");
-                                router.push("/tailor/home");
-                            }}
-                            className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            Seller Dash
-                        </button>
                         <button
                             onClick={() => setIsChatDrawerOpen((prev) => !prev)}
                             title="Direct Message Tailor"

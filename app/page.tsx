@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { auth, googleProvider } from "@/lib/firebase/config";
 import { signInWithPopup } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { useAuth } from "@/lib/firebase/AuthContext";
 import { getMyRole } from "@/lib/api/endpoints/auth";
 import { FitiApiError } from "@/lib/api/client";
+import { useAuth } from "@/lib/firebase/AuthContext";
 import AtelierChatDrawer from "@/components/chat/AtelierChatDrawer";
 
 export default function HomePage() {
@@ -165,26 +165,6 @@ export default function HomePage() {
 
                     {/* Right User Actions */}
                     <div className="flex items-center space-x-3">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("client");
-                                router.push("/client/home");
-                            }}
-                            className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            Client Dash
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("tailor");
-                                router.push("/tailor/home");
-                            }}
-                            className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            Seller Dash
-                        </button>
                         <button
                             onClick={() => setIsChatDrawerOpen((prev) => !prev)}
                             title="Direct Message Atelier"

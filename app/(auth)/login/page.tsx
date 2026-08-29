@@ -66,9 +66,11 @@ export default function LoginPage() {
 
             router.replace("/register");
         } catch (err) {
-            console.warn("Post auth role check fallback:", err);
-            setRole("client");
-            router.replace("/client/home");
+            if (err instanceof FitiApiError && err.status === 404) {
+                router.replace("/onboarding");
+                return;
+            }
+            throw err;
         }
     };
 
@@ -94,8 +96,13 @@ export default function LoginPage() {
             await signInWithPopup(auth, googleProvider);
             await handlePostAuthRedirect();
         } catch (err: unknown) {
-            const message = firebaseErrorMessage(err);
-            if (message) setError(message);
+            if (err instanceof FirebaseError) {
+                if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
+                    setError("Google sign-in failed. Please try again.");
+                }
+            } else {
+                setError("An unexpected error occurred.");
+            }
         } finally {
             setLoading(false);
         }
@@ -136,26 +143,6 @@ export default function LoginPage() {
                     </div>
 
                     <div className="flex items-center space-x-3">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("client");
-                                router.push("/client/home");
-                            }}
-                            className="bg-[#18191E] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3.5 py-2 rounded-xl transition-all"
-                        >
-                            Client Dash &rarr;
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("tailor");
-                                router.push("/tailor/home");
-                            }}
-                            className="bg-[#18191E] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3.5 py-2 rounded-xl transition-all"
-                        >
-                            Seller Dash &rarr;
-                        </button>
                         <button
                             type="button"
                             onClick={() => router.push("/register")}
@@ -361,40 +348,6 @@ export default function LoginPage() {
                                 <span>Sign in with Google</span>
                             </button>
 
-                            {/* DEV MODE QUICK DIRECT ACCESS BUTTONS */}
-                            <div className="p-4 rounded-2xl bg-[#18191E]/90 border border-[#F5CA53]/40 space-y-3 shadow-lg">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F5CA53] flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full bg-[#F5CA53] animate-ping" />
-                                        DEV MODE DIRECT ACCESS
-                                    </span>
-                                    <span className="text-[9px] font-mono text-zinc-500 uppercase">Testing</span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2.5">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setRole("client");
-                                            router.push("/client/home");
-                                        }}
-                                        className="w-full bg-[#0A0B0E] hover:bg-[#F5CA53] hover:text-black border border-zinc-700 hover:border-[#F5CA53] text-zinc-200 text-xs font-bold py-2.5 px-3 rounded-xl transition-all duration-300 text-center flex items-center justify-center gap-1"
-                                    >
-                                        <span>Client Dashboard</span>
-                                        <span>&rarr;</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setRole("tailor");
-                                            router.push("/tailor/home");
-                                        }}
-                                        className="w-full bg-[#0A0B0E] hover:bg-[#F5CA53] hover:text-black border border-zinc-700 hover:border-[#F5CA53] text-zinc-200 text-xs font-bold py-2.5 px-3 rounded-xl transition-all duration-300 text-center flex items-center justify-center gap-1"
-                                    >
-                                        <span>Seller Dashboard</span>
-                                        <span>&rarr;</span>
-                                    </button>
-                                </div>
-                            </div>
                         </div>
 
                         <p className="text-[10px] text-zinc-500 text-center mt-6">

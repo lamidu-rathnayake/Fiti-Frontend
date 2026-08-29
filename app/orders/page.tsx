@@ -51,7 +51,7 @@ interface ClientOrderRow {
 }
 
 export default function OrdersPage() {
-    const { user, role, logout, setRole } = useAuth();
+    const { user, role, logout } = useAuth();
     const router = useRouter();
 
     const isTailorView = role === "tailor";
@@ -560,26 +560,6 @@ export default function OrdersPage() {
                     </nav>
 
                     <div className="flex items-center space-x-3">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("client");
-                                router.push("/client/home");
-                            }}
-                            className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            Client Dash
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("tailor");
-                                router.push("/tailor/home");
-                            }}
-                            className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            Tailor Dash
-                        </button>
                         <button
                             onClick={async () => {
                                 await logout();

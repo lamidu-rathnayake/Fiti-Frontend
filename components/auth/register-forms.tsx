@@ -12,6 +12,16 @@ import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/pr
 import { createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
 
+function registrationErrorMessage(error: unknown): string {
+    if (error instanceof FitiApiError) return error.detail;
+    if (error instanceof FirebaseError) {
+        if (error.code === "auth/email-already-in-use") return "This email is already registered.";
+        if (error.code === "auth/invalid-email") return "Please enter a valid email address.";
+        if (error.code === "auth/weak-password") return "Choose a stronger password.";
+    }
+    return error instanceof Error ? error.message : "Registration failed. Please try again.";
+}
+
 // ── CLIENT REGISTRATION FORM (EXACT MATCHING SCREENSHOT) ─────────────────────
 
 export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
@@ -42,41 +52,24 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
         setLoading(true);
 
         try {
-            // 1. Attempt Firebase User Creation
-            try {
-                if (auth) {
-                    const userCredential = await createUserWithEmailAndPassword(
-                        auth,
-                        userEmail,
-                        userPass
-                    );
-                    if (userCredential?.user) {
-                        await updateProfile(userCredential.user, { displayName: fullName });
-                        await userCredential.user.getIdToken(true);
-                    }
-                }
-            } catch (fbErr: unknown) {
-                console.warn("Firebase Auth registration notice:", fbErr);
-            }
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                userEmail,
+                userPass
+            );
+            await updateProfile(userCredential.user, { displayName: fullName });
+            await userCredential.user.getIdToken(true);
 
-            // 2. Attempt Backend API Client Profile Creation
-            try {
-                await createClientProfile({
-                    phone: whatsapp.trim() ? `+94${whatsapp.trim()}` : null,
-                    city: city.trim() || "Colombo",
-                    address: address.trim() || null,
-                });
-            } catch (apiErr) {
-                console.warn("Backend API profile creation notice:", apiErr);
-            }
+            await createClientProfile({
+                phone: whatsapp.trim() ? `+94${whatsapp.replace(/\D/g, "")}` : null,
+                city: city.trim() || "Colombo",
+                address: address.trim() || null,
+            });
 
-            // 3. Always set role & navigate to Client Dashboard
             setRole("client");
             router.replace("/client/home");
         } catch (err: unknown) {
-            console.error("Client registration fallback redirecting:", err);
-            setRole("client");
-            router.replace("/client/home");
+            setError(registrationErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -385,56 +378,34 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
         setLoading(true);
 
         try {
-            // 1. Attempt Firebase User Creation
-            try {
-                if (auth) {
-                    const userCredential = await createUserWithEmailAndPassword(
-                        auth,
-                        userEmail,
-                        userPass
-                    );
-                    if (userCredential?.user) {
-                        await updateProfile(userCredential.user, { displayName: fullName });
-                        await userCredential.user.getIdToken(true);
-                    }
-                }
-            } catch (fbErr: unknown) {
-                console.warn("Firebase Auth seller registration notice:", fbErr);
-            }
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                userEmail,
+                userPass
+            );
+            await updateProfile(userCredential.user, { displayName: fullName });
+            await userCredential.user.getIdToken(true);
 
-            // 2. Attempt Backend API Tailor Profile Creation
-            try {
-                await createTailorProfile({
-                    phone: whatsapp.trim() ? `+94${whatsapp.trim()}` : null,
-                    city: city.trim() || "Colombo",
-                    address: address.trim() || null,
-                });
-            } catch (apiErr) {
-                console.warn("Backend API tailor profile notice:", apiErr);
-            }
+            await createTailorProfile({
+                phone: whatsapp.trim() ? `+94${whatsapp.replace(/\D/g, "")}` : null,
+                city: city.trim() || "Colombo",
+                address: address.trim() || null,
+            });
 
-            // 3. Attempt Shop Creation
-            try {
-                await createShop({
-                    shop_name: shopName.trim() || "Atelier Vane",
-                    specialty: "Bespoke Tailoring",
-                    shop_bio: shopBio.trim() || null,
-                    shop_address: shopAddress.trim() || address.trim() || null,
-                    city: city.trim() || "Colombo",
-                    contact_number: shopContact.trim() || whatsapp.trim() || null,
-                    registration_number: registrationNumber.trim() || null,
-                });
-            } catch (shopErr) {
-                console.warn("Backend API shop creation notice:", shopErr);
-            }
+            await createShop({
+                shop_name: shopName.trim() || "Atelier Vane",
+                specialty: "Bespoke Tailoring",
+                shop_bio: shopBio.trim() || null,
+                shop_address: shopAddress.trim() || address.trim() || null,
+                city: city.trim() || "Colombo",
+                contact_number: shopContact.trim() ? `+94${shopContact.replace(/\D/g, "")}` : null,
+                registration_number: registrationNumber.trim() || null,
+            });
 
-            // 4. Always set role & navigate to Tailor / Seller Dashboard
             setRole("tailor");
             router.replace("/tailor/home");
         } catch (err: unknown) {
-            console.error("Tailor registration fallback redirecting:", err);
-            setRole("tailor");
-            router.replace("/tailor/home");
+            setError(registrationErrorMessage(err));
         } finally {
             setLoading(false);
         }

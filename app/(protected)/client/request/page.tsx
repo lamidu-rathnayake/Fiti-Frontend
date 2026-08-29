@@ -9,7 +9,7 @@ import { createClothingRequest } from "@/lib/api/endpoints/orders";
 
 export default function NewTailoringRequestPage() {
     const router = useRouter();
-    const { user, logout, setRole } = useAuth();
+    const { user, logout } = useAuth();
 
     const [garmentType, setGarmentType] = useState("TWO-PIECE SUIT");
     const [fabricChoice, setFabricChoice] = useState("tailor_provided");
@@ -99,26 +99,6 @@ export default function NewTailoringRequestPage() {
 
                     {/* Right Action Buttons */}
                     <div className="flex items-center space-x-3">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("client");
-                                router.push("/client/home");
-                            }}
-                            className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            Client Dash
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRole("tailor");
-                                router.push("/tailor/home");
-                            }}
-                            className="bg-[#141519] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3 py-1.5 rounded-xl transition-all"
-                        >
-                            Tailor Dash
-                        </button>
                         <button
                             onClick={async () => {
                                 await logout();

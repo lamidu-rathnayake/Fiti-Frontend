@@ -9,30 +9,33 @@ export default function ProtectedLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { user, dbRole, loading, setRole } = useAuth();
+    const { user, dbRole, loading } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
+    const requiredRole = pathname.startsWith("/tailor")
+        ? "tailor"
+        : pathname.startsWith("/client")
+            ? "client"
+            : null;
 
     useEffect(() => {
-        if (!loading) {
-            if (pathname.startsWith("/tailor")) {
-                if (dbRole !== "tailor") {
-                    setRole("tailor");
-                }
-            } else if (pathname.startsWith("/client")) {
-                if (dbRole !== "client") {
-                    setRole("client");
-                }
-            } else if (!user && !dbRole) {
-                router.replace("/login");
-            }
-        }
-    }, [loading, router, user, dbRole, pathname, setRole]);
+        if (loading) return;
 
-    if (loading) {
+        if (!user) {
+            router.replace("/login");
+        } else if (!dbRole) {
+            router.replace("/onboarding");
+        } else if (requiredRole && dbRole !== requiredRole) {
+            router.replace(`/${dbRole}/home`);
+        }
+    }, [loading, router, user, dbRole, requiredRole]);
+
+    const authorized = user && dbRole && (!requiredRole || dbRole === requiredRole);
+
+    if (loading || !authorized) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#0A0B0E] text-xs text-[#F5CA53] font-mono tracking-widest uppercase">
-                Loading Atelier Dashboard...
+                Checking access...
             </div>
         );
     }

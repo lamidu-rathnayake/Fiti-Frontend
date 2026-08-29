@@ -415,6 +415,7 @@ export default function HomePage() {
                                 src="/images/orders/navy_double_suit.jpg"
                                 alt="New Arrivals"
                                 fill
+                                sizes="144px"
                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                         </div>
@@ -435,6 +436,7 @@ export default function HomePage() {
                                 src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=600&q=80"
                                 alt="Trending Tailoring"
                                 fill
+                                sizes="144px"
                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                         </div>
@@ -455,6 +457,7 @@ export default function HomePage() {
                                 src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=600&q=80"
                                 alt="Best Sellers"
                                 fill
+                                sizes="144px"
                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                         </div>
@@ -509,6 +512,7 @@ export default function HomePage() {
                                 src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=1400&q=88"
                                 alt="Bespoke Collection"
                                 fill
+                                sizes="(min-width: 1024px) 58vw, 100vw"
                                 className="object-cover group-hover:scale-105 transition-transform duration-700 brightness-95"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-earth-text/95 via-earth-text/40 to-transparent z-10" />
@@ -551,6 +555,7 @@ export default function HomePage() {
                                         src="https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=600&q=80"
                                         alt="Custom Shirting"
                                         fill
+                                        sizes="176px"
                                         className="object-cover object-left group-hover:scale-105 transition-transform duration-500"
                                     />
                                 </div>
@@ -571,6 +576,7 @@ export default function HomePage() {
                                         src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=600&q=80"
                                         alt="Silk Accessories"
                                         fill
+                                        sizes="176px"
                                         className="object-cover object-left group-hover:scale-105 transition-transform duration-500"
                                     />
                                 </div>
@@ -592,6 +598,7 @@ export default function HomePage() {
                                 src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=88"
                                 alt="Master Tailor Craftsmanship"
                                 fill
+                                sizes="(min-width: 1024px) 42vw, 100vw"
                                 className="object-cover"
                             />
                         </div>

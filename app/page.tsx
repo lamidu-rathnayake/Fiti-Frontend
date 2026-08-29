@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { FirebaseError } from "firebase/app";
 import { signInWithPopup } from "firebase/auth";
 
-import AtelierChatDrawer from "@/components/chat/AtelierChatDrawer";
 import { FitiApiError } from "@/lib/api/client";
 import { getMyRole } from "@/lib/api/endpoints/auth";
 import { useAuth } from "@/lib/firebase/AuthContext";
@@ -69,7 +68,6 @@ export default function HomePage() {
     const [error, setError] = useState("");
     const [selectedFabric, setSelectedFabric] = useState(0);
     const [openFaq, setOpenFaq] = useState<number | null>(0);
-    const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -418,25 +416,6 @@ export default function HomePage() {
                     </div>
                 </div>
             </footer>
-
-            {/* Atelier chat */}
-            {!isChatDrawerOpen ? (
-                <button
-                    type="button"
-                    onClick={() => setIsChatDrawerOpen(true)}
-                    className="fixed bottom-5 right-5 z-[80] flex h-12 items-center gap-2 bg-[#4e220f] px-5 text-xs font-extrabold text-[#f7f1de] shadow-[0_12px_36px_rgba(78,34,15,0.28)] transition-transform hover:-translate-y-1"
-                    aria-label="Open atelier chat"
-                >
-                    <span className="h-2 w-2 rounded-full bg-[#B0BA99]" />
-                    Ask an atelier
-                </button>
-            ) : null}
-
-            <AtelierChatDrawer
-                isOpen={isChatDrawerOpen}
-                onClose={() => setIsChatDrawerOpen(false)}
-                userRole="client"
-            />
         </div>
     );
 }

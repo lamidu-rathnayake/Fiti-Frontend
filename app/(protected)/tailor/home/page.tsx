@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthContext";
-import AtelierChatDrawer from "@/components/chat/AtelierChatDrawer";
-import NotificationDrawer from "@/components/notifications/NotificationDrawer";
 import { listOpenRequests, submitBid, listShopOrders } from "@/lib/api/endpoints/orders";
 import { listTailorShops } from "@/lib/api/endpoints/shops";
 import { getTailorProfile, updateTailorProfile } from "@/lib/api/endpoints/profiles";
@@ -18,9 +16,6 @@ export default function TailorHomePage() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<"overview" | "schedule" | "clients" | "fabrics" | "earnings" | "settings">("overview");
 
-    // Chat & Notification drawer states for Tailor
-    const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
-    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
     // Real data state
@@ -235,18 +230,6 @@ export default function TailorHomePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
                         </Link>
-                        <button onClick={() => setIsNotificationOpen(true)} title="Notifications" className="relative cursor-pointer p-1 rounded-xl hover:bg-zinc-800 transition-colors">
-                            <svg className="w-5 h-5 hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                            <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#F5CA53]" />
-                        </button>
-                        <button onClick={() => setIsChatDrawerOpen((prev) => !prev)} title="Direct Message Client" className="w-8 h-8 rounded-full border border-[#F5CA53]/50 bg-[#F5CA53]/10 hover:bg-[#F5CA53]/20 flex items-center justify-center text-[#F5CA53] transition-all relative">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-black" />
-                        </button>
                         <button
                             onClick={async () => { await logout(); router.push("/login"); }}
                             className="px-3.5 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
@@ -773,30 +756,6 @@ export default function TailorHomePage() {
                     </div>
                 </div>
             </footer>
-
-            {/* FLOATING CHAT TRIGGER */}
-            {!isChatDrawerOpen && (
-                <button
-                    onClick={() => setIsChatDrawerOpen(true)}
-                    className="fixed bottom-6 right-6 z-[8888] px-4 py-3 bg-[#F5CA53] hover:bg-[#f7d369] text-black font-extrabold text-xs uppercase tracking-wider rounded-full shadow-[0_0_25px_rgba(245,202,83,0.5)] flex items-center gap-2 transition-all hover:scale-105"
-                >
-                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
-                    <span>💬 Text Client Direct Line</span>
-                </button>
-            )}
-
-            {/* LIVE ATELIER CHAT DRAWER */}
-            <AtelierChatDrawer
-                isOpen={isChatDrawerOpen}
-                onClose={() => setIsChatDrawerOpen(false)}
-                userRole="tailor"
-            />
-
-            {/* REAL-TIME NOTIFICATION DRAWER */}
-            <NotificationDrawer
-                isOpen={isNotificationOpen}
-                onClose={() => setIsNotificationOpen(false)}
-            />
         </div>
     );
 }

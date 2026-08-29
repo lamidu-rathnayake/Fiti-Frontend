@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthContext";
-import AtelierChatDrawer from "@/components/chat/AtelierChatDrawer";
 import { listShops } from "@/lib/api/endpoints/shops";
 
 export default function StorefrontPage() {
@@ -12,8 +11,6 @@ export default function StorefrontPage() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("ALL");
-    const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
-    const [chatTarget, setChatTarget] = useState("Master Alexander Vane");
     const [products, setProducts] = useState<Array<{
         id: number | string;
         name: string;
@@ -123,11 +120,6 @@ export default function StorefrontPage() {
         return matchesQuery && matchesCategory;
     });
 
-    const handleOpenChat = (tailorName: string) => {
-        setChatTarget(tailorName);
-        setIsChatDrawerOpen(true);
-    };
-
     return (
         <div className="min-h-screen bg-[#07080A] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
             {/* TOP NAVIGATION HEADER */}
@@ -176,16 +168,6 @@ export default function StorefrontPage() {
 
                     {/* Right Action Buttons */}
                     <div className="flex items-center space-x-3">
-                        <button
-                            onClick={() => setIsChatDrawerOpen((prev) => !prev)}
-                            title="Direct Message Tailor"
-                            className="w-9 h-9 rounded-xl border border-[#F5CA53]/50 bg-[#F5CA53]/10 hover:bg-[#F5CA53]/20 flex items-center justify-center text-[#F5CA53] transition-all relative"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-black" />
-                        </button>
                         <button
                             onClick={async () => {
                                 await logout();
@@ -284,13 +266,7 @@ export default function StorefrontPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2 pt-2">
-                                    <button
-                                        onClick={() => handleOpenChat(item.tailor)}
-                                        className="w-full py-3 rounded-xl bg-[#18191E] border border-[#F5CA53]/50 hover:bg-[#F5CA53]/10 text-[#F5CA53] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all"
-                                    >
-                                        <span>💬 Text</span>
-                                    </button>
+                                <div className="grid grid-cols-1 gap-2 pt-2">
                                     <Link
                                         href="/client/request"
                                         className="w-full text-center py-3 rounded-xl bg-[#F5CA53] text-black text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(245,202,83,0.25)] hover:scale-[1.01] transition-transform block"
@@ -320,25 +296,6 @@ export default function StorefrontPage() {
                     </div>
                 )}
             </main>
-
-            {/* FLOATING TEXT / CHAT TRIGGER BUTTON */}
-            {!isChatDrawerOpen && (
-                <button
-                    onClick={() => setIsChatDrawerOpen(true)}
-                    className="fixed bottom-6 right-6 z-[8888] px-4 py-3 bg-[#F5CA53] hover:bg-[#f7d369] text-black font-extrabold text-xs uppercase tracking-wider rounded-full shadow-[0_0_25px_rgba(245,202,83,0.5)] flex items-center gap-2 transition-all hover:scale-105"
-                >
-                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-ping" />
-                    <span>💬 Text Master Tailor</span>
-                </button>
-            )}
-
-            {/* LIVE ATELIER CHAT DRAWER */}
-            <AtelierChatDrawer
-                isOpen={isChatDrawerOpen}
-                onClose={() => setIsChatDrawerOpen(false)}
-                initialContactName={chatTarget}
-                userRole="client"
-            />
 
             {/* FOOTER */}
             <footer className="w-full border-t border-zinc-900/90 bg-[#07080A] py-8 px-4 sm:px-8 relative z-20">

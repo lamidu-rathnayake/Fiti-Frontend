@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { auth, googleProvider } from "@/lib/firebase/config";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
@@ -38,10 +39,10 @@ function firebaseErrorMessage(err: unknown): string {
 
 export default function LoginPage() {
     const router = useRouter();
-    const [mode, setMode] = useState<"login">("login");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [agreeTerms, setAgreeTerms] = useState(true);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -98,7 +99,7 @@ export default function LoginPage() {
         } catch (err: unknown) {
             if (err instanceof FirebaseError) {
                 if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
-                    setError("Google sign-in failed. Please try again.");
+                    setError("Google sign-in failed. Check your connection and try again.");
                 }
             } else {
                 setError("An unexpected error occurred.");
@@ -109,223 +110,80 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0A0B0E] text-white flex flex-col justify-between relative overflow-x-hidden selection:bg-[#F5CA53] selection:text-black font-sans">
+        <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-8 overflow-hidden font-sans selection:bg-[#9d6638] selection:text-[#f7f1de]">
+            {/* FULL BACKGROUND PHOTO */}
+            <div className="absolute inset-0 z-0">
+                <Image
+                    src="/images/orders/mens_charcoal_suit.jpg"
+                    alt="Atelier Studio Background"
+                    fill
+                    className="object-cover brightness-[0.4] scale-105"
+                    priority
+                />
+                <div className="absolute inset-0 bg-[#4e220f]/20 backdrop-blur-[3px]" />
+            </div>
 
-            {/* AMBIENT BACKGROUND GLOW RECTANGLES */}
-            <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-[#F5CA53]/10 blur-[180px] rounded-full pointer-events-none animate-pulse-glow z-0" />
+            {/* FLOATING CARD CONTAINER */}
+            <div className="relative z-10 w-full max-w-5xl bg-transparent rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
+                
+                {/* LEFT COLUMN: TORN PAPER FORM SECTION */}
+                <div className="lg:col-span-6 bg-[#f7f1de] relative p-8 sm:p-12 flex flex-col justify-between z-20">
+                    
+                    {/* TORN PAPER JAGGED SVG EDGE (Right border on desktop) */}
+                    <svg
+                        className="absolute top-0 -right-7 h-full w-8 z-30 text-[#f7f1de] fill-current hidden lg:block pointer-events-none drop-shadow-[4px_0_6px_rgba(0,0,0,0.15)]"
+                        viewBox="0 0 30 600"
+                        preserveAspectRatio="none"
+                    >
+                        <path d="M0,0 L0,600 L14,600 Q2,570 20,540 Q6,510 24,480 Q4,450 18,420 Q28,390 10,360 Q2,330 22,300 Q8,270 26,240 Q4,210 18,180 Q28,150 10,120 Q0,90 22,60 Q8,30 26,0 Z" />
+                    </svg>
 
-            {/* TOP NAVIGATION BAR */}
-            <header className="w-full border-b border-zinc-900/90 bg-[#0A0B0E]/80 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button
-                            type="button"
-                            onClick={() => router.push("/")}
-                            className="px-3.5 py-2 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
-                            title="Return to Landing Page"
-                        >
-                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
-                            <span className="hidden sm:inline">Landing Page</span>
-                        </button>
-
-                        <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative h-10 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
-                                <img
-                                    src="/logoo.png"
-                                    alt="FITI Bespoke Atelier Logo"
-                                    className="h-8 w-auto object-contain"
+                    <div>
+                        {/* Top Branding & Return Link */}
+                        <div className="flex items-center justify-between mb-8">
+                            <Link href="/" className="group">
+                                <Image
+                                    src="/logo_light.png"
+                                    alt="FITI Atelier"
+                                    width={140}
+                                    height={44}
+                                    className="h-10 w-auto object-contain group-hover:scale-105 transition-transform"
+                                    priority
                                 />
-                            </div>
-                            <span className="hidden sm:inline-block text-[9px] font-mono tracking-[0.25em] text-zinc-400 uppercase border-l border-zinc-800 pl-3 py-1">
-                                Bespoke Atelier
-                            </span>
-                        </Link>
-                    </div>
+                            </Link>
 
-                    <div className="flex items-center space-x-3">
-                        <button
-                            type="button"
-                            onClick={() => router.push("/register")}
-                            className="btn-gold-shimmer text-black font-extrabold text-xs uppercase tracking-wider px-4 py-2 rounded-xl"
-                        >
-                            Register
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            {/* MAIN CONTENT AREA */}
-            <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-12 relative z-10 animate-fade-in-up">
-                <div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-
-                    {/* LEFT COLUMN: CRAFTSMANSHIP & RIGOR */}
-                    <div className="lg:col-span-5 glass-card stitch-border rounded-[32px] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden min-h-[480px]">
-                        <div className="absolute top-0 left-0 w-48 h-32 bg-[#F5CA53]/15 blur-3xl pointer-events-none" />
-
-                        <div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FFE28A] mb-3 block">
-                                Craftsmanship &amp; Precision
-                            </span>
-
-                            <h1 className="mb-4">
-                                <span className="text-3xl font-serif font-light text-white block mb-1">
-                                    The Standard of
-                                </span>
-                                <span className="text-3xl sm:text-4xl font-serif font-bold gold-gradient-text tracking-tight block">
-                                    Bespoke Living.
-                                </span>
-                            </h1>
-
-                            <p className="text-xs text-zinc-400 leading-relaxed max-w-md">
-                                Join an exclusive ecosystem where high-performance tailoring meets elite physical discipline. Access your customized fits and orders in real-time.
-                            </p>
+                            <button
+                                type="button"
+                                onClick={() => router.push("/")}
+                                className="text-xs font-bold text-[#9d6638] hover:text-[#4e220f] transition flex items-center gap-1"
+                            >
+                                &larr; Home
+                            </button>
                         </div>
 
-                        {/* Lower Image Card */}
-                        <div className="relative overflow-hidden rounded-2xl border border-zinc-800/90 bg-black/40 h-52 mt-8 group cursor-pointer shadow-xl">
-                            <img
-                                src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80"
-                                alt="Bespoke Master Tailor at Work"
-                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-90"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
+                        {/* Title */}
+                        <h1 className="text-3xl sm:text-4xl font-black tracking-wider text-[#4e220f] uppercase mb-6 text-center">
+                            SIGN IN
+                        </h1>
 
-                            <div className="relative z-20 h-full p-5 flex flex-col justify-end">
-                                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53] mb-1 block">
-                                    Verified Artisans
-                                </span>
-                                <p className="text-xs font-serif font-bold text-white tracking-wide">
-                                    Over 1,500 custom garments crafted with precision.
-                                </p>
+                        {/* Error Banner */}
+                        {error && (
+                            <div
+                                aria-live="polite"
+                                role="alert"
+                                className="mb-6 rounded-2xl border border-rose-800/30 bg-rose-100/60 px-4 py-3 text-xs font-medium text-rose-900 text-center"
+                            >
+                                {error}
                             </div>
-                        </div>
-                    </div>
+                        )}
 
-                    {/* RIGHT COLUMN: LOGIN FORM */}
-                    <div className="lg:col-span-7 glass-card rounded-[32px] p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col justify-between">
-                        <div className="absolute top-0 right-1/2 translate-x-1/2 w-64 h-20 bg-[#F5CA53]/15 blur-2xl pointer-events-none" />
-
-                        <div>
-                            {/* Header */}
-                            <div className="flex items-center justify-between mb-8 border-b border-zinc-800/80 pb-5">
-                                <div>
-                                    <h2 className="text-3xl font-serif font-bold text-white tracking-tight">
-                                        Sign In
-                                    </h2>
-                                    <p className="text-xs text-zinc-400 mt-1">
-                                        Enter your credentials to access your bespoke dashboard.
-                                    </p>
-                                </div>
-
-                                <div className="flex items-center bg-[#18191E] border border-zinc-800 rounded-xl p-1 text-xs">
-                                    <span className="bg-[#F5CA53] text-black px-3 py-1.5 rounded-lg font-bold">
-                                        Log In
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => router.push("/register")}
-                                        className="text-zinc-400 hover:text-white px-3 py-1.5 rounded-lg font-bold transition-all"
-                                    >
-                                        Register
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Error Banner */}
-                            {error && (
-                                <div
-                                    aria-live="polite"
-                                    role="alert"
-                                    className="mb-6 rounded-xl border border-rose-900/50 bg-rose-950/40 px-4 py-3 text-xs font-medium text-rose-400 text-center animate-fade-in-up"
-                                >
-                                    {error}
-                                </div>
-                            )}
-
-                            {/* FORM FIELDS */}
-                            <form onSubmit={handleSubmit} className="space-y-5">
-                                <div>
-                                    <label
-                                        htmlFor="login-email"
-                                        className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2"
-                                    >
-                                        Email Address
-                                    </label>
-                                    <input
-                                        id="login-email"
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="you@example.com"
-                                        autoComplete="email"
-                                        required
-                                        disabled={loading}
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E]/90 px-4 py-3.5 text-sm text-zinc-200 outline-none transition duration-300 placeholder:text-zinc-600 focus:border-[#F5CA53] focus:ring-1 focus:ring-[#F5CA53] shadow-inner"
-                                    />
-                                </div>
-
-                                <div>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <label
-                                            htmlFor="login-password"
-                                            className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase"
-                                        >
-                                            Password
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="text-[10px] font-bold text-zinc-500 hover:text-[#F5CA53] uppercase tracking-wider transition-colors"
-                                        >
-                                            {showPassword ? "Hide" : "Show"}
-                                        </button>
-                                    </div>
-                                    <input
-                                        id="login-password"
-                                        type={showPassword ? "text" : "password"}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="••••••••••••"
-                                        autoComplete="current-password"
-                                        required
-                                        disabled={loading}
-                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E]/90 px-4 py-3.5 text-sm text-zinc-200 outline-none transition duration-300 placeholder:text-zinc-600 focus:border-[#F5CA53] focus:ring-1 focus:ring-[#F5CA53] shadow-inner"
-                                    />
-                                </div>
-
-                                {/* Status Indicator */}
-                                <div className="flex items-center gap-2 pt-2">
-                                    <span className="w-2 h-2 rounded-full bg-[#F5CA53] animate-ping" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFE28A]">
-                                        SECURE ATELIER AUTHENTICATION
-                                    </span>
-                                </div>
-
-                                {/* Submit Button */}
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full btn-gold-shimmer text-black font-extrabold text-xs uppercase tracking-[0.2em] py-4 px-6 rounded-xl text-center block mt-2"
-                                >
-                                    {loading ? "Authenticating..." : "Log In"}
-                                </button>
-                            </form>
-
-                            {/* Google Sign In Divider & Button */}
-                            <div className="relative flex items-center justify-center my-6">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-zinc-800/90" />
-                                </div>
-                                <span className="relative bg-[#131418] px-4 text-[9px] font-black tracking-[0.25em] text-zinc-500 uppercase">
-                                    OR CONTINUE WITH
-                                </span>
-                            </div>
-
+                        {/* Centered Google Sign-In Button */}
+                        <div className="flex justify-center mb-6">
                             <button
                                 type="button"
                                 onClick={handleGoogleLogin}
                                 disabled={loading}
-                                className="w-full bg-[#18191E] border border-zinc-800 hover:border-zinc-700 text-zinc-200 font-bold text-xs py-3.5 px-6 rounded-xl hover:bg-zinc-800/90 transition-all duration-300 flex items-center justify-center gap-3 transform hover:scale-[1.01] active:scale-[0.98] shadow-md mb-6"
+                                className="w-full max-w-md rounded-full bg-white border border-[#9d6638]/40 hover:bg-[#B0BA99]/20 text-[#4e220f] font-bold text-xs py-3.5 px-6 shadow-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
                             >
                                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                                     <path
@@ -347,46 +205,128 @@ export default function LoginPage() {
                                 </svg>
                                 <span>Sign in with Google</span>
                             </button>
-
                         </div>
 
-                        <p className="text-[10px] text-zinc-500 text-center mt-6">
-                            By signing in, you agree to FITI's{" "}
-                            <Link href="/terms" className="text-zinc-300 hover:underline">
-                                Terms
-                            </Link>{" "}
-                            and{" "}
-                            <Link href="/privacy" className="text-zinc-300 hover:underline">
-                                Privacy Policy
-                            </Link>
-                            .
+                        {/* OR Divider Line */}
+                        <div className="relative flex items-center justify-center my-6 max-w-md mx-auto">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-[#9d6638]/30" />
+                            </div>
+                            <span className="relative bg-[#f7f1de] px-3 text-[10px] font-bold tracking-widest text-[#4e220f]/70 uppercase">
+                                OR WITH EMAIL
+                            </span>
+                        </div>
+
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
+                            {/* Email Pill Input */}
+                            <div className="relative flex items-center">
+                                <span className="absolute left-4 text-[#9d6638]">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </span>
+                                <input
+                                    id="login-email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="e-mail"
+                                    autoComplete="email"
+                                    required
+                                    disabled={loading}
+                                    className="w-full rounded-full bg-[#B0BA99]/30 border border-[#9d6638]/40 pl-12 pr-5 py-3.5 text-sm text-[#4e220f] placeholder:text-[#4e220f]/60 focus:bg-[#f7f1de] focus:border-[#9d6638] focus:outline-none transition duration-200 shadow-inner"
+                                />
+                            </div>
+
+                            {/* Password Pill Input */}
+                            <div className="relative flex items-center">
+                                <span className="absolute left-4 text-[#9d6638]">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </span>
+                                <input
+                                    id="login-password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="password"
+                                    autoComplete="current-password"
+                                    required
+                                    disabled={loading}
+                                    className="w-full rounded-full bg-[#B0BA99]/30 border border-[#9d6638]/40 pl-12 pr-12 py-3.5 text-sm text-[#4e220f] placeholder:text-[#4e220f]/60 focus:bg-[#f7f1de] focus:border-[#9d6638] focus:outline-none transition duration-200 shadow-inner"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 text-xs font-bold text-[#9d6638] hover:text-[#4e220f] uppercase"
+                                >
+                                    {showPassword ? "Hide" : "Show"}
+                                </button>
+                            </div>
+
+                            {/* Terms Checkbox */}
+                            <div className="flex items-center gap-2 pt-1 pb-2">
+                                <input
+                                    id="agree-terms"
+                                    type="checkbox"
+                                    checked={agreeTerms}
+                                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                                    className="w-4 h-4 rounded border-[#9d6638] text-[#9d6638] focus:ring-[#9d6638] accent-[#9d6638] cursor-pointer"
+                                />
+                                <label htmlFor="agree-terms" className="text-xs text-[#4e220f] cursor-pointer">
+                                    I agree to FITI&apos;s{" "}
+                                    <Link href="/terms" className="underline font-medium hover:text-[#9d6638]">
+                                        terms of service
+                                    </Link>
+                                    .
+                                </label>
+                            </div>
+
+                            {/* Pill Action Button */}
+                            <div className="flex justify-center">
+                                <button
+                                    type="submit"
+                                    disabled={loading || !agreeTerms}
+                                    className="w-full rounded-full bg-[#9d6638] hover:bg-[#4e220f] active:scale-95 text-[#f7f1de] font-extrabold text-xs uppercase tracking-widest px-10 py-3.5 transition-all shadow-md disabled:opacity-50"
+                                >
+                                    {loading ? "AUTHENTICATING..." : "SIGN IN"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <p className="text-[11px] text-[#4e220f]/70 mt-6">
+                        Need an account?{" "}
+                        <Link href="/register" className="text-[#9d6638] font-bold hover:underline">
+                            Register here
+                        </Link>
+                    </p>
+                </div>
+
+                {/* RIGHT COLUMN: FULL BACKGROUND IMAGE WITH OVERLAY TEXT */}
+                <div className="lg:col-span-6 relative hidden lg:block overflow-hidden">
+                    <Image
+                        src="/images/orders/mens_charcoal_suit.jpg"
+                        alt="Bespoke Suit Studio"
+                        fill
+                        className="object-cover brightness-90 scale-105"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#4e220f]/80 via-transparent to-black/30" />
+
+                    <div className="absolute bottom-12 right-12 text-right text-[#f7f1de] max-w-sm">
+                        <h2 className="text-4xl font-black tracking-tight leading-none drop-shadow-lg uppercase">
+                            FITI ATELIER
+                        </h2>
+                        <p className="text-xl font-bold tracking-wider text-[#B0BA99] mt-2 uppercase drop-shadow-md">
+                            CRAFTED TO FIT
                         </p>
                     </div>
                 </div>
-            </main>
 
-            {/* BOTTOM FOOTER */}
-            <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-7 px-6 sm:px-12 relative z-20">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
-                        <span className="text-sm font-serif font-black tracking-widest gold-gradient-text">
-                            FITI
-                        </span>
-                        <span className="text-[11px] text-zinc-500">
-                            &copy; {new Date().getFullYear()} FITI Bespoke Fitness &amp; Tailoring. All rights reserved.
-                        </span>
-                    </div>
-
-                    <div className="flex items-center space-x-6 text-xs text-zinc-400">
-                        <Link href="/privacy" className="hover:text-white transition-colors">
-                            Privacy Policy
-                        </Link>
-                        <Link href="/terms" className="hover:text-white transition-colors">
-                            Terms of Service
-                        </Link>
-                    </div>
-                </div>
-            </footer>
+            </div>
         </div>
     );
 }

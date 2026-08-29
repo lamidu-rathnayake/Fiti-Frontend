@@ -135,6 +135,7 @@ export default function HomePage() {
 
     return (
         <div className="fiti-landing min-h-screen bg-[#f7f1de] text-[#4e220f] selection:bg-[#9d6638] selection:text-[#f7f1de]">
+            {/* Site header */}
             <header className="fixed inset-x-0 top-0 z-50 border-b border-[#4e220f]/15 bg-[#f7f1de]/95 backdrop-blur-md">
                 <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
                     <Link href="/" className="flex items-center" aria-label="FITI home">
@@ -165,6 +166,7 @@ export default function HomePage() {
             </header>
 
             <main className="pt-[72px]">
+                {/* Hero */}
                 <section className="relative min-h-[82svh] overflow-hidden border-b border-[#4e220f]/15">
                     <div className="mx-auto grid min-h-[82svh] max-w-[1440px] lg:grid-cols-[0.9fr_1.1fr]">
                         <div className="relative z-10 flex flex-col justify-center px-5 py-16 sm:px-8 lg:px-12 lg:py-20">
@@ -225,6 +227,7 @@ export default function HomePage() {
                     </div>
                 </section>
 
+                {/* Marketplace benefits */}
                 <section className="border-b border-[#4e220f]/20 bg-[#B0BA99]" aria-label="Platform benefits">
                     <div className="mx-auto grid max-w-[1440px] divide-y divide-[#4e220f]/20 px-5 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-8 lg:px-12">
                         {["Tailoring shops in one place", "Proposals before commitment", "Direct maker communication"].map((item) => (
@@ -233,6 +236,7 @@ export default function HomePage() {
                     </div>
                 </section>
 
+                {/* Commission process */}
                 <section id="process" className="px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
                     <div className="mx-auto max-w-[1320px]">
                         <div className="reveal grid gap-8 border-b border-[#4e220f]/25 pb-10 lg:grid-cols-[1fr_0.7fr] lg:items-end">
@@ -261,6 +265,7 @@ export default function HomePage() {
                     </div>
                 </section>
 
+                {/* Service options */}
                 <section className="grid bg-[#4e220f] text-[#f7f1de] lg:grid-cols-2">
                     <div className="reveal-left relative min-h-[500px] overflow-hidden lg:min-h-[720px]">
                         <Image
@@ -297,6 +302,7 @@ export default function HomePage() {
                     </div>
                 </section>
 
+                {/* Interactive fabric guide */}
                 <section id="fabrics" className="px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
                     <div className="mx-auto max-w-[1320px]">
                         <div className="reveal mb-12 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
@@ -350,6 +356,7 @@ export default function HomePage() {
                     </div>
                 </section>
 
+                {/* Frequently asked questions */}
                 <section id="faq" className="border-y border-[#4e220f]/20 bg-[#B0BA99]/40 px-5 py-24 sm:px-8 lg:px-12">
                     <div className="mx-auto grid max-w-[1200px] gap-12 lg:grid-cols-[0.7fr_1.3fr]">
                         <div className="reveal-left">
@@ -382,6 +389,7 @@ export default function HomePage() {
                     </div>
                 </section>
 
+                {/* Final call to action */}
                 <section className="bg-[#9d6638] px-5 py-20 text-[#f7f1de] sm:px-8 lg:px-12 lg:py-24">
                     <div className="mx-auto flex max-w-[1200px] flex-col items-start justify-between gap-10 lg:flex-row lg:items-end">
                         <div className="max-w-3xl">
@@ -395,6 +403,7 @@ export default function HomePage() {
                 </section>
             </main>
 
+            {/* Site footer */}
             <footer className="bg-[#4e220f] px-5 py-10 text-[#f7f1de] sm:px-8 lg:px-12">
                 <div className="mx-auto flex max-w-[1320px] flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -410,6 +419,7 @@ export default function HomePage() {
                 </div>
             </footer>
 
+            {/* Atelier chat */}
             {!isChatDrawerOpen ? (
                 <button
                     type="button"

@@ -351,3 +351,64 @@
         transform: none;
     }
 }
+
+/* -------------------------------------------------------------
+ * FITI PUBLIC LANDING
+ * ------------------------------------------------------------- */
+
+.fiti-landing {
+    font-family: var(--font-sans);
+    background-color: #f7f1de;
+}
+
+.landing-display {
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+.landing-ruler {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    padding-block: 2rem;
+    border-right: 1px solid rgba(78, 34, 15, 0.35);
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 9px,
+        rgba(78, 34, 15, 0.55) 10px,
+        transparent 11px,
+        transparent 19px
+    );
+}
+
+.landing-ruler span {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    padding-right: 0.35rem;
+    background: #B0BA99;
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.landing-ruler span::before {
+    content: "";
+    width: 0.65rem;
+    height: 1px;
+    background: #4e220f;
+}
+
+.fiti-landing section:not(:first-child) {
+    content-visibility: auto;
+    contain-intrinsic-size: 800px;
+}
+
+.fiti-landing :focus-visible {
+    outline: 2px solid #9d6638;
+    outline-offset: 4px;
+}

@@ -30,7 +30,7 @@ function firebaseErrorMessage(err: unknown): string {
             return "Network error. Check your connection and try again.";
         case "auth/popup-closed-by-user":
         case "auth/cancelled-popup-request":
-            return ""; // Silently ignore — user dismissed the popup
+            return ""; // Silently ignore — user dismissed popup
         default:
             return "Unable to sign in. Please try again.";
     }
@@ -38,19 +38,10 @@ function firebaseErrorMessage(err: unknown): string {
 
 export default function LoginPage() {
     const router = useRouter();
-    const [mode, setMode] = useState<"login" | "profile">("login");
+    const [mode, setMode] = useState<"login">("login");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-
-    // Profile form state (matching screenshot fields)
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [address, setAddress] = useState("");
-    const [city, setCity] = useState("");
-    const [whatsapp, setWhatsapp] = useState("");
-    const [gender, setGender] = useState("MALE");
-    const [age, setAge] = useState("25");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -61,7 +52,7 @@ export default function LoginPage() {
             const data = await getMyRole();
             const role = data.role;
 
-            if (role === "tailor" || role === "seller") {
+            if (role === "tailor") {
                 setRole("tailor");
                 router.replace("/tailor/home");
                 return;
@@ -86,13 +77,8 @@ export default function LoginPage() {
         setLoading(true);
         setError("");
         try {
-            if (mode === "login") {
-                await signInWithEmailAndPassword(auth, email, password);
-                await handlePostAuthRedirect();
-            } else {
-                // If in create profile view, redirect to register flow or onboarding
-                router.push("/register");
-            }
+            await signInWithEmailAndPassword(auth, email, password);
+            await handlePostAuthRedirect();
         } catch (err: unknown) {
             const message = firebaseErrorMessage(err);
             if (message) setError(message);
@@ -117,53 +103,63 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen bg-[#0A0B0E] text-white flex flex-col justify-between relative overflow-x-hidden selection:bg-[#F5CA53] selection:text-black font-sans">
-            {/* Top Navigation Bar */}
-            <header className="w-full border-b border-zinc-900/80 bg-[#0A0B0E]/90 backdrop-blur-md sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-5 flex items-center justify-between">
-                    {/* Brand Logo */}
-                    <Link
-                        href="/"
-                        className="text-xl sm:text-2xl font-black tracking-widest text-[#F5CA53] hover:opacity-90 transition-opacity"
-                    >
-                        FITI
-                    </Link>
 
-                    {/* Navigation Links */}
-                    <nav className="hidden md:flex items-center space-x-10 text-xs font-semibold tracking-wider text-zinc-400">
-                        <Link href="/" className="hover:text-[#F5CA53] transition-colors">
-                            Dashboard
-                        </Link>
-                        <Link href="/" className="hover:text-[#F5CA53] transition-colors">
-                            Orders
-                        </Link>
-                        <Link href="/" className="hover:text-[#F5CA53] transition-colors">
-                            Shops
-                        </Link>
-                        <Link href="/" className="hover:text-[#F5CA53] transition-colors">
-                            Tailoring
-                        </Link>
-                    </nav>
+            {/* AMBIENT BACKGROUND GLOW RECTANGLES */}
+            <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-[#F5CA53]/10 blur-[180px] rounded-full pointer-events-none animate-pulse-glow z-0" />
 
-                    {/* Right User Actions */}
-                    <div className="flex items-center space-x-4">
-                        <Link
-                            href="/login"
-                            className="p-2 rounded-full border border-zinc-700/80 text-zinc-400 hover:text-[#F5CA53] hover:border-[#F5CA53] transition-colors"
-                            aria-label="User Account"
+            {/* TOP NAVIGATION BAR */}
+            <header className="w-full border-b border-zinc-900/90 bg-[#0A0B0E]/80 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
+                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button
+                            type="button"
+                            onClick={() => router.push("/")}
+                            className="px-3.5 py-2 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
+                            title="Return to Landing Page"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
+                            <span className="hidden sm:inline">Landing Page</span>
+                        </button>
+
+                        <Link href="/" className="flex items-center gap-3 group">
+                            <div className="relative h-10 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
+                                <img
+                                    src="/logoo.png"
+                                    alt="FITI Bespoke Atelier Logo"
+                                    className="h-8 w-auto object-contain"
                                 />
-                            </svg>
+                            </div>
+                            <span className="hidden sm:inline-block text-[9px] font-mono tracking-[0.25em] text-zinc-400 uppercase border-l border-zinc-800 pl-3 py-1">
+                                Bespoke Atelier
+                            </span>
                         </Link>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setRole("client");
+                                router.push("/client/home");
+                            }}
+                            className="bg-[#18191E] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3.5 py-2 rounded-xl transition-all"
+                        >
+                            Client Dash &rarr;
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setRole("tailor");
+                                router.push("/tailor/home");
+                            }}
+                            className="bg-[#18191E] border border-zinc-800 hover:border-[#F5CA53] text-[#F5CA53] font-bold text-xs px-3.5 py-2 rounded-xl transition-all"
+                        >
+                            Seller Dash &rarr;
+                        </button>
                         <button
                             type="button"
                             onClick={() => router.push("/register")}
-                            className="px-5 py-2 text-xs font-bold uppercase tracking-wider text-black bg-[#F5CA53] hover:bg-[#f7d369] rounded-xl transition-all shadow-[0_0_12px_rgba(245,202,83,0.25)]"
+                            className="btn-gold-shimmer text-black font-extrabold text-xs uppercase tracking-wider px-4 py-2 rounded-xl"
                         >
                             Register
                         </button>
@@ -172,41 +168,34 @@ export default function LoginPage() {
             </header>
 
             {/* MAIN CONTENT AREA */}
-            <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-10 relative z-10">
-                {/* Background Ambient Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] bg-[#F5CA53]/10 blur-[160px] rounded-full pointer-events-none" />
+            <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-12 relative z-10 animate-fade-in-up">
+                <div className="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
 
-                <div className="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                    
                     {/* LEFT COLUMN: CRAFTSMANSHIP & RIGOR */}
-                    <div className="lg:col-span-5 bg-[#131418]/90 border border-zinc-800/90 rounded-[28px] p-8 sm:p-10 flex flex-col justify-between shadow-2xl relative overflow-hidden backdrop-blur-xl min-h-[500px]">
-                        {/* Internal Ambient Glow Accent */}
-                        <div className="absolute top-0 left-0 w-48 h-32 bg-[#F5CA53]/10 blur-3xl pointer-events-none" />
+                    <div className="lg:col-span-5 glass-card stitch-border rounded-[32px] p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden min-h-[480px]">
+                        <div className="absolute top-0 left-0 w-48 h-32 bg-[#F5CA53]/15 blur-3xl pointer-events-none" />
 
                         <div>
-                            {/* Subtitle tag */}
-                            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#E5C158] mb-4 block">
-                                Craftsmanship &amp; Rigor
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#FFE28A] mb-3 block">
+                                Craftsmanship &amp; Precision
                             </span>
 
-                            {/* Headline */}
                             <h1 className="mb-4">
-                                <span className="text-3xl sm:text-4xl font-light text-white block mb-1">
+                                <span className="text-3xl font-serif font-light text-white block mb-1">
                                     The Standard of
                                 </span>
-                                <span className="text-3xl sm:text-4xl font-extrabold text-[#F5D061] tracking-tight block">
+                                <span className="text-3xl sm:text-4xl font-serif font-bold gold-gradient-text tracking-tight block">
                                     Bespoke Living.
                                 </span>
                             </h1>
 
-                            {/* Body Paragraph */}
-                            <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-md">
-                                Join an exclusive ecosystem where high-performance tailoring meets elite physical discipline. Your measurements, your progress, your FITI.
+                            <p className="text-xs text-zinc-400 leading-relaxed max-w-md">
+                                Join an exclusive ecosystem where high-performance tailoring meets elite physical discipline. Access your customized fits and orders in real-time.
                             </p>
                         </div>
 
-                        {/* Lower Master Tailor Image Card */}
-                        <div className="relative overflow-hidden rounded-2xl border border-zinc-800/90 bg-black/40 h-56 mt-8 group cursor-pointer shadow-lg">
+                        {/* Lower Image Card */}
+                        <div className="relative overflow-hidden rounded-2xl border border-zinc-800/90 bg-black/40 h-52 mt-8 group cursor-pointer shadow-xl">
                             <img
                                 src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=80"
                                 alt="Bespoke Master Tailor at Work"
@@ -214,44 +203,37 @@ export default function LoginPage() {
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
 
-                            {/* Image Overlay Badge & Text */}
                             <div className="relative z-20 h-full p-5 flex flex-col justify-end">
                                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53] mb-1 block">
-                                    Elite Status
+                                    Verified Artisans
                                 </span>
-                                <p className="text-xs font-bold text-white tracking-wide">
-                                    Over 2,500 active members in Colombo &amp; Kandy.
+                                <p className="text-xs font-serif font-bold text-white tracking-wide">
+                                    Over 1,500 custom garments crafted with precision.
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: FORM (Sign In / Create Profile) */}
-                    <div className="lg:col-span-7 bg-[#131418]/90 border border-zinc-800/90 rounded-[28px] p-8 sm:p-10 shadow-2xl relative overflow-hidden backdrop-blur-xl flex flex-col justify-between">
-                        {/* Top Ambient Glow */}
+                    {/* RIGHT COLUMN: LOGIN FORM */}
+                    <div className="lg:col-span-7 glass-card rounded-[32px] p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col justify-between">
                         <div className="absolute top-0 right-1/2 translate-x-1/2 w-64 h-20 bg-[#F5CA53]/15 blur-2xl pointer-events-none" />
 
                         <div>
-                            {/* Mode Toggle Header */}
-                            <div className="flex items-center justify-between mb-6 border-b border-zinc-800/80 pb-4">
+                            {/* Header */}
+                            <div className="flex items-center justify-between mb-8 border-b border-zinc-800/80 pb-5">
                                 <div>
-                                    <h2 className="text-3xl font-extrabold text-white tracking-tight">
+                                    <h2 className="text-3xl font-serif font-bold text-white tracking-tight">
                                         Sign In
                                     </h2>
                                     <p className="text-xs text-zinc-400 mt-1">
-                                        Enter your details to access your bespoke dashboard.
+                                        Enter your credentials to access your bespoke dashboard.
                                     </p>
                                 </div>
 
-                                {/* Mode Switcher Pill */}
                                 <div className="flex items-center bg-[#18191E] border border-zinc-800 rounded-xl p-1 text-xs">
-                                    <button
-                                        type="button"
-                                        onClick={() => setMode("login")}
-                                        className="bg-[#F5CA53] text-black shadow-sm px-3 py-1.5 rounded-lg font-bold transition-all"
-                                    >
+                                    <span className="bg-[#F5CA53] text-black px-3 py-1.5 rounded-lg font-bold">
                                         Log In
-                                    </button>
+                                    </span>
                                     <button
                                         type="button"
                                         onClick={() => router.push("/register")}
@@ -267,7 +249,7 @@ export default function LoginPage() {
                                 <div
                                     aria-live="polite"
                                     role="alert"
-                                    className="mb-6 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center"
+                                    className="mb-6 rounded-xl border border-rose-900/50 bg-rose-950/40 px-4 py-3 text-xs font-medium text-rose-400 text-center animate-fade-in-up"
                                 >
                                     {error}
                                 </div>
@@ -275,188 +257,60 @@ export default function LoginPage() {
 
                             {/* FORM FIELDS */}
                             <form onSubmit={handleSubmit} className="space-y-5">
-                                {mode === "login" ? (
-                                    /* LOGIN FORM FIELDS */
-                                    <>
-                                        <div>
-                                            <label
-                                                htmlFor="login-email"
-                                                className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2"
-                                            >
-                                                Email Address
-                                            </label>
-                                            <input
-                                                id="login-email"
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                placeholder="you@example.com"
-                                                autoComplete="email"
-                                                required
-                                                disabled={loading}
-                                                className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm text-zinc-200 outline-none transition placeholder:text-zinc-600 focus:border-[#F5CA53] focus:ring-1 focus:ring-[#F5CA53]"
-                                            />
-                                        </div>
+                                <div>
+                                    <label
+                                        htmlFor="login-email"
+                                        className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase mb-2"
+                                    >
+                                        Email Address
+                                    </label>
+                                    <input
+                                        id="login-email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="you@example.com"
+                                        autoComplete="email"
+                                        required
+                                        disabled={loading}
+                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E]/90 px-4 py-3.5 text-sm text-zinc-200 outline-none transition duration-300 placeholder:text-zinc-600 focus:border-[#F5CA53] focus:ring-1 focus:ring-[#F5CA53] shadow-inner"
+                                    />
+                                </div>
 
-                                        <div>
-                                            <div className="flex items-center justify-between mb-2">
-                                                <label
-                                                    htmlFor="login-password"
-                                                    className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase"
-                                                >
-                                                    Password
-                                                </label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="text-[10px] font-bold text-zinc-500 hover:text-[#F5CA53] uppercase tracking-wider"
-                                                >
-                                                    {showPassword ? "Hide" : "Show"}
-                                                </button>
-                                            </div>
-                                            <input
-                                                id="login-password"
-                                                type={showPassword ? "text" : "password"}
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                placeholder="••••••••••••"
-                                                autoComplete="current-password"
-                                                required
-                                                disabled={loading}
-                                                className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3.5 text-sm text-zinc-200 outline-none transition placeholder:text-zinc-600 focus:border-[#F5CA53] focus:ring-1 focus:ring-[#F5CA53]"
-                                            />
-                                        </div>
-                                    </>
-                                ) : (
-                                    /* CREATE PROFILE FORM FIELDS (SRI LANKAN DATA DEFAULTS) */
-                                    <>
-                                        {/* First & Last Name */}
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
-                                                    First Name
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={firstName}
-                                                    onChange={(e) => setFirstName(e.target.value)}
-                                                    placeholder="AHAMED"
-                                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
-                                                    Last Name
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={lastName}
-                                                    onChange={(e) => setLastName(e.target.value)}
-                                                    placeholder="PERERA"
-                                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Address with Icon */}
-                                        <div>
-                                            <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
-                                                Address
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    value={address}
-                                                    onChange={(e) => setAddress(e.target.value)}
-                                                    placeholder="45 TEMPLE ROAD, MAHARAGAMA"
-                                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
-                                                />
-                                                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* City */}
-                                        <div>
-                                            <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
-                                                City
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={city}
-                                                onChange={(e) => setCity(e.target.value)}
-                                                placeholder="COLOMBO"
-                                                className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
-                                            />
-                                        </div>
-
-                                        {/* Whatsapp Number */}
-                                        <div>
-                                            <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
-                                                WhatsApp Number
-                                            </label>
-                                            <div className="flex items-center gap-2">
-                                                <div className="bg-[#18191E] border border-zinc-800 rounded-xl px-3 py-3 flex items-center gap-2 text-xs font-bold text-zinc-300">
-                                                    <span>🇱🇰 +94</span>
-                                                </div>
-                                                <input
-                                                    type="tel"
-                                                    value={whatsapp}
-                                                    onChange={(e) => setWhatsapp(e.target.value)}
-                                                    placeholder="77 123 4567"
-                                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 text-sm font-semibold tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Gender & Age */}
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
-                                                    Gender
-                                                </label>
-                                                <select
-                                                    value={gender}
-                                                    onChange={(e) => setGender(e.target.value)}
-                                                    className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53] appearance-none"
-                                                >
-                                                    <option value="MALE">MALE</option>
-                                                    <option value="FEMALE">FEMALE</option>
-                                                    <option value="OTHER">OTHER</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-[10px] font-black tracking-widest text-zinc-400 uppercase mb-2">
-                                                    Age
-                                                </label>
-                                                <div className="relative">
-                                                    <input
-                                                        type="number"
-                                                        value={age}
-                                                        onChange={(e) => setAge(e.target.value)}
-                                                        placeholder="25"
-                                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E] px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-zinc-200 outline-none transition focus:border-[#F5CA53]"
-                                                    />
-                                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.701 2.701 0 01-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M3 21h18M3 10h18v11H3V10z" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label
+                                            htmlFor="login-password"
+                                            className="block text-[10px] font-black tracking-widest text-[#F5CA53] uppercase"
+                                        >
+                                            Password
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="text-[10px] font-bold text-zinc-500 hover:text-[#F5CA53] uppercase tracking-wider transition-colors"
+                                        >
+                                            {showPassword ? "Hide" : "Show"}
+                                        </button>
+                                    </div>
+                                    <input
+                                        id="login-password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="••••••••••••"
+                                        autoComplete="current-password"
+                                        required
+                                        disabled={loading}
+                                        className="w-full rounded-xl border border-zinc-800 bg-[#18191E]/90 px-4 py-3.5 text-sm text-zinc-200 outline-none transition duration-300 placeholder:text-zinc-600 focus:border-[#F5CA53] focus:ring-1 focus:ring-[#F5CA53] shadow-inner"
+                                    />
+                                </div>
 
                                 {/* Status Indicator */}
                                 <div className="flex items-center gap-2 pt-2">
-                                    <span className="w-2 h-2 rounded-full bg-[#F5CA53] animate-pulse" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#E5C158]">
-                                        {mode === "login" ? "SECURE BESPOKE AUTHENTICATION" : "ENSURING A PRECISION FIT"}
+                                    <span className="w-2 h-2 rounded-full bg-[#F5CA53] animate-ping" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFE28A]">
+                                        SECURE ATELIER AUTHENTICATION
                                     </span>
                                 </div>
 
@@ -464,63 +318,89 @@ export default function LoginPage() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full bg-[#F5CA53] hover:bg-[#f7d369] text-black font-extrabold text-xs uppercase tracking-[0.15em] py-4 px-6 rounded-xl shadow-[0_4px_25px_rgba(245,202,83,0.3)] transition-all transform hover:scale-[1.01] active:scale-[0.98] mt-2"
+                                    className="w-full btn-gold-shimmer text-black font-extrabold text-xs uppercase tracking-[0.2em] py-4 px-6 rounded-xl text-center block mt-2"
                                 >
-                                    {loading
-                                        ? "Processing..."
-                                        : mode === "login"
-                                        ? "Log In"
-                                        : "Register"}
+                                    {loading ? "Authenticating..." : "Log In"}
                                 </button>
                             </form>
 
                             {/* Google Sign In Divider & Button */}
-                            {mode === "login" && (
-                                <>
-                                    <div className="relative flex items-center justify-center my-6">
-                                        <div className="absolute inset-0 flex items-center">
-                                            <div className="w-full border-t border-zinc-800/90" />
-                                        </div>
-                                        <span className="relative bg-[#131418] px-4 text-[10px] font-extrabold tracking-[0.2em] text-zinc-500 uppercase">
-                                            OR CONTINUE WITH
-                                        </span>
-                                    </div>
+                            <div className="relative flex items-center justify-center my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-zinc-800/90" />
+                                </div>
+                                <span className="relative bg-[#131418] px-4 text-[9px] font-black tracking-[0.25em] text-zinc-500 uppercase">
+                                    OR CONTINUE WITH
+                                </span>
+                            </div>
 
+                            <button
+                                type="button"
+                                onClick={handleGoogleLogin}
+                                disabled={loading}
+                                className="w-full bg-[#18191E] border border-zinc-800 hover:border-zinc-700 text-zinc-200 font-bold text-xs py-3.5 px-6 rounded-xl hover:bg-zinc-800/90 transition-all duration-300 flex items-center justify-center gap-3 transform hover:scale-[1.01] active:scale-[0.98] shadow-md mb-6"
+                            >
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        fill="#4285F4"
+                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                    />
+                                    <path
+                                        fill="#34A853"
+                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                    />
+                                    <path
+                                        fill="#FBBC05"
+                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z"
+                                    />
+                                    <path
+                                        fill="#EA4335"
+                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"
+                                    />
+                                </svg>
+                                <span>Sign in with Google</span>
+                            </button>
+
+                            {/* DEV MODE QUICK DIRECT ACCESS BUTTONS */}
+                            <div className="p-4 rounded-2xl bg-[#18191E]/90 border border-[#F5CA53]/40 space-y-3 shadow-lg">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F5CA53] flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-[#F5CA53] animate-ping" />
+                                        DEV MODE DIRECT ACCESS
+                                    </span>
+                                    <span className="text-[9px] font-mono text-zinc-500 uppercase">Testing</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2.5">
                                     <button
                                         type="button"
-                                        onClick={handleGoogleLogin}
-                                        disabled={loading}
-                                        className="w-full bg-[#18191E] border border-zinc-800 hover:border-zinc-700 text-zinc-200 font-bold text-xs py-3.5 px-6 rounded-xl hover:bg-zinc-800/90 transition-all flex items-center justify-center gap-3 transform hover:scale-[1.01] active:scale-[0.98]"
+                                        onClick={() => {
+                                            setRole("client");
+                                            router.push("/client/home");
+                                        }}
+                                        className="w-full bg-[#0A0B0E] hover:bg-[#F5CA53] hover:text-black border border-zinc-700 hover:border-[#F5CA53] text-zinc-200 text-xs font-bold py-2.5 px-3 rounded-xl transition-all duration-300 text-center flex items-center justify-center gap-1"
                                     >
-                                        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path
-                                                fill="#4285F4"
-                                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                                            />
-                                            <path
-                                                fill="#34A853"
-                                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                                            />
-                                            <path
-                                                fill="#FBBC05"
-                                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z"
-                                            />
-                                            <path
-                                                fill="#EA4335"
-                                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"
-                                            />
-                                        </svg>
-                                        <span>Sign up with Google</span>
+                                        <span>Client Dashboard</span>
+                                        <span>&rarr;</span>
                                     </button>
-                                </>
-                            )}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setRole("tailor");
+                                            router.push("/tailor/home");
+                                        }}
+                                        className="w-full bg-[#0A0B0E] hover:bg-[#F5CA53] hover:text-black border border-zinc-700 hover:border-[#F5CA53] text-zinc-200 text-xs font-bold py-2.5 px-3 rounded-xl transition-all duration-300 text-center flex items-center justify-center gap-1"
+                                    >
+                                        <span>Seller Dashboard</span>
+                                        <span>&rarr;</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Terms Disclaimer */}
                         <p className="text-[10px] text-zinc-500 text-center mt-6">
-                            By registering, you agree to our{" "}
+                            By signing in, you agree to FITI's{" "}
                             <Link href="/terms" className="text-zinc-300 hover:underline">
-                                Terms of Service
+                                Terms
                             </Link>{" "}
                             and{" "}
                             <Link href="/privacy" className="text-zinc-300 hover:underline">
@@ -532,12 +412,11 @@ export default function LoginPage() {
                 </div>
             </main>
 
-            {/* Bottom Footer */}
+            {/* BOTTOM FOOTER */}
             <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-7 px-6 sm:px-12 relative z-20">
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                    {/* Left Footer Info */}
                     <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
-                        <span className="text-sm font-black tracking-widest text-[#F5CA53]">
+                        <span className="text-sm font-serif font-black tracking-widest gold-gradient-text">
                             FITI
                         </span>
                         <span className="text-[11px] text-zinc-500">
@@ -545,19 +424,12 @@ export default function LoginPage() {
                         </span>
                     </div>
 
-                    {/* Right Footer Links */}
                     <div className="flex items-center space-x-6 text-xs text-zinc-400">
                         <Link href="/privacy" className="hover:text-white transition-colors">
                             Privacy Policy
                         </Link>
                         <Link href="/terms" className="hover:text-white transition-colors">
                             Terms of Service
-                        </Link>
-                        <Link href="/contact" className="hover:text-white transition-colors">
-                            Contact Us
-                        </Link>
-                        <Link href="/about" className="hover:text-white transition-colors">
-                            About Us
                         </Link>
                     </div>
                 </div>

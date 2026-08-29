@@ -28,6 +28,7 @@ export interface UserProfile {
 interface AuthContextType {
     user: UserProfile | null;
     dbRole: Role | null;
+    role: Role | null;
     loading: boolean;
     logout: () => Promise<void>;
     setRole: (role: Role) => void;
@@ -36,6 +37,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
     user: null,
     dbRole: null,
+    role: null,
     loading: true,
     logout: async () => { },
     setRole: () => { },
@@ -76,8 +78,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setDbRole(roleFromDb ?? null);
                     setLoading(false);
                 } else {
-                    setUser(null);
-                    setDbRole(null);
+                    const devRole = (typeof window !== "undefined" ? sessionStorage.getItem("fiti_dev_role") : null) as Role | null;
+                    if (devRole) {
+                        setUser({
+                            uid: "dev-user-id",
+                            email: "dev@fiti.lk",
+                            displayName: devRole === "tailor" ? "Master Tailor (Dev)" : "Client (Dev)",
+                            photoURL: null,
+                            role: devRole,
+                        });
+                        setDbRole(devRole);
+                    } else {
+                        setUser(null);
+                        setDbRole(null);
+                    }
                     setLoading(false);
                 }
             },
@@ -89,6 +103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const logout = async () => {
+        if (typeof window !== "undefined") {
+            sessionStorage.removeItem("fiti_dev_role");
+        }
         await signOut(auth);
         setUser(null);
         setDbRole(null);
@@ -100,16 +117,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
      * createTailorProfile is called during onboarding — no additional write needed here.
      */
     const setRole = (role: Role) => {
+        if (typeof window !== "undefined") {
+            sessionStorage.setItem("fiti_dev_role", role);
+        }
         const currentUser = auth.currentUser;
-        if (!currentUser) return;
 
-        const nextUser: UserProfile = user
-            ? { ...user, role }
-            : {
+        const nextUser: UserProfile = currentUser
+            ? {
                 uid: currentUser.uid,
                 email: currentUser.email,
                 displayName: currentUser.displayName,
                 photoURL: currentUser.photoURL,
+                role,
+            }
+            : {
+                uid: "dev-user-id",
+                email: "dev@fiti.lk",
+                displayName: role === "tailor" ? "Master Tailor (Dev)" : "Client (Dev)",
+                photoURL: null,
                 role,
             };
 
@@ -119,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return React.createElement(
         AuthContext.Provider,
-        { value: { user, dbRole, loading, logout, setRole } },
+        { value: { user, dbRole, role: dbRole, loading, logout, setRole } },
         children,
     );
 }

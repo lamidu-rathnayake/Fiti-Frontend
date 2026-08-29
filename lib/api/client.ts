@@ -255,38 +255,7 @@ function handleMockApi<T>(endpoint: string, options: ApiFetchOptions): T {
     if (endpoint.startsWith("/shops")) {
         let shopsStr = getItem("fiti_shops");
         if (!shopsStr) {
-            const initialShops = [
-                {
-                    shop_id: 101,
-                    tailor_id: "sample_tailor_1",
-                    shop_name: "Royal Bespoke Tailors",
-                    specialty: "Bridal & Luxury Suits",
-                    shop_bio: "Premium custom tailoring with over 15 years of experience in Sri Lanka.",
-                    city: "Colombo",
-                    shop_address: "128 Galle Road, Colombo 03",
-                    contact_number: "+94 11 234 5678",
-                    rating: 4.9,
-                    review_count: 28,
-                    latitude: 6.9157,
-                    longitude: 79.8517,
-                    images: [{ image_id: 1, image_url: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop" }],
-                },
-                {
-                    shop_id: 102,
-                    tailor_id: "sample_tailor_2",
-                    shop_name: "Urban Stitch Studio",
-                    specialty: "Casual Wear & Alterations",
-                    shop_bio: "Modern custom fits, shirt tailoring, and rapid alterations.",
-                    city: "Kandy",
-                    shop_address: "42 Main Street, Kandy",
-                    contact_number: "+94 81 223 4455",
-                    rating: 4.7,
-                    review_count: 14,
-                    latitude: 7.2906,
-                    longitude: 80.6337,
-                    images: [{ image_id: 2, image_url: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=800&auto=format&fit=crop" }],
-                },
-            ];
+            const initialShops: any[] = [];
             setItem("fiti_shops", JSON.stringify(initialShops));
             shopsStr = JSON.stringify(initialShops);
         }
@@ -349,17 +318,7 @@ function handleMockApi<T>(endpoint: string, options: ApiFetchOptions): T {
         let ordersStr = getItem("fiti_orders");
 
         if (!reqsStr) {
-            const initialReqs = [
-                {
-                    request_id: 201,
-                    client_id: "sample_client_1",
-                    clothing_type: "3-Piece Tuxedo Suit",
-                    description: "Navy blue Italian wool tuxedo for a wedding event.",
-                    budget: 45000,
-                    status: "open",
-                    created_at: new Date().toISOString(),
-                },
-            ];
+            const initialReqs: any[] = [];
             setItem("fiti_requests", JSON.stringify(initialReqs));
             reqsStr = JSON.stringify(initialReqs);
         }

@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthContext";
 
 import { createClothingRequest } from "@/lib/api/endpoints/orders";
+import { uploadToCloudinary } from "@/lib/cloudinary";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase/config";
 
 export default function NewTailoringRequestPage() {
     const router = useRouter();
@@ -23,11 +26,66 @@ export default function NewTailoringRequestPage() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Inspiration Gallery (Cloudinary)
+    const [designImages, setDesignImages] = useState<File[]>([]);
+    
+    // Voice Note (Firebase Storage)
+    const [voiceBlob, setVoiceBlob] = useState<Blob | null>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const chunksRef = useRef<BlobPart[]>([]);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setDesignImages(Array.from(e.target.files));
+        }
+    };
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorderRef.current = new MediaRecorder(stream);
+            chunksRef.current = [];
+
+            mediaRecorderRef.current.ondataavailable = (e) => chunksRef.current.push(e.data);
+            mediaRecorderRef.current.onstop = () => {
+                const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+                setVoiceBlob(blob);
+            };
+
+            mediaRecorderRef.current.start();
+            setIsRecording(true);
+        } catch (err) {
+            console.error("Mic error:", err);
+            setError("Could not access microphone.");
+        }
+    };
+
+    const stopRecording = () => {
+        mediaRecorderRef.current?.stop();
+        setIsRecording(false);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
         setError(null);
         try {
+            // 1. Upload Images
+            const uploadedImageUrls: string[] = [];
+            for (const file of designImages) {
+                const url = await uploadToCloudinary(file, "image");
+                if (url) uploadedImageUrls.push(url);
+            }
+
+            // 2. Upload Voice Note
+            let voiceUrl = null;
+            if (voiceBlob && user) {
+                const audioRef = ref(storage, `voice_notes/${user.uid}_${Date.now()}.webm`);
+                await uploadBytes(audioRef, voiceBlob);
+                voiceUrl = await getDownloadURL(audioRef);
+            }
+
             await createClothingRequest({
                 client_id: user?.uid || "guest_client",
                 clothing_category: garmentType,
@@ -38,6 +96,8 @@ export default function NewTailoringRequestPage() {
                 gender: gender,
                 target_budget: targetBudget ? parseFloat(targetBudget) : undefined,
                 target_date: targetDate || undefined,
+                design_image_urls: uploadedImageUrls,
+                voice_note_url: voiceUrl || undefined,
             });
             setSubmitted(true);
             setTimeout(() => {
@@ -52,67 +112,7 @@ export default function NewTailoringRequestPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#07080A] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
-            {/* TOP NAVIGATION HEADER */}
-            <header className="w-full border-b border-zinc-900/90 bg-[#0A0B0E]/95 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
-                    {/* Left: Back button & Atelier Logo */}
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="px-3 py-1.5 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
-                            title="Go back to previous page"
-                        >
-                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
-                            <span className="hidden sm:inline">Back</span>
-                        </button>
-
-                        <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative h-9 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
-                                <img
-                                    src="/logoo.png"
-                                    alt="FITI Atelier Digital Logo"
-                                    className="h-7 w-auto object-contain"
-                                />
-                            </div>
-                            <span className="font-extrabold tracking-widest text-sm text-white uppercase font-heading hidden sm:inline-block">
-                                ATELIER DIGITAL
-                            </span>
-                        </Link>
-                    </div>
-
-                    {/* Middle Navigation Links */}
-                    <nav className="hidden lg:flex items-center space-x-8 text-xs font-bold tracking-wider text-zinc-400">
-                        <Link href="/storefront" className="hover:text-[#F5CA53] transition-colors">
-                            Storefront
-                        </Link>
-                        <Link href="/client/home" className="hover:text-[#F5CA53] transition-colors">
-                            Dashboard
-                        </Link>
-                        <Link href="/orders" className="hover:text-[#F5CA53] transition-colors">
-                            Orders
-                        </Link>
-                        <Link href="/tailors" className="hover:text-[#F5CA53] transition-colors">
-                            Tailors
-                        </Link>
-                    </nav>
-
-                    {/* Right Action Buttons */}
-                    <div className="flex items-center space-x-3">
-                        <button
-                            onClick={async () => {
-                                await logout();
-                                router.push("/login");
-                            }}
-                            className="px-3.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
-                            title="Sign out"
-                        >
-                            <span>Logout</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-
+        <>
             {/* FORM CONTAINER */}
             <main className="max-w-3xl w-full mx-auto px-4 sm:px-8 py-12 flex-1 space-y-8">
                 <div>
@@ -313,6 +313,26 @@ export default function NewTailoringRequestPage() {
                             />
                         </div>
 
+                        {/* RICH MEDIA */}
+                        <div className="p-5 bg-[#18191E] rounded-xl space-y-5 border border-zinc-800">
+                            <div>
+                                <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">INSPIRATION GALLERY (IMAGES)</label>
+                                <input type="file" multiple accept="image/*" onChange={handleImageChange} className="w-full text-xs text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-[#F5CA53] hover:file:bg-zinc-700 transition-all cursor-pointer" />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#F5CA53] mb-2">VOICE NOTE INSTRUCTIONS</label>
+                                <div className="flex items-center gap-4">
+                                    {isRecording ? (
+                                        <button type="button" onClick={stopRecording} className="px-5 py-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-xl text-xs font-bold animate-pulse hover:bg-rose-500/20 transition-all">Stop Recording</button>
+                                    ) : (
+                                        <button type="button" onClick={startRecording} className="px-5 py-2.5 bg-zinc-800 text-zinc-300 border border-zinc-700 rounded-xl text-xs font-bold hover:text-white hover:border-zinc-500 transition-all">Record Audio</button>
+                                    )}
+                                    {voiceBlob && <span className="text-xs text-[#F5CA53] font-bold flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#F5CA53] inline-block"></span> Audio attached</span>}
+                                </div>
+                            </div>
+                        </div>
+
                         <button
                             type="submit"
                             disabled={submitting}
@@ -333,20 +353,6 @@ export default function NewTailoringRequestPage() {
                     </form>
                 )}
             </main>
-
-            {/* FOOTER */}
-            <footer className="w-full border-t border-zinc-900/90 bg-[#07080A] py-8 px-4 sm:px-8 relative z-20">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <span className="font-extrabold text-sm tracking-widest text-white uppercase font-heading">
-                        ATELIER DIGITAL
-                    </span>
-                    <div className="flex gap-6 text-[10px] font-mono uppercase font-bold text-zinc-400">
-                        <Link href="/privacy">Privacy</Link>
-                        <Link href="/terms">Terms</Link>
-                        <Link href="/contact">Contact</Link>
-                    </div>
-                </div>
-            </footer>
-        </div>
+        </>
     );
 }

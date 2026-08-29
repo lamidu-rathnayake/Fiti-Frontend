@@ -16,8 +16,8 @@ export default function RegisterPage() {
             {/* FULL BACKGROUND PHOTO */}
             <div className="absolute inset-0 z-0">
                 <Image
-                    src="/images/orders/cashmere_belted_coat.jpg"
-                    alt="Cashmere Atelier Background"
+                    src="/images/orders/navy_double_suit.jpg"
+                    alt="Navy Double Suit Atelier Background"
                     fill
                     className="object-cover brightness-[0.4] scale-105"
                     priority

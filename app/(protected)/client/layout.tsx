@@ -22,15 +22,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
                     {/* Left: Back button & Atelier Logo */}
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="px-3 py-1.5 rounded-xl border border-zinc-800 bg-[#141519] hover:bg-[#1C1D22] text-zinc-300 hover:text-[#F5CA53] hover:border-[#F5CA53]/40 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm group"
-                            title="Go back to previous page"
-                        >
-                            <span className="group-hover:-translate-x-0.5 transition-transform">&larr;</span>
-                            <span className="hidden sm:inline">Back</span>
-                        </button>
-
                         <Link href="/" className="flex items-center gap-3 group">
                             <div className="relative h-9 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
                                 <img
@@ -39,9 +30,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                                     className="h-7 w-auto object-contain"
                                 />
                             </div>
-                            <span className="font-extrabold tracking-widest text-sm text-white uppercase font-heading hidden sm:inline-block">
-                                ATELIER DIGITAL
-                            </span>
                         </Link>
                     </div>
 

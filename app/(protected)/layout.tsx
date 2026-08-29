@@ -84,7 +84,7 @@ export default function ProtectedLayout({
                         <Link href={homeUrl} className={pathname === homeUrl ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
                             Dashboard
                         </Link>
-                        <Link href="/orders" className={pathname === '/orders' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                        <Link href={`/${dbRole}/orders`} className={pathname === `/${dbRole}/orders` ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
                             Orders
                         </Link>
                         <Link href="/tailors" className={pathname === '/tailors' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>

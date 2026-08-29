@@ -27,6 +27,12 @@ export default function TailorHomePage() {
     const [requestAccepted, setRequestAccepted] = useState<boolean | null>(null);
     const [openRequests, setOpenRequests] = useState<any[]>([]);
 
+    // Shop & location state (multi-shop switcher)
+    const [shops, setShops] = useState<string[]>(["Shop 1"]);
+    const [selectedShop, setSelectedShop] = useState("Shop 1");
+    const [location, setLocation] = useState("London, UK");
+    const [isShopDropdownOpen, setIsShopDropdownOpen] = useState(false);
+
     useEffect(() => {
         const fetchOpenRequests = async () => {
             try {
@@ -41,6 +47,34 @@ export default function TailorHomePage() {
 
         fetchOpenRequests();
     }, []);
+
+    useEffect(() => {
+        // Load shops, selected shop & location from localStorage on mount
+        const storedShops = localStorage.getItem('tailorShops');
+        if (storedShops) {
+            try {
+                setShops(JSON.parse(storedShops));
+            } catch (e) {
+                console.error("Failed to parse shops", e);
+            }
+        }
+
+        const lastSelected = localStorage.getItem('tailorSelectedShop');
+        if (lastSelected) {
+            setSelectedShop(lastSelected);
+        }
+
+        const storedLocation = localStorage.getItem('tailorLocation');
+        if (storedLocation) {
+            setLocation(storedLocation);
+        }
+    }, []);
+
+    const handleSelectShop = (shopName: string) => {
+        setSelectedShop(shopName);
+        setIsShopDropdownOpen(false);
+        localStorage.setItem('tailorSelectedShop', shopName);
+    };
 
     const handleAcceptRequest = async (requestId: number, budget?: number) => {
         try {
@@ -252,23 +286,60 @@ export default function TailorHomePage() {
                         </div>
                     </div>
 
-                    {/* WORKSHOP STATUS CARD */}
-                    <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 space-y-3 relative overflow-hidden backdrop-blur-xl">
-                        <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#F5CA53] animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F5CA53]">
-                                Workshop Status: Open
-                            </span>
+                    {/* SHOP SWITCHER (bottom of sidebar) */}
+                    <div className="space-y-3 px-3">
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 block">
+                            ACTIVE SHOP
+                        </span>
+
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsShopDropdownOpen(!isShopDropdownOpen)}
+                                className="w-full flex items-center justify-between gap-2 bg-[#141519] border border-zinc-800 hover:border-[#F5CA53]/40 px-3.5 py-2.5 rounded-xl text-xs font-bold text-[#F5CA53] transition-all"
+                            >
+                                <span className="truncate">{selectedShop}</span>
+                                <svg className={`w-3 h-3 shrink-0 transition-transform ${isShopDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            {isShopDropdownOpen && (
+                                <div className="absolute bottom-full left-0 mb-2 w-full bg-[#141519] border border-zinc-800 rounded-xl shadow-xl overflow-hidden z-20">
+                                    {shops.map((shop, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleSelectShop(shop)}
+                                            className={`w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-[#1C1D22] transition-colors ${selectedShop === shop ? 'text-[#F5CA53]' : 'text-zinc-300'}`}
+                                        >
+                                            {shop}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <p className="text-xs text-zinc-400 leading-relaxed font-normal">
-                            You have 4 fittings scheduled for today.
-                        </p>
-                        <button
-                            onClick={() => setActiveTab("schedule")}
-                            className="w-full rounded-xl bg-[#18191E] border border-zinc-800 hover:border-zinc-700 py-2.5 text-[10px] font-black uppercase tracking-widest text-zinc-300 transition-colors"
+
+                        <Link
+                            href="/tailor/add-shop"
+                            title="Add new shop"
+                            className="w-full flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#F5CA53]/20 text-[#F5CA53] hover:bg-[#F5CA53]/10 text-xs font-bold transition-colors"
                         >
-                            VIEW DAILY SHEET
-                        </button>
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span>Add Shop</span>
+                        </Link>
+
+                        <Link
+                            href="/tailor/location"
+                            title="Change Location"
+                            className="w-full flex items-center gap-1.5 px-3.5 py-1.5 bg-[#15140e]/90 hover:bg-[#232014] rounded-full border border-[#F5CA53]/30 hover:border-[#F5CA53] transition-all group"
+                        >
+                            <svg className="w-3.5 h-3.5 text-[#F5CA53] shrink-0 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span className="text-[9px] font-bold text-[#F5CA53] tracking-widest uppercase truncate">{location}</span>
+                        </Link>
                     </div>
                 </aside>
 
@@ -282,7 +353,7 @@ export default function TailorHomePage() {
                                     Manage Orders
                                 </h1>
                                 <p className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">
-                                    ACTIVE WORKSHOP SCHEDULE
+                                    ACTIVE WORKSHOP SCHEDULE &bull; {selectedShop}
                                 </p>
                             </div>
 
@@ -398,7 +469,7 @@ export default function TailorHomePage() {
                                     PENDING
                                 </span>
 
-                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 shadow-xl transition-all">
+                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 shadow-xl transition-all duration-300 hover:border-zinc-700">
                                     <div
                                         onClick={() => setPendingExpanded(!pendingExpanded)}
                                         className="flex items-center justify-between cursor-pointer"
@@ -500,134 +571,18 @@ export default function TailorHomePage() {
                         </>
                     )}
 
-                    {/* TAB 2: WORKSHOP SCHEDULE */}
-                    {activeTab === "schedule" && (
-                        <div className="space-y-6">
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white">Workshop Schedule</h1>
-                                <p className="text-xs text-zinc-400 mt-1">Today&apos;s active fitting appointments in Colombo atelier</p>
-                            </div>
-                            <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-6 space-y-4">
-                                <div className="flex justify-between items-center p-4 bg-[#18191E] border border-zinc-800 rounded-xl">
-                                    <div>
-                                        <span className="text-[10px] font-black uppercase text-[#F5CA53] block">10:00 AM - 11:30 AM</span>
-                                        <h4 className="text-sm font-bold text-white">Adam G. &bull; Initial Suit Fitting</h4>
-                                    </div>
-                                    <span className="text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-3 py-1 rounded-full">CONFIRMED</span>
-                                </div>
-                                <div className="flex justify-between items-center p-4 bg-[#18191E] border border-zinc-800 rounded-xl">
-                                    <div>
-                                        <span className="text-[10px] font-black uppercase text-[#F5CA53] block">02:00 PM - 03:00 PM</span>
-                                        <h4 className="text-sm font-bold text-white">Julian V. &bull; Overcoat Chalk Line Adjustment</h4>
-                                    </div>
-                                    <span className="text-xs font-bold text-[#F5CA53] bg-[#F5CA53]/10 border border-[#F5CA53]/30 px-3 py-1 rounded-full">IN PROGRESS</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TAB 3: CLIENTS */}
-                    {activeTab === "clients" && (
-                        <div className="space-y-6">
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white">Client Archive</h1>
-                                <p className="text-xs text-zinc-400 mt-1">Master measurement records &amp; style profiles</p>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-5 space-y-3">
-                                    <h4 className="text-sm font-extrabold text-white">Adam G.</h4>
-                                    <p className="text-xs text-zinc-400">Chest: 40&quot; &bull; Waist: 32&quot; &bull; Shoulders: 18.5&quot;</p>
-                                    <span className="text-[10px] font-black text-[#F5CA53] uppercase block">3 Commissions Completed</span>
-                                </div>
-                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-5 space-y-3">
-                                    <h4 className="text-sm font-extrabold text-white">Julian V.</h4>
-                                    <p className="text-xs text-zinc-400">Chest: 42&quot; &bull; Waist: 34&quot; &bull; Shoulders: 19&quot;</p>
-                                    <span className="text-[10px] font-black text-[#F5CA53] uppercase block">1 Active Order</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TAB 4: FABRIC ARCHIVE */}
-                    {activeTab === "fabrics" && (
-                        <div className="space-y-6">
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white">Fabric Archive</h1>
-                                <p className="text-xs text-zinc-400 mt-1">Curated inventory of luxury wools, silks, and linens</p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-4 space-y-2">
-                                    <div className="w-full h-32 bg-zinc-800 rounded-xl overflow-hidden">
-                                        <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=400&q=80" className="w-full h-full object-cover" alt="Biella Wool" />
-                                    </div>
-                                    <h4 className="text-xs font-bold text-white">Biella Super 150s Wool</h4>
-                                    <p className="text-[10px] text-[#F5CA53] font-bold">14 Meters Available</p>
-                                </div>
-                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-4 space-y-2">
-                                    <div className="w-full h-32 bg-zinc-800 rounded-xl overflow-hidden">
-                                        <img src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=400&q=80" className="w-full h-full object-cover" alt="Midnight Velvet" />
-                                    </div>
-                                    <h4 className="text-xs font-bold text-white">Midnight Velvet</h4>
-                                    <p className="text-[10px] text-[#F5CA53] font-bold">8 Meters Available</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TAB 5: EARNINGS */}
-                    {activeTab === "earnings" && (
-                        <div className="space-y-6">
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white">Earnings &amp; Payouts</h1>
-                                <p className="text-xs text-zinc-400 mt-1">Financial performance of Atelier Vane</p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-5">
-                                    <span className="text-[10px] font-black uppercase text-zinc-500 block mb-1">THIS MONTH</span>
-                                    <h3 className="text-2xl font-extrabold text-[#F5CA53]">LKR 450,000</h3>
-                                </div>
-                                <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-5">
-                                    <span className="text-[10px] font-black uppercase text-zinc-500 block mb-1">PENDING PAYOUT</span>
-                                    <h3 className="text-2xl font-extrabold text-white">LKR 125,000</h3>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TAB 6: ATELIER SETTINGS */}
-                    {activeTab === "settings" && (
-                        <div className="space-y-6">
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white">Atelier Settings</h1>
-                                <p className="text-xs text-zinc-400 mt-1">Manage shop address, working hours, and contact details</p>
-                            </div>
-                            <div className="bg-[#131418] border border-zinc-800 rounded-2xl p-6 space-y-4 max-w-lg">
-                                <div>
-                                    <label className="text-[10px] font-black uppercase text-[#F5CA53] block mb-2">Shop Name</label>
-                                    <input type="text" defaultValue="Atelier Vane" className="w-full bg-[#18191E] border border-zinc-800 rounded-xl p-3 text-xs font-semibold text-white" />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black uppercase text-[#F5CA53] block mb-2">Shop Address</label>
-                                    <input type="text" defaultValue="Savile Row, Colombo 07" className="w-full bg-[#18191E] border border-zinc-800 rounded-xl p-3 text-xs font-semibold text-white" />
-                                </div>
-                            </div>
+                    {/* Other tabs (schedule/clients/fabrics/earnings/settings) render here */}
+                    {activeTab !== "overview" && (
+                        <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-8 text-center text-sm text-zinc-500">
+                            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} view coming soon.
                         </div>
                     )}
                 </main>
             </div>
 
-            {/* BOTTOM FOOTER */}
-            <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E] py-8 px-6 sm:px-12 relative z-20 mt-12">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex flex-col sm:flex-row items-center sm:space-x-4 space-y-1 sm:space-y-0 text-center sm:text-left">
-                        <span className="text-sm font-black tracking-widest text-[#F5CA53]">
-                            FITI
-                        </span>
-                        <span className="text-[11px] text-zinc-500">
-                            &copy; {new Date().getFullYear()} FITI Digital Atelier. All rights reserved.
-                        </span>
-                    </div>
-
+            {/* FOOTER */}
+            <footer className="w-full border-t border-zinc-900/80 bg-[#0A0B0E]">
+                <div className="max-w-7xl mx-auto px-6 sm:px-12 py-8">
                     <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
                         <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
                         <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>

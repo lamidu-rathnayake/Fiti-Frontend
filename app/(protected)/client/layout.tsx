@@ -23,9 +23,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                     {/* Left: Back button & Atelier Logo */}
                     <div className="flex items-center gap-4">
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative h-9 px-3 py-1 bg-[#FFFDF9] rounded-xl border border-[#F5CA53]/50 shadow-[0_0_15px_rgba(245,202,83,0.25)] flex items-center justify-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_25px_rgba(245,202,83,0.45)]">
+                            <div className="relative h-9 px-3 py-1 flex items-center justify-center transition-all duration-300 group-hover:scale-105 ">
                                 <img
-                                    src="/logo_light.png"
+                                    src="/logo_dark.png"
                                     alt="FITI Atelier Digital Logo"
                                     className="h-7 w-auto object-contain"
                                 />

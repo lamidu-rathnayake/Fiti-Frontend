@@ -24,6 +24,19 @@ import type {
     Measurements,
 } from "@/lib/api/types/profile";
 
+// ── Cloudinary ────────────────────────────────────────────────────────
+
+/**
+ * Request the backend to securely delete a Cloudinary image.
+ * POST /api/v1/profiles/cloudinary-image/delete
+ */
+export async function deleteCloudinaryImage(publicId: string): Promise<any> {
+    return apiFetch<any>("/profiles/cloudinary-image/delete", {
+        method: "POST",
+        body: JSON.stringify({ public_id: publicId }),
+    });
+}
+
 // ── Client ────────────────────────────────────────────────────────────
 
 /**

@@ -31,7 +31,7 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
     const fetchAddress = async (lat: number, lng: number): Promise<{ address: string; city: string } | null> => {
         try {
             setSelectedAddress("Resolving address...");
-            
+
             // Using Nominatim for highly detailed village/street level precision
             // (The infinite loop bug that caused rate limiting is now fixed)
             const response = await fetch(
@@ -39,12 +39,12 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
                 { headers: { "User-Agent": "Fiti-Atelier-App/1.0" } }
             );
             const data = await response.json();
-            
+
             if (data && data.address) {
                 // Get the most specific local name available (village, road, suburb, or neighbourhood)
                 const localName = data.address.village || data.address.road || data.address.suburb || data.address.neighbourhood || "Unknown Area";
                 const city = data.address.city || data.address.town || data.address.state || "Unknown City";
-                
+
                 const finalAddress = localName === city ? city : `${localName}, ${city}`;
                 setSelectedAddress(finalAddress);
                 return { address: finalAddress, city: city };
@@ -174,7 +174,7 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
                         </div>
                         <div>
                             <span className="text-[9px] font-mono tracking-[0.25em] uppercase text-zinc-400 block mb-1">
-                                Current Atelier Hub
+                                Current Location
                             </span>
                             <p className="text-sm sm:text-base font-extrabold text-white leading-tight font-heading">
                                 {selectedAddress}

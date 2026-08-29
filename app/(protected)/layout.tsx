@@ -14,7 +14,6 @@ export default function ProtectedLayout({
     const { user, dbRole, loading } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
-    const [searchQuery, setSearchQuery] = useState("");
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Protected Route Logic
@@ -53,18 +52,8 @@ export default function ProtectedLayout({
             {/* TOP NAVIGATION HEADER */}
             <header className="w-full border-b border-zinc-900/90 bg-[#0A0B0E]/95 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
-                    {/* Left: Hamburger & Atelier Logo */}
+                    {/* Left: Atelier Logo */}
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="p-1 -ml-1 hover:bg-[#141519] rounded-lg transition-colors text-zinc-400 hover:text-[#F5CA53]"
-                            title="Menu"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-
                         <Link href="/" className="flex items-center gap-3 group">
                             <div className="relative h-9 px-3 py-1 flex items-center justify-center transition-all duration-300 group-hover:scale-105 ">
                                 <img
@@ -98,27 +87,17 @@ export default function ProtectedLayout({
                         )}
                     </nav>
 
-                    {/* Right User Actions & Search Bar */}
+                    {/* Right: Hamburger Menu */}
                     <div className="flex items-center space-x-3">
-                        <div className="relative hidden md:block w-48 lg:w-56">
-                            <svg className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#F5CA53]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-1 hover:bg-[#141519] rounded-lg transition-colors text-zinc-400 hover:text-[#F5CA53]"
+                            title="Menu"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
-                            <input
-                                type="text"
-                                placeholder={dbRole === 'tailor' ? "Search..." : "Find a tailor..."}
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && searchQuery.trim()) {
-                                        if (dbRole === 'client') {
-                                            router.push(`/tailors?q=${encodeURIComponent(searchQuery.trim())}`);
-                                        }
-                                    }
-                                }}
-                                className="w-full pl-9 pr-3 py-1.5 bg-[#141519] border border-zinc-800 focus:border-[#F5CA53] rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none transition-all"
-                            />
-                        </div>
+                        </button>
                     </div>
                 </div>
             </header>

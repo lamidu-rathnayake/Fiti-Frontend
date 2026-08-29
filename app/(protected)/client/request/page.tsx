@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthContext";
 
 import { createClothingRequest } from "@/lib/api/endpoints/orders";
+import { getMeasurements } from "@/lib/api/endpoints/profiles";
+import type { Measurements } from "@/lib/api/types/profile";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase/config";
 
 export default function NewTailoringRequestPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user, logout } = useAuth();
+    
+    const shopIdParam = searchParams.get("shop_id");
 
     const [garmentType, setGarmentType] = useState("TWO-PIECE SUIT");
     const [fabricChoice, setFabricChoice] = useState("tailor_provided");
@@ -25,6 +30,20 @@ export default function NewTailoringRequestPage() {
     const [submitted, setSubmitted] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [savedMeasurements, setSavedMeasurements] = useState<Measurements | null>(null);
+    const [shopName, setShopName] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (user) {
+            getMeasurements(user.uid)
+                .then(setSavedMeasurements)
+                .catch(err => console.log("No saved measurements found", err));
+        }
+        // In a real app we'd fetch the shop name using shopIdParam here too
+        if (shopIdParam) {
+            setShopName("Selected Atelier");
+        }
+    }, [user, shopIdParam]);
 
     // Inspiration Gallery (Cloudinary)
     const [designImages, setDesignImages] = useState<File[]>([]);
@@ -98,6 +117,17 @@ export default function NewTailoringRequestPage() {
                 target_date: targetDate || undefined,
                 design_image_urls: uploadedImageUrls,
                 voice_note_url: voiceUrl || undefined,
+                target_shop_ids: shopIdParam ? [parseInt(shopIdParam)] : undefined,
+                measurement: savedMeasurements ? {
+                    chest: savedMeasurements.chest ? Number(savedMeasurements.chest) : null,
+                    waist: savedMeasurements.waist ? Number(savedMeasurements.waist) : null,
+                    shoulder: savedMeasurements.shoulder ? Number(savedMeasurements.shoulder) : null,
+                    sleeve: savedMeasurements.sleeve ? Number(savedMeasurements.sleeve) : null,
+                    neck: savedMeasurements.neck ? Number(savedMeasurements.neck) : null,
+                    hip: savedMeasurements.hip ? Number(savedMeasurements.hip) : null,
+                    inseam: savedMeasurements.inseam ? Number(savedMeasurements.inseam) : null,
+                    length: savedMeasurements.length ? Number(savedMeasurements.length) : null,
+                } : undefined,
             });
             setSubmitted(true);
             setTimeout(() => {
@@ -116,6 +146,14 @@ export default function NewTailoringRequestPage() {
             {/* FORM CONTAINER */}
             <main className="max-w-3xl w-full mx-auto px-4 sm:px-8 py-12 flex-1 space-y-8">
                 <div>
+                    {shopIdParam && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F5CA53]/10 border border-[#F5CA53]/30 rounded-full mb-4">
+                            <span className="w-2 h-2 rounded-full bg-[#F5CA53] animate-pulse"></span>
+                            <span className="text-[10px] font-bold text-[#F5CA53] tracking-widest uppercase">
+                                Direct Request to {shopName}
+                            </span>
+                        </div>
+                    )}
                     <span className="text-[10px] font-mono tracking-[0.25em] text-[#F5CA53] uppercase block mb-1">
                         BESPOKE COMMISSION
                     </span>
@@ -256,6 +294,24 @@ export default function NewTailoringRequestPage() {
                                 </button>
                             </div>
                         </div>
+
+                    {/* Saved Measurements Badge */}
+                    <div className="bg-[#121318] p-4 rounded-xl border border-zinc-800/80 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[#F5CA53]">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" /></svg>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-white">Measurement Profile</p>
+                                <p className="text-xs text-zinc-500 mt-0.5">
+                                    {savedMeasurements ? "Your saved bespoke measurements will be attached securely to this request." : "No saved measurements found. Tailors will ask for them later."}
+                                </p>
+                            </div>
+                        </div>
+                        <Link href="/client/profile" className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-[#F5CA53] transition-colors border border-zinc-800 px-3 py-1.5 rounded-lg hover:border-[#F5CA53]">
+                            Edit
+                        </Link>
+                    </div>
 
                         {/* TARGET BUDGET & DATE (two-column) */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

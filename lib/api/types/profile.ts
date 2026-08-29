@@ -19,6 +19,7 @@ export interface ClientProfilePayload {
     address?: string | null;
     latitude?: number | null;
     longitude?: number | null;
+    photo_url?: string | null;
 }
 
 /** Success (201) response from POST /api/v1/profiles/client */
@@ -29,6 +30,7 @@ export interface ClientProfileResponse {
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    photo_url: string | null;
     created_at: string | null;
     updated_at: string | null;
 }
@@ -44,6 +46,7 @@ export interface ClientProfile {
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    photo_url: string | null;
     created_at: string | null;
     updated_at: string | null;
 }
@@ -57,13 +60,13 @@ export type ClientProfileUpdatePayload = Partial<ClientProfilePayload>;
 export interface MeasurementsPayload {
     chest?: number | null;
     waist?: number | null;
-    hips?: number | null;
-    inseam?: number | null;
     shoulder?: number | null;
     sleeve?: number | null;
     neck?: number | null;
-    height?: number | null;
-    weight?: number | null;
+    hip?: number | null;
+    inseam?: number | null;
+    length?: number | null;
+    notes?: string | null;
 }
 
 export interface Measurements extends MeasurementsPayload {

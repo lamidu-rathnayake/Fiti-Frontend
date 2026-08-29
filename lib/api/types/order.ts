@@ -35,6 +35,17 @@ export interface ClothingRequestPayload {
     radius_km?: number;
     design_image_urls?: string[];
     target_shop_ids?: number[];
+    measurement?: {
+        chest?: number | null;
+        waist?: number | null;
+        shoulder?: number | null;
+        sleeve?: number | null;
+        neck?: number | null;
+        hip?: number | null;
+        inseam?: number | null;
+        length?: number | null;
+        notes?: string | null;
+    } | null;
 }
 
 /** A clothing request object returned from GET endpoints */

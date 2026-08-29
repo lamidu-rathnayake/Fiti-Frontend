@@ -32,3 +32,14 @@ export async function uploadToCloudinary(file: File, resourceType: "image" | "vi
         return null;
     }
 }
+
+export function extractPublicIdFromUrl(url: string): string | null {
+    try {
+        const urlParts = url.split("/");
+        const filename = urlParts[urlParts.length - 1];
+        if (!filename) return null;
+        return filename.split(".")[0] || null;
+    } catch {
+        return null;
+    }
+}

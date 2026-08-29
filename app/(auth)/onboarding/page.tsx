@@ -310,8 +310,8 @@ export default function OnboardingPage() {
                                             onClick={() => setSelectedRole("client")}
                                             disabled={submitting}
                                             className={`group text-left rounded-2xl border p-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${role === "client"
-                                                    ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
-                                                    : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
+                                                ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
+                                                : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
                                                 }`}
                                         >
                                             <div>
@@ -332,15 +332,15 @@ export default function OnboardingPage() {
                                             </div>
                                         </button>
 
-                                        {/* SELLER / TAILOR CARD */}
+                                        {/* Tailor / TAILOR CARD */}
                                         <button
                                             type="button"
                                             aria-pressed={role === "tailor"}
                                             onClick={() => setSelectedRole("tailor")}
                                             disabled={submitting}
                                             className={`group text-left rounded-2xl border p-5 transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${role === "tailor"
-                                                    ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
-                                                    : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
+                                                ? "border-[#F5CA53] bg-[#F5CA53]/10 shadow-[0_0_20px_rgba(245,202,83,0.15)] scale-[1.02]"
+                                                : "border-zinc-800 bg-[#0D0D0D] hover:border-zinc-700 hover:bg-[#16171C]"
                                                 }`}
                                         >
                                             <div>
@@ -350,14 +350,14 @@ export default function OnboardingPage() {
                                                     </svg>
                                                 </div>
                                                 <p className="text-sm font-extrabold text-white mb-1">
-                                                    Register as a Seller
+                                                    Register as a Tailor
                                                 </p>
                                                 <p className="text-[11px] text-zinc-400 leading-relaxed">
                                                     Join our artisan network and showcase your craftsmanship.
                                                 </p>
                                             </div>
                                             <div className="mt-4 text-[10px] font-black uppercase tracking-widest text-[#F5CA53] flex items-center gap-1">
-                                                <span>{role === "tailor" ? "SELECTED ✓" : "SELECT SELLER →"}</span>
+                                                <span>{role === "tailor" ? "SELECTED ✓" : "SELECT TAILOR →"}</span>
                                             </div>
                                         </button>
                                     </div>

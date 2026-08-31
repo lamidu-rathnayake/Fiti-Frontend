@@ -14,8 +14,8 @@ export type FabricStatus = "client_provided" | "tailor_provided";
 export type ServiceType = "online" | "physical_visit";
 export type ClothingRequestType = "direct" | "bidding";
 export type Gender = "male" | "female" | "unisex";
-export type ClothingRequestStatus = "open" | "closed" | "cancelled";
-export type OrderStatus = "pending" | "in_progress" | "completed" | "cancelled";
+export type ClothingRequestStatus = "open" | "in_progress" | "completed" | "cancelled";
+export type OrderStatus = "in_progress" | "completed" | "cancelled";
 
 /**
  * Request body for POST /api/v1/orders/requests

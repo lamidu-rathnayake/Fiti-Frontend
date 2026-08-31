@@ -23,6 +23,8 @@ export default function ClientOrdersPage() {
     const [isDbConnected, setIsDbConnected] = useState(false);
     const [clientOrders, setClientOrders] = useState<ClientOrderRow[]>([]);
 
+    const [selectedOrder, setSelectedOrder] = useState<ClientOrderRow | null>(null);
+
     const filteredClientOrders = clientOrders.filter(
         (ord) =>
             ord.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -127,17 +129,21 @@ export default function ClientOrdersPage() {
                     </div>
                 ) : filteredClientOrders.length > 0 ? (
                     filteredClientOrders.map((ord) => (
-                        <div key={ord.id} className="bg-cream-bg border border-accent/20 rounded-2xl p-6 shadow-md space-y-4">
+                        <div
+                            key={ord.id}
+                            onClick={() => setSelectedOrder(ord)}
+                            className="bg-cream-bg border border-accent/20 hover:border-accent/60 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all cursor-pointer group space-y-4"
+                        >
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-accent/15 pb-4">
                                 <div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-xs font-mono font-bold text-accent">{ord.id}</span>
+                                        <span className="text-xs font-mono font-bold text-accent group-hover:underline">{ord.id}</span>
                                         <span className="text-xs font-bold text-earth-text/50">• {ord.date}</span>
                                     </div>
-                                    <h3 className="text-base font-extrabold text-earth-text mt-1 font-heading">{ord.title}</h3>
+                                    <h3 className="text-base font-extrabold text-earth-text mt-1 font-heading group-hover:text-accent transition-colors">{ord.title}</h3>
                                     <p className="text-xs text-earth-text/70 mt-0.5 font-medium">{ord.tailor} &bull; Client: {ord.client}</p>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto">
                                     <span className="text-sm font-black text-earth-text block">{ord.price}</span>
                                     <span className="text-[10px] font-mono font-bold text-earth-text uppercase px-2.5 py-1 rounded-full bg-accent/15 border border-accent/30 inline-block mt-1">
                                         {ord.status}
@@ -153,6 +159,10 @@ export default function ClientOrdersPage() {
                                 <div className="w-full h-2.5 bg-warm-beige border border-accent/20 rounded-full overflow-hidden">
                                     <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${ord.progress}%` }} />
                                 </div>
+                            </div>
+                            <div className="text-right text-[10px] font-bold text-accent uppercase tracking-wider group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                                <span>View Commission Details</span>
+                                <span>&rarr;</span>
                             </div>
                         </div>
                     ))
@@ -172,6 +182,82 @@ export default function ClientOrdersPage() {
                     </div>
                 )}
             </div>
+
+            {/* ORDER DETAILS MODAL */}
+            {selectedOrder && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-earth-text/40 backdrop-blur-xs">
+                    <div className="bg-cream-bg border border-accent/40 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+                        {/* Modal Header */}
+                        <div className="flex justify-between items-start border-b border-accent/20 pb-4">
+                            <div>
+                                <span className="text-[10px] font-mono font-bold text-accent uppercase tracking-widest block mb-1">
+                                    COMMISSION DETAILS
+                                </span>
+                                <h2 className="text-2xl font-black text-earth-text font-heading">{selectedOrder.title}</h2>
+                                <p className="text-xs text-earth-text/70 font-mono mt-0.5">{selectedOrder.id} &bull; Created {selectedOrder.date}</p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedOrder(null)}
+                                className="w-8 h-8 rounded-full bg-warm-beige border border-accent/30 flex items-center justify-center text-earth-text hover:bg-accent hover:text-cream-bg transition-colors font-bold text-base"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        {/* Overview Grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-warm-beige/50 p-4 rounded-2xl border border-accent/20 text-xs">
+                            <div>
+                                <span className="text-[10px] text-earth-text/60 font-mono uppercase font-bold block">Status</span>
+                                <span className="font-extrabold text-accent">{selectedOrder.status}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-earth-text/60 font-mono uppercase font-bold block">Commission Value</span>
+                                <span className="font-extrabold text-earth-text">{selectedOrder.price}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-earth-text/60 font-mono uppercase font-bold block">Assigned Artisan</span>
+                                <span className="font-extrabold text-earth-text">{selectedOrder.tailor}</span>
+                            </div>
+                        </div>
+
+                        {/* Fitting Progress Milestone Steps */}
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center text-xs font-bold text-earth-text">
+                                <span>Fitting &amp; Crafting Timeline</span>
+                                <span className="text-accent font-mono">{selectedOrder.progress}% Completed</span>
+                            </div>
+                            <div className="w-full h-3 bg-warm-beige border border-accent/30 rounded-full overflow-hidden p-0.5">
+                                <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${selectedOrder.progress}%` }} />
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-2 pt-2 text-[10px] font-semibold text-center">
+                                <div className={`p-2 rounded-xl border ${selectedOrder.progress >= 25 ? 'bg-accent/15 border-accent text-accent font-bold' : 'bg-warm-beige/30 border-accent/20 text-earth-text/50'}`}>
+                                    1. Order Placed
+                                </div>
+                                <div className={`p-2 rounded-xl border ${selectedOrder.progress >= 50 ? 'bg-accent/15 border-accent text-accent font-bold' : 'bg-warm-beige/30 border-accent/20 text-earth-text/50'}`}>
+                                    2. Measurements
+                                </div>
+                                <div className={`p-2 rounded-xl border ${selectedOrder.progress >= 75 ? 'bg-accent/15 border-accent text-accent font-bold' : 'bg-warm-beige/30 border-accent/20 text-earth-text/50'}`}>
+                                    3. Fitting &amp; Stitch
+                                </div>
+                                <div className={`p-2 rounded-xl border ${selectedOrder.progress === 100 ? 'bg-accent/15 border-accent text-accent font-bold' : 'bg-warm-beige/30 border-accent/20 text-earth-text/50'}`}>
+                                    4. Ready &amp; Delivered
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Footer */}
+                        <div className="flex justify-end gap-3 border-t border-accent/20 pt-4">
+                            <button
+                                onClick={() => setSelectedOrder(null)}
+                                className="px-5 py-2.5 bg-warm-beige border border-accent/40 text-earth-text text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-accent/10 transition-all"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

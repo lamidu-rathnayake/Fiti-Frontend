@@ -162,16 +162,16 @@ export async function getOrder(orderId: number): Promise<Order> {
 
 /**
  * Update order status.
- * PATCH /api/v1/orders/{order_id}/status
+ * PATCH /api/v1/orders/{order_id}/status?order_status={status}
+ * NOTE: FastAPI reads `order_status` as a query param, NOT a request body.
  * (Auth: Valid Token)
  */
 export async function updateOrderStatus(
     orderId: number,
-    status: "in_progress" | "completed",
+    status: "in_progress" | "completed" | "cancelled",
 ): Promise<Order> {
-    return apiFetch<Order>(`/orders/${orderId}/status`, {
+    return apiFetch<Order>(`/orders/${orderId}/status?order_status=${status}`, {
         method: "PATCH",
-        body: JSON.stringify({ status }),
     });
 }
 

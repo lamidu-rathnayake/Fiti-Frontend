@@ -2,688 +2,499 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthContext";
-import { listOpenRequests, submitBid, listShopOrders } from "@/lib/api/endpoints/orders";
+import {
+    listOpenRequests,
+    listShopOrders,
+    submitBid,
+    updateOrderStatus,
+} from "@/lib/api/endpoints/orders";
 import { listTailorShops } from "@/lib/api/endpoints/shops";
 import { getTailorProfile, updateTailorProfile } from "@/lib/api/endpoints/profiles";
-import type { ClothingRequest, Order } from "@/lib/api/types/order";
+import type { ClothingRequest, Order, ShopRequest } from "@/lib/api/types/order";
 import type { Shop } from "@/lib/api/types/shop";
 import type { TailorProfile } from "@/lib/api/types/profile";
 
+interface RequestView {
+    req: ClothingRequest;
+    myShopRequest: ShopRequest | null;
+    isBidding: boolean;
+    isDirect: boolean;
+}
+
+type Tab = "overview" | "pipeline" | "earnings" | "settings";
+
 export default function TailorHomePage() {
-    const { user, logout } = useAuth();
-    const router = useRouter();
-    const [activeTab, setActiveTab] = useState<"overview" | "schedule" | "clients" | "fabrics" | "earnings" | "settings">("overview");
-
-    const [searchQuery, setSearchQuery] = useState("");
-
-    // Real data state
+    const { user } = useAuth();
+    const [activeTab, setActiveTab] = useState<Tab>("pipeline");
     const [tailorShops, setTailorShops] = useState<Shop[]>([]);
     const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
+    
+    // Data state
     const [openRequests, setOpenRequests] = useState<ClothingRequest[]>([]);
     const [shopOrders, setShopOrders] = useState<Order[]>([]);
     const [tailorProfile, setTailorProfile] = useState<TailorProfile | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
+    
     // UI state
-    const [location, setLocation] = useState("Colombo, Sri Lanka");
+    const [isLoading, setIsLoading] = useState(true);
     const [isShopDropdownOpen, setIsShopDropdownOpen] = useState(false);
-    const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
-    const [bidSubmittedForId, setBidSubmittedForId] = useState<number | null>(null);
-
-    // Settings form state
+    
+    // Action state
+    const [submittingBidFor, setSubmittingBidFor] = useState<number | null>(null);
+    const [completingOrderId, setCompletingOrderId] = useState<number | null>(null);
+    const [actionToast, setActionToast] = useState<{ msg: string; ok: boolean } | null>(null);
+    
+    // Form state
+    const [bidPrices, setBidPrices] = useState<Record<number, string>>({});
+    const [bidMessages, setBidMessages] = useState<Record<number, string>>({});
     const [settingsPhone, setSettingsPhone] = useState("");
     const [settingsCity, setSettingsCity] = useState("");
     const [settingsAddress, setSettingsAddress] = useState("");
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [settingsSaved, setSettingsSaved] = useState(false);
 
-    // ---- Data fetching ----
+    const showToast = (msg: string, ok = true) => {
+        setActionToast({ msg, ok });
+        setTimeout(() => setActionToast(null), 3000);
+    };
+
     const fetchData = useCallback(async () => {
         if (!user) return;
         setIsLoading(true);
         try {
-            // Fetch tailor profile, shops & open requests in parallel
-            const [profileResult, shopsResult, requestsResult] = await Promise.allSettled([
+            const [profileRes, shopsRes, reqsRes] = await Promise.allSettled([
                 getTailorProfile(user.uid),
                 listTailorShops(user.uid),
                 listOpenRequests(),
             ]);
 
-            // Profile
-            if (profileResult.status === "fulfilled") {
-                const p = profileResult.value;
+            if (profileRes.status === "fulfilled") {
+                const p = profileRes.value;
                 setTailorProfile(p);
-                if (p.city) setLocation(p.city);
                 setSettingsPhone(p.phone || "");
                 setSettingsCity(p.city || "");
                 setSettingsAddress(p.address || "");
             }
 
-            // Shops
-            let primaryShop: Shop | null = null;
-            if (shopsResult.status === "fulfilled" && shopsResult.value.length > 0) {
-                setTailorShops(shopsResult.value);
-                // Restore previously selected shop from localStorage
-                const storedShopId = localStorage.getItem("tailorSelectedShopId");
-                const found = storedShopId
-                    ? shopsResult.value.find((s) => String(s.shop_id) === storedShopId) ?? shopsResult.value[0]
-                    : shopsResult.value[0];
-                setSelectedShop(found);
-                primaryShop = found;
-            } else {
-                // Restore from localStorage as fallback for UI
-                const storedName = localStorage.getItem("tailorSelectedShop");
-                if (storedName) {
-                    setSelectedShop({ shop_name: storedName } as Shop);
-                }
-                const storedLoc = localStorage.getItem("tailorLocation");
-                if (storedLoc) setLocation(storedLoc);
+            let activeShop: Shop | null = null;
+            if (shopsRes.status === "fulfilled" && shopsRes.value.length > 0) {
+                const shops = shopsRes.value;
+                setTailorShops(shops);
+                const storedId = localStorage.getItem("tailorSelectedShopId");
+                activeShop = storedId ? (shops.find((s) => String(s.shop_id) === storedId) ?? shops[0]) : shops[0];
+                setSelectedShop(activeShop);
+                localStorage.setItem("tailorSelectedShopId", String(activeShop.shop_id));
             }
 
-            // Open requests
-            if (requestsResult.status === "fulfilled") {
-                setOpenRequests(requestsResult.value);
+            if (reqsRes.status === "fulfilled") {
+                setOpenRequests(reqsRes.value);
             }
 
-            // Fetch shop orders if we have a primary shop
-            if (primaryShop?.shop_id) {
+            if (activeShop?.shop_id) {
                 try {
-                    const orders = await listShopOrders(primaryShop.shop_id);
+                    const orders = await listShopOrders(activeShop.shop_id);
                     setShopOrders(orders);
-                } catch {
-                    setShopOrders([]);
-                }
+                } catch { setShopOrders([]); }
             }
         } catch (err) {
-            console.error("Failed to fetch tailor dashboard data:", err);
+            console.error("Failed to load tailor data:", err);
         } finally {
             setIsLoading(false);
         }
     }, [user]);
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+    useEffect(() => { fetchData(); }, [user, fetchData]);
 
-    // When shop changes, reload orders for that shop
     const handleSelectShop = useCallback(async (shop: Shop) => {
         setSelectedShop(shop);
         setIsShopDropdownOpen(false);
         localStorage.setItem("tailorSelectedShopId", String(shop.shop_id));
-        localStorage.setItem("tailorSelectedShop", shop.shop_name);
         if (shop.shop_id) {
-            try {
-                const orders = await listShopOrders(shop.shop_id);
-                setShopOrders(orders);
-            } catch {
-                setShopOrders([]);
-            }
+            setIsLoading(true);
+            try { 
+                const orders = await listShopOrders(shop.shop_id); 
+                setShopOrders(orders); 
+            } catch { setShopOrders([]); }
+            setIsLoading(false);
         }
     }, []);
 
-    const handleAcceptRequest = async (req: ClothingRequest) => {
-        try {
-            await submitBid({
-                shop_request_id: req.request_id,
-                bid_amount: req.target_budget || 10000,
-                message: "I am interested in crafting this bespoke commission. Please review my profile.",
-            });
-            setBidSubmittedForId(req.request_id);
-        } catch (err) {
-            console.error("Failed to submit bid:", err);
-            // Still mark as submitted optimistically
-            setBidSubmittedForId(req.request_id);
-        }
-    };
+    // ── Pipeline Data Preparation ──
+    
+    const newInquiries: RequestView[] = [];
+    const pendingClient: RequestView[] = [];
+    const activeWorkshop = shopOrders.filter((o) => o.order_status === "in_progress");
+    const completedHistory = shopOrders.filter((o) => o.order_status === "completed");
 
-    const handleSaveSettings = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!user) return;
-        setIsSavingSettings(true);
-        try {
-            await updateTailorProfile(user.uid, {
-                phone: settingsPhone || undefined,
-                city: settingsCity || undefined,
-                address: settingsAddress || undefined,
-            });
-            if (settingsCity) setLocation(settingsCity);
-            setSettingsSaved(true);
-            setTimeout(() => setSettingsSaved(false), 2500);
-        } catch (err) {
-            console.error("Failed to save settings:", err);
-        } finally {
-            setIsSavingSettings(false);
-        }
-    };
+    if (selectedShop) {
+        openRequests.forEach((req) => {
+            const myShopRequest = req.shop_requests?.find((sr) => sr.shop_id === selectedShop.shop_id) || null;
+            const view: RequestView = {
+                req,
+                myShopRequest,
+                isBidding: req.request_type === "bidding",
+                isDirect: req.request_type === "direct",
+            };
 
-    // ---- Derived data ----
-    const ongoingOrders = shopOrders.filter((o) => o.order_status === "in_progress");
-    const pendingOrders = shopOrders.filter((o) => o.order_status === "pending");
-    const completedOrders = shopOrders.filter((o) => o.order_status === "completed");
+            // If we have an accepted quote, it's an order now, skip it from requests lists.
+            if (myShopRequest?.status === "accepted") return;
 
-    const totalEarnings = completedOrders.reduce((sum, o) => sum + (o.accepted_price || 0), 0);
-    const pendingEarnings = ongoingOrders.reduce((sum, o) => sum + (o.accepted_price || 0), 0);
+            // If we have already quoted, it is pending client approval
+            if (myShopRequest?.status === "quoted") {
+                pendingClient.push(view);
+                return;
+            }
 
-    // Unique client IDs from all orders
-    const uniqueClientIds = [...new Set(shopOrders.map((o) => `Client #${o.shop_request_id}`))];
+            // New Inquiry if direct to us, OR if it's a bidding request we haven't answered
+            if ((myShopRequest && myShopRequest.status === "pending") || (!myShopRequest && view.isBidding)) {
+                newInquiries.push(view);
+            }
+        });
+    }
 
-    // Filtered requests by search query
-    const filteredRequests = openRequests.filter(
-        (r) =>
-            !searchQuery ||
-            (r.clothing_category || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (r.description || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
+    const totalRevenue = completedHistory.reduce((sum, o) => sum + (o.accepted_price || 0), 0);
+    const pipelineValue = activeWorkshop.reduce((sum, o) => sum + (o.accepted_price || 0), 0);
     const shopDisplayName = selectedShop?.shop_name || "Your Shop";
 
-    return (
-        <div className="text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
+    // ── Handlers ──
 
-            {/* DASHBOARD BODY WITH SIDEBAR & MAIN SECTION */}
-            <div className="max-w-7xl w-full mx-auto px-6 sm:px-12 py-10 flex-1 flex gap-10">
-                {/* LEFT SIDEBAR */}
-                <aside className="w-64 shrink-0 hidden lg:flex flex-col justify-between space-y-8">
-                    <div className="space-y-8">
-                        {/* MANAGEMENT SECTION */}
+    const handleSubmitQuote = async (view: RequestView) => {
+        const srId = view.myShopRequest?.shop_request_id;
+        if (!srId) {
+            showToast("Cannot bid without a valid shop request context.", false);
+            return;
+        }
+        
+        const price = Number(bidPrices[srId]);
+        if (!price || price <= 0) return;
+        
+        setSubmittingBidFor(srId);
+        try {
+            await submitBid({
+                shop_request_id: srId,
+                bid_amount: price,
+                message: bidMessages[srId] || `Quote of LKR ${price.toLocaleString()} submitted.`,
+            });
+            showToast("Quote submitted successfully!");
+            setBidPrices((p) => { const n = { ...p }; delete n[srId]; return n; });
+            setBidMessages((p) => { const n = { ...p }; delete n[srId]; return n; });
+            await fetchData(); // Refresh board
+        } catch (err) {
+            console.error("Failed to submit quote:", err);
+            showToast("Failed to submit quote. Try again.", false);
+        } finally { 
+            setSubmittingBidFor(null); 
+        }
+    };
+
+    const handleMarkComplete = async (orderId: number) => {
+        setCompletingOrderId(orderId);
+        try {
+            await updateOrderStatus(orderId, "completed");
+            showToast("Order marked as completed!");
+            await fetchData(); // Refresh board
+        } catch (err) {
+            console.error("Failed to mark complete:", err);
+            showToast("Failed to complete order. Try again.", false);
+        } finally { 
+            setCompletingOrderId(null); 
+        }
+    };
+
+    // ── Render Helpers ──
+
+    const SkeletonCard = () => <div className="h-40 bg-[#141519] rounded-xl border border-zinc-800/60 animate-pulse" />;
+
+    const renderInquiryCard = (view: RequestView) => {
+        const { req, myShopRequest, isDirect } = view;
+        const srId = myShopRequest?.shop_request_id;
+        const isSubmitting = srId != null && submittingBidFor === srId;
+        const priceVal = srId != null ? (bidPrices[srId] ?? "") : "";
+        const canSubmit = srId != null;
+
+        return (
+            <div key={req.request_id} className="bg-[#18191E] border border-zinc-800/80 rounded-xl overflow-hidden flex flex-col hover:border-zinc-700 transition-colors shadow-sm relative group">
+                <div className={`absolute top-0 left-0 w-1 h-full ${isDirect ? "bg-sky-400" : "bg-amber-400"}`} />
+                <div className="p-4 pl-5 flex-1">
+                    <div className="flex justify-between items-start mb-2">
                         <div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 mb-4 block px-3">MANAGEMENT</span>
-                            <nav className="space-y-1.5">
-                                {([
-                                    { key: "overview", label: "Overview", icon: "M4 6h16M4 12h16M4 18h7" },
-                                    { key: "schedule", label: "Schedule", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
-                                    { key: "clients", label: "Clients", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" },
-                                    { key: "fabrics", label: "Fabric Archive", icon: "M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" },
-                                    { key: "earnings", label: "Earnings", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
-                                    { key: "settings", label: "Settings", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" },
-                                ] as { key: typeof activeTab; label: string; icon: string }[]).map(({ key, label, icon }) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => setActiveTab(key)}
-                                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-left transition-all ${activeTab === key
-                                            ? "bg-[#F5CA53]/10 border border-[#F5CA53]/30 text-[#F5CA53]"
-                                            : "text-zinc-400 hover:bg-[#141519] hover:text-white"
-                                            }`}
-                                    >
-                                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={icon} />
-                                        </svg>
-                                        {label}
-                                    </button>
-                                ))}
-                            </nav>
+                            <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border mb-1.5 inline-block ${isDirect ? "text-sky-400 bg-sky-400/10 border-sky-400/20" : "text-amber-400 bg-amber-400/10 border-amber-400/20"}`}>
+                                {isDirect ? "Direct" : "Bidding"}
+                            </span>
+                            <h4 className="text-sm font-bold text-white leading-tight">{req.clothing_category || "Custom Garment"}</h4>
                         </div>
+                        <span className="text-xs font-mono text-zinc-500">#{req.request_id}</span>
                     </div>
-
-                    {/* ACTIVE SHOP SELECTOR */}
-                    <div className="space-y-3 px-3">
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 block">ACTIVE SHOP</span>
-
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsShopDropdownOpen(!isShopDropdownOpen)}
-                                className="w-full flex items-center justify-between gap-2 bg-[#141519] border border-zinc-800 hover:border-[#F5CA53]/40 px-3.5 py-2.5 rounded-xl text-xs font-bold text-[#F5CA53] transition-all"
-                            >
-                                <span className="truncate">{shopDisplayName}</span>
-                                <svg className={`w-3 h-3 shrink-0 transition-transform ${isShopDropdownOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-
-                            {isShopDropdownOpen && (
-                                <div className="absolute bottom-full left-0 mb-2 w-full bg-[#141519] border border-zinc-800 rounded-xl shadow-xl overflow-hidden z-20">
-                                    {tailorShops.length > 0 ? (
-                                        tailorShops.map((shop) => (
-                                            <button
-                                                key={shop.shop_id}
-                                                onClick={() => handleSelectShop(shop)}
-                                                className={`w-full text-left px-3.5 py-2.5 text-xs font-bold hover:bg-[#1C1D22] transition-colors ${selectedShop?.shop_id === shop.shop_id ? "text-[#F5CA53]" : "text-zinc-300"}`}
-                                            >
-                                                {shop.shop_name}
-                                            </button>
-                                        ))
-                                    ) : (
-                                        <div className="px-3.5 py-2.5 text-xs text-zinc-500">No shops yet</div>
-                                    )}
-                                </div>
-                            )}
+                    <p className="text-[10px] text-zinc-400 mb-2">
+                        {req.gender ? `${req.gender.charAt(0).toUpperCase() + req.gender.slice(1)} fit` : "Custom"} &bull; {req.target_budget ? `Budget: LKR ${req.target_budget.toLocaleString()}` : "Open Budget"}
+                    </p>
+                    {req.description && <p className="text-[10px] text-zinc-500 italic line-clamp-2 bg-[#141519] p-2 rounded-lg border border-zinc-800">"{req.description}"</p>}
+                </div>
+                
+                {canSubmit ? (
+                    <div className="p-3 bg-[#141519] border-t border-zinc-800/80 space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                            <input 
+                                type="number" 
+                                placeholder="Your Price (LKR)" 
+                                value={priceVal}
+                                onChange={(e) => srId != null && setBidPrices((p) => ({ ...p, [srId]: e.target.value }))}
+                                className="w-full bg-[#1A1B20] border border-zinc-700/60 focus:border-[#F5CA53]/60 rounded-lg px-2 py-1.5 text-[10px] text-white placeholder-zinc-600 outline-none transition-colors" 
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Short message..." 
+                                value={srId != null ? (bidMessages[srId] ?? "") : ""}
+                                onChange={(e) => srId != null && setBidMessages((p) => ({ ...p, [srId]: e.target.value }))}
+                                className="w-full bg-[#1A1B20] border border-zinc-700/60 focus:border-[#F5CA53]/60 rounded-lg px-2 py-1.5 text-[10px] text-white placeholder-zinc-600 outline-none transition-colors" 
+                            />
                         </div>
-
-                        <Link
-                            href="/tailor/add-shop"
-                            className="w-full flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#F5CA53]/20 text-[#F5CA53] hover:bg-[#F5CA53]/10 text-xs font-bold transition-colors"
+                        <button 
+                            onClick={() => handleSubmitQuote(view)} 
+                            disabled={isSubmitting || !priceVal || Number(priceVal) <= 0}
+                            className="w-full bg-[#F5CA53] hover:bg-[#f7d369] disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-black font-black text-[10px] uppercase tracking-widest py-2 rounded-lg transition-all flex items-center justify-center gap-2"
                         >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            <span>Add Shop</span>
-                        </Link>
-
-                        <Link
-                            href="/tailor/location"
-                            className="w-full flex items-center gap-1.5 px-3.5 py-1.5 bg-[#15140e]/90 hover:bg-[#232014] rounded-full border border-[#F5CA53]/30 hover:border-[#F5CA53] transition-all group"
-                        >
-                            <svg className="w-3.5 h-3.5 text-[#F5CA53] shrink-0 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span className="text-[9px] font-bold text-[#F5CA53] tracking-widest uppercase truncate">{location}</span>
-                        </Link>
+                            {isSubmitting ? "Submitting..." : "Send Quote"}
+                        </button>
                     </div>
-                </aside>
-
-                {/* MAIN CONTENT DYNAMIC VIEWS */}
-                <main className="flex-1 space-y-8 min-w-0">
-
-                    {/* ─── TAB: OVERVIEW ─── */}
-                    {activeTab === "overview" && (
-                        <>
-                            <div>
-                                <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-1">Manage Orders</h1>
-                                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">
-                                    ACTIVE WORKSHOP SCHEDULE &bull; {shopDisplayName}
-                                </p>
-                            </div>
-
-                            {isLoading ? (
-                                <div className="space-y-3">
-                                    {[1, 2, 3].map((i) => (
-                                        <div key={i} className="h-20 bg-[#131418] border border-zinc-800 rounded-2xl animate-pulse" />
-                                    ))}
-                                </div>
-                            ) : (
-                                <>
-                                    {/* ONGOING */}
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53]">ONGOING</span>
-                                            <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#F5CA53]/10 border border-[#F5CA53]/30 text-[#F5CA53]">
-                                                {ongoingOrders.length} ACTIVE
-                                            </span>
-                                        </div>
-
-                                        {ongoingOrders.length === 0 ? (
-                                            <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-6 text-center text-xs text-zinc-500">
-                                                No orders in progress right now.
-                                            </div>
-                                        ) : (
-                                            ongoingOrders.map((ord) => (
-                                                <div key={ord.order_id} className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 shadow-xl transition-all duration-300 hover:border-zinc-700">
-                                                    <div
-                                                        onClick={() => setExpandedOrderId(expandedOrderId === ord.order_id ? null : ord.order_id)}
-                                                        className="flex items-center justify-between cursor-pointer"
-                                                    >
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-12 h-12 rounded-xl bg-[#1A1B20] border border-zinc-700 flex items-center justify-center text-[#F5CA53] shrink-0">
-                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                                                </svg>
-                                                            </div>
-                                                            <div>
-                                                                <h3 className="text-sm font-extrabold text-white">Order #{ord.order_id}</h3>
-                                                                <p className="text-xs text-zinc-400 font-medium mt-0.5">
-                                                                    Request #{ord.shop_request_id} &bull; <span className="text-[#F5CA53] font-bold">LKR {Number(ord.accepted_price).toLocaleString()}</span>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <svg className={`w-5 h-5 text-zinc-400 transition-transform duration-300 ${expandedOrderId === ord.order_id ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                        </svg>
-                                                    </div>
-                                                    {expandedOrderId === ord.order_id && (
-                                                        <div className="mt-4 pt-4 border-t border-zinc-800/80 space-y-3">
-                                                            <div className="flex justify-between text-xs">
-                                                                <span className="text-zinc-400">Status:</span>
-                                                                <span className="text-[#F5CA53] font-bold">IN PROGRESS</span>
-                                                            </div>
-                                                            <div className="flex justify-between text-xs">
-                                                                <span className="text-zinc-400">Started:</span>
-                                                                <span className="text-white font-medium">{ord.started_date ? new Date(ord.started_date).toLocaleDateString() : "—"}</span>
-                                                            </div>
-                                                            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                                                <div className="h-full bg-[#F5CA53] w-3/5 shadow-[0_0_10px_rgba(245,202,83,0.5)]" />
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-
-                                    {/* PENDING */}
-                                    <div className="space-y-4 pt-2">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 block">PENDING ({pendingOrders.length})</span>
-                                        {pendingOrders.length === 0 ? (
-                                            <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-6 text-center text-xs text-zinc-500">No pending orders.</div>
-                                        ) : (
-                                            pendingOrders.map((ord) => (
-                                                <div key={ord.order_id} className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 shadow-xl">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-12 h-12 rounded-xl bg-[#18191E] border border-zinc-800 flex items-center justify-center text-zinc-400 shrink-0">
-                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
-                                                            </div>
-                                                            <div>
-                                                                <h3 className="text-sm font-extrabold text-white">Order #{ord.order_id}</h3>
-                                                                <p className="text-xs text-zinc-400 font-medium mt-0.5">
-                                                                    Request #{ord.shop_request_id} &bull; <span className="text-white">LKR {Number(ord.accepted_price).toLocaleString()}</span>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <span className="text-[9px] font-bold text-amber-400 uppercase tracking-widest bg-amber-400/10 border border-amber-400/30 px-2.5 py-1 rounded-full">PENDING</span>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-
-                                    {/* NEW REQUESTS */}
-                                    <div className="space-y-4 pt-2">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 block">NEW REQUESTS ({filteredRequests.length})</span>
-                                        {filteredRequests.length > 0 ? (
-                                            filteredRequests.map((req) => (
-                                                <div key={req.request_id} className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 sm:p-6 shadow-xl space-y-5">
-                                                    <div className="flex items-start gap-4">
-                                                        <div className="w-12 h-12 rounded-xl bg-[#18191E] border border-zinc-800 flex items-center justify-center text-[#F5CA53] shrink-0">
-                                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                            </svg>
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <h3 className="text-sm font-extrabold text-white">
-                                                                {req.clothing_category || "Custom Bespoke Request"}
-                                                            </h3>
-                                                            <p className="text-xs text-zinc-400 font-medium mt-0.5">
-                                                                {req.gender ? `${req.gender.charAt(0).toUpperCase() + req.gender.slice(1)} fit` : "Custom garment"} &bull;{" "}
-                                                                <span className="text-[#F5CA53] font-bold">
-                                                                    {req.target_budget ? `LKR ${Number(req.target_budget).toLocaleString()}` : "Custom Quote"}
-                                                                </span>
-                                                            </p>
-                                                            {req.target_date && (
-                                                                <p className="text-[10px] text-zinc-500 mt-1">Needed by: {new Date(req.target_date).toLocaleDateString()}</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {req.description && (
-                                                        <div className="p-4 rounded-xl bg-[#18191E] border border-zinc-800 text-xs italic text-zinc-300 leading-relaxed">
-                                                            &quot;{req.description}&quot;
-                                                        </div>
-                                                    )}
-
-                                                    {bidSubmittedForId === req.request_id ? (
-                                                        <div className="p-3 rounded-xl bg-[#F5CA53]/10 border border-[#F5CA53]/40 text-[#F5CA53] text-xs font-bold text-center uppercase tracking-wider">
-                                                            BID SUBMITTED TO CLIENT ✓
-                                                        </div>
-                                                    ) : (
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <button
-                                                                onClick={() => handleAcceptRequest(req)}
-                                                                className="w-full rounded-xl bg-[#F5CA53] hover:bg-[#f7d369] py-3.5 text-xs font-black uppercase tracking-[0.15em] text-black shadow-[0_0_15px_rgba(245,202,83,0.25)] transition-all hover:scale-[1.01]"
-                                                            >
-                                                                SUBMIT BID
-                                                            </button>
-                                                            <Link
-                                                                href="/orders"
-                                                                className="w-full rounded-xl bg-[#18191E] hover:bg-zinc-800 border border-zinc-800 py-3.5 text-xs font-black uppercase tracking-[0.15em] text-zinc-300 transition-all text-center"
-                                                            >
-                                                                VIEW FULL
-                                                            </Link>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-6 text-center text-xs text-zinc-500">
-                                                {isLoading ? "Loading requests..." : "No active client requests at the moment."}
-                                            </div>
-                                        )}
-                                    </div>
-                                </>
-                            )}
-                        </>
-                    )}
-
-                    {/* ─── TAB: SCHEDULE ─── */}
-                    {activeTab === "schedule" && (
-                        <>
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Schedule</h1>
-                                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">ACTIVE & UPCOMING ORDERS</p>
-                            </div>
-                            {isLoading ? (
-                                <div className="space-y-3">{[1, 2].map((i) => <div key={i} className="h-20 bg-[#131418] border border-zinc-800 rounded-2xl animate-pulse" />)}</div>
-                            ) : shopOrders.length === 0 ? (
-                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-8 text-center text-xs text-zinc-500">No scheduled orders yet.</div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {shopOrders.map((ord) => {
-                                        const statusColor = ord.order_status === "in_progress" ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/30"
-                                            : ord.order_status === "completed" ? "text-zinc-400 bg-zinc-800 border-zinc-700"
-                                                : "text-amber-400 bg-amber-400/10 border-amber-400/30";
-                                        return (
-                                            <div key={ord.order_id} className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 flex items-center justify-between gap-4">
-                                                <div>
-                                                    <p className="text-sm font-bold text-white">Order #{ord.order_id}</p>
-                                                    <p className="text-xs text-zinc-400 mt-0.5">LKR {Number(ord.accepted_price).toLocaleString()}</p>
-                                                    {ord.started_date && <p className="text-[10px] text-zinc-500 mt-0.5">Started: {new Date(ord.started_date).toLocaleDateString()}</p>}
-                                                    {ord.completed_date && <p className="text-[10px] text-zinc-500">Completed: {new Date(ord.completed_date).toLocaleDateString()}</p>}
-                                                </div>
-                                                <span className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${statusColor}`}>
-                                                    {(ord.order_status || "pending").replace(/_/g, " ").toUpperCase()}
-                                                </span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {/* ─── TAB: CLIENTS ─── */}
-                    {activeTab === "clients" && (
-                        <>
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Clients</h1>
-                                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">CLIENTS FROM YOUR ORDERS</p>
-                            </div>
-                            {isLoading ? (
-                                <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-16 bg-[#131418] border border-zinc-800 rounded-2xl animate-pulse" />)}</div>
-                            ) : uniqueClientIds.length === 0 ? (
-                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-8 text-center text-xs text-zinc-500">No client data yet. Orders will appear here once you have confirmed commissions.</div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {shopOrders.map((ord) => (
-                                        <div key={ord.order_id} className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-[#F5CA53]/10 border border-[#F5CA53]/30 flex items-center justify-center text-[#F5CA53] font-bold text-sm">
-                                                    C
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-white">Client #{ord.shop_request_id}</p>
-                                                    <p className="text-xs text-zinc-400">Order #{ord.order_id} &bull; LKR {Number(ord.accepted_price).toLocaleString()}</p>
-                                                </div>
-                                            </div>
-                                            <span className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${ord.order_status === "completed" ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/30" : "text-zinc-400 bg-zinc-800 border-zinc-700"}`}>
-                                                {(ord.order_status || "pending").replace(/_/g, " ").toUpperCase()}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {/* ─── TAB: FABRIC ARCHIVE ─── */}
-                    {activeTab === "fabrics" && (
-                        <>
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Fabric Archive</h1>
-                                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">FABRIC STATUS FROM INCOMING REQUESTS</p>
-                            </div>
-                            {isLoading ? (
-                                <div className="space-y-3">{[1, 2].map((i) => <div key={i} className="h-16 bg-[#131418] border border-zinc-800 rounded-2xl animate-pulse" />)}</div>
-                            ) : openRequests.length === 0 ? (
-                                <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-8 text-center text-xs text-zinc-500">No incoming requests with fabric information.</div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {openRequests.map((req) => (
-                                        <div key={req.request_id} className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-5 flex items-center justify-between gap-4">
-                                            <div>
-                                                <p className="text-sm font-bold text-white">{req.clothing_category || "Custom Garment"}</p>
-                                                <p className="text-xs text-zinc-400 mt-0.5">Request #{req.request_id}</p>
-                                            </div>
-                                            <span className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${req.fabric_status === "client_provided"
-                                                ? "text-sky-400 bg-sky-400/10 border-sky-400/30"
-                                                : req.fabric_status === "tailor_provided"
-                                                    ? "text-amber-400 bg-amber-400/10 border-amber-400/30"
-                                                    : "text-zinc-400 bg-zinc-800 border-zinc-700"
-                                                }`}>
-                                                {req.fabric_status === "client_provided" ? "Client Provides" : req.fabric_status === "tailor_provided" ? "Tailor Sources" : "Not Specified"}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </>
-                    )}
-
-                    {/* ─── TAB: EARNINGS ─── */}
-                    {activeTab === "earnings" && (
-                        <>
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Earnings</h1>
-                                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">REVENUE OVERVIEW FOR {shopDisplayName.toUpperCase()}</p>
-                            </div>
-
-                            {/* Earnings Summary Cards */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                {[
-                                    { label: "Total Earned", value: `LKR ${totalEarnings.toLocaleString()}`, desc: "From completed orders", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
-                                    { label: "In Pipeline", value: `LKR ${pendingEarnings.toLocaleString()}`, desc: "Ongoing orders value", color: "text-[#F5CA53] bg-[#F5CA53]/10 border-[#F5CA53]/20" },
-                                    { label: "Total Orders", value: String(shopOrders.length), desc: `${completedOrders.length} completed`, color: "text-zinc-300 bg-zinc-800 border-zinc-700" },
-                                ].map(({ label, value, desc, color }) => (
-                                    <div key={label} className={`bg-[#131418]/90 border rounded-2xl p-5 ${color}`}>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">{label}</p>
-                                        <p className="text-2xl font-extrabold mt-2">{value}</p>
-                                        <p className="text-[10px] opacity-60 mt-1">{desc}</p>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Orders List */}
-                            <div className="space-y-3">
-                                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 block">ORDER BREAKDOWN</span>
-                                {isLoading ? (
-                                    <div className="space-y-3">{[1, 2, 3].map((i) => <div key={i} className="h-16 bg-[#131418] border border-zinc-800 rounded-2xl animate-pulse" />)}</div>
-                                ) : shopOrders.length === 0 ? (
-                                    <div className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-6 text-center text-xs text-zinc-500">No orders yet. Revenue will appear here once you have completed commissions.</div>
-                                ) : (
-                                    shopOrders.map((ord) => (
-                                        <div key={ord.order_id} className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-4 flex items-center justify-between gap-4">
-                                            <div>
-                                                <p className="text-sm font-bold text-white">Order #{ord.order_id}</p>
-                                                <p className="text-xs text-zinc-400 mt-0.5">{ord.created_at ? new Date(ord.created_at).toLocaleDateString() : "—"}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-bold text-[#F5CA53]">LKR {Number(ord.accepted_price).toLocaleString()}</p>
-                                                <p className={`text-[9px] font-bold uppercase mt-0.5 ${ord.order_status === "completed" ? "text-emerald-400" : "text-amber-400"}`}>
-                                                    {(ord.order_status || "pending").replace(/_/g, " ")}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </>
-                    )}
-
-                    {/* ─── TAB: SETTINGS ─── */}
-                    {activeTab === "settings" && (
-                        <>
-                            <div>
-                                <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">Settings</h1>
-                                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500">TAILOR PROFILE &amp; ACCOUNT</p>
-                            </div>
-
-                            <form onSubmit={handleSaveSettings} className="bg-[#131418]/90 border border-zinc-800/90 rounded-2xl p-6 sm:p-8 space-y-5">
-                                {settingsSaved && (
-                                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold text-center">
-                                        Profile updated successfully ✓
-                                    </div>
-                                )}
-
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Name (Firebase)</label>
-                                    <div className="w-full bg-[#1F2025] border border-zinc-700/60 rounded-xl px-4 py-3 text-sm text-zinc-400 cursor-not-allowed">
-                                        {user?.displayName || user?.email || "—"}
-                                    </div>
-                                    <p className="text-[9px] text-zinc-600">Display name is managed via Firebase Authentication.</p>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Phone Number</label>
-                                    <input
-                                        type="tel"
-                                        value={settingsPhone}
-                                        onChange={(e) => setSettingsPhone(e.target.value)}
-                                        placeholder="+94 77 123 4567"
-                                        className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors"
-                                    />
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">City</label>
-                                    <input
-                                        type="text"
-                                        value={settingsCity}
-                                        onChange={(e) => setSettingsCity(e.target.value)}
-                                        placeholder="e.g. Colombo"
-                                        className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors"
-                                    />
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Address</label>
-                                    <input
-                                        type="text"
-                                        value={settingsAddress}
-                                        onChange={(e) => setSettingsAddress(e.target.value)}
-                                        placeholder="Street address"
-                                        className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors"
-                                    />
-                                </div>
-
-                                {tailorProfile && (
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Verification Status</label>
-                                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${tailorProfile.is_verified
-                                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                                            : "bg-amber-400/10 border-amber-400/30 text-amber-400"
-                                            }`}>
-                                            <span className={`w-2 h-2 rounded-full ${tailorProfile.is_verified ? "bg-emerald-400" : "bg-amber-400"}`} />
-                                            {tailorProfile.is_verified ? "Verified Tailor" : "Pending Verification"}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    disabled={isSavingSettings}
-                                    className="w-full bg-[#F5CA53] hover:bg-[#e4bb49] text-black font-bold text-xs uppercase tracking-widest py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-70"
-                                >
-                                    {isSavingSettings ? "Saving..." : "Save Profile Changes"}
-                                </button>
-                            </form>
-                        </>
-                    )}
-                </main>
+                ) : (
+                    <div className="p-3 bg-[#141519] border-t border-zinc-800/80 text-center">
+                        <span className="text-[10px] text-zinc-500">Shop request not initialized</span>
+                    </div>
+                )}
             </div>
+        );
+    };
 
+    const renderPendingCard = (view: RequestView) => {
+        const { req, myShopRequest } = view;
+        return (
+            <div key={req.request_id} className="bg-[#18191E] border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm relative opacity-80 hover:opacity-100 transition-opacity">
+                <div className="absolute top-0 left-0 w-1 h-full bg-[#F5CA53]" />
+                <div className="p-4 pl-5">
+                    <div className="flex justify-between items-start mb-2">
+                        <h4 className="text-sm font-bold text-white leading-tight">{req.clothing_category || "Custom Garment"}</h4>
+                        <span className="text-[9px] uppercase font-bold text-[#F5CA53] bg-[#F5CA53]/10 px-2 py-0.5 rounded border border-[#F5CA53]/20">Quoted</span>
+                    </div>
+                    <div className="bg-[#141519] border border-zinc-800 rounded-lg p-2.5 flex justify-between items-center mt-3">
+                        <span className="text-[10px] text-zinc-500 uppercase font-bold">Your Offer</span>
+                        <span className="text-xs font-black text-white">LKR {Number(myShopRequest?.offered_price || 0).toLocaleString()}</span>
+                    </div>
+                    <p className="text-[9px] text-zinc-500 mt-3 text-center uppercase tracking-wider font-bold">Awaiting Client Approval</p>
+                </div>
+            </div>
+        );
+    };
+
+    const renderOrderCard = (ord: Order, isActive: boolean) => {
+        const isCompleting = completingOrderId === ord.order_id;
+        return (
+            <div key={ord.order_id} className={`bg-[#18191E] border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm relative ${!isActive && 'opacity-60 grayscale hover:grayscale-0 transition-all'}`}>
+                <div className={`absolute top-0 left-0 w-1 h-full ${isActive ? "bg-emerald-400" : "bg-zinc-600"}`} />
+                <div className="p-4 pl-5">
+                    <div className="flex justify-between items-start mb-1">
+                        <h4 className="text-sm font-bold text-white leading-tight">Order #{ord.order_id}</h4>
+                        <span className="text-xs font-mono text-zinc-500">Ref #{ord.shop_request_id}</span>
+                    </div>
+                    <p className="text-xs font-black text-emerald-400 mb-3">LKR {Number(ord.accepted_price).toLocaleString()}</p>
+                    
+                    {isActive ? (
+                        <button 
+                            onClick={() => handleMarkComplete(ord.order_id)} 
+                            disabled={isCompleting}
+                            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold text-[10px] uppercase tracking-widest py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+                        >
+                            {isCompleting ? "Completing..." : "✓ Mark Completed"}
+                        </button>
+                    ) : (
+                        <div className="bg-zinc-800/50 rounded-lg p-2 text-center border border-zinc-700/50">
+                            <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-widest">Finished</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="text-white flex flex-col h-screen selection:bg-[#F5CA53] selection:text-black font-sans bg-[#0B0C10]">
+            {actionToast && (
+                <div className={`fixed top-6 right-6 z-50 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2 ${actionToast.ok ? "bg-emerald-600" : "bg-red-600"}`}>
+                    {actionToast.msg}
+                </div>
+            )}
+            
+            {/* Header */}
+            <header className="h-16 shrink-0 border-b border-zinc-800/60 bg-[#121316] flex items-center px-6 lg:px-12 justify-between">
+                <div className="flex items-center gap-8">
+                    <span className="text-[#F5CA53] font-serif font-black text-xl tracking-tighter">Atelier Mode</span>
+                    <nav className="hidden sm:flex items-center gap-1">
+                        {[
+                            { key: "pipeline", label: "Pipeline" },
+                            { key: "overview", label: "Overview" },
+                            { key: "earnings", label: "Earnings" },
+                            { key: "settings", label: "Settings" }
+                        ].map(t => (
+                            <button 
+                                key={t.key} 
+                                onClick={() => setActiveTab(t.key as Tab)}
+                                className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${activeTab === t.key ? "bg-[#F5CA53]/10 text-[#F5CA53]" : "text-zinc-500 hover:text-white"}`}
+                            >
+                                {t.label}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+                
+                <div className="relative">
+                    <button onClick={() => setIsShopDropdownOpen(!isShopDropdownOpen)} className="flex items-center gap-2 bg-[#1A1B20] border border-zinc-800 hover:border-[#F5CA53]/40 px-4 py-2 rounded-full text-xs font-bold text-[#F5CA53] transition-all">
+                        <span className="truncate max-w-[120px]">{shopDisplayName}</span>
+                        <svg className={`w-3 h-3 transition-transform ${isShopDropdownOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    {isShopDropdownOpen && (
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-[#1A1B20] border border-zinc-800 rounded-xl shadow-xl overflow-hidden z-20 py-1">
+                            {tailorShops.map(shop => (
+                                <button key={shop.shop_id} onClick={() => handleSelectShop(shop)} className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-[#25262C] transition-colors text-zinc-300">
+                                    {shop.shop_name}
+                                </button>
+                            ))}
+                            <div className="h-px bg-zinc-800 my-1"/>
+                            <Link href="/tailor/add-shop" className="w-full text-left px-4 py-2 text-xs font-bold text-[#F5CA53] hover:bg-[#25262C] transition-colors flex items-center gap-2">
+                                + Add New Shop
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </header>
+
+            <main className="flex-1 overflow-hidden flex flex-col bg-[#0B0C10]">
+                {/* PIPELINE VIEW */}
+                {activeTab === "pipeline" && (
+                    <div className="flex-1 overflow-x-auto flex flex-col p-6 lg:px-12">
+                        <div className="mb-6 shrink-0">
+                            <h1 className="text-2xl font-extrabold text-white tracking-tight">Order Pipeline</h1>
+                            <p className="text-xs text-zinc-500 mt-1">Track and manage the entire lifecycle of your commissions.</p>
+                        </div>
+                        
+                        <div className="flex-1 min-h-0 flex gap-6 pb-6 w-max lg:w-full">
+                            {/* Column 1: New Inquiries */}
+                            <div className="w-[300px] lg:flex-1 flex flex-col bg-[#121316] rounded-2xl border border-zinc-800/60 shrink-0">
+                                <div className="p-4 border-b border-zinc-800/60 bg-[#16171B] rounded-t-2xl flex items-center justify-between">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-white">New Inquiries</h3>
+                                    <span className="bg-zinc-800 text-zinc-300 text-[10px] px-2 py-0.5 rounded-full font-mono">{newInquiries.length}</span>
+                                </div>
+                                <div className="p-4 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
+                                    {isLoading ? <><SkeletonCard/><SkeletonCard/></> : newInquiries.length === 0 ? (
+                                        <p className="text-xs text-zinc-600 text-center mt-10">No new requests</p>
+                                    ) : newInquiries.map(renderInquiryCard)}
+                                </div>
+                            </div>
+
+                            {/* Column 2: Pending Client */}
+                            <div className="w-[300px] lg:flex-1 flex flex-col bg-[#121316] rounded-2xl border border-zinc-800/60 shrink-0">
+                                <div className="p-4 border-b border-zinc-800/60 bg-[#16171B] rounded-t-2xl flex items-center justify-between">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Pending Client</h3>
+                                    <span className="bg-[#F5CA53]/10 text-[#F5CA53] border border-[#F5CA53]/20 text-[10px] px-2 py-0.5 rounded-full font-mono">{pendingClient.length}</span>
+                                </div>
+                                <div className="p-4 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
+                                    {isLoading ? <><SkeletonCard/></> : pendingClient.length === 0 ? (
+                                        <p className="text-xs text-zinc-600 text-center mt-10">No pending quotes</p>
+                                    ) : pendingClient.map(renderPendingCard)}
+                                </div>
+                            </div>
+
+                            {/* Column 3: Active Workshop */}
+                            <div className="w-[300px] lg:flex-1 flex flex-col bg-[#121316] rounded-2xl border border-zinc-800/60 shrink-0">
+                                <div className="p-4 border-b border-zinc-800/60 bg-[#16171B] rounded-t-2xl flex items-center justify-between">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Active Workshop</h3>
+                                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-0.5 rounded-full font-mono">{activeWorkshop.length}</span>
+                                </div>
+                                <div className="p-4 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
+                                    {isLoading ? <><SkeletonCard/></> : activeWorkshop.length === 0 ? (
+                                        <p className="text-xs text-zinc-600 text-center mt-10">No active orders</p>
+                                    ) : activeWorkshop.map(o => renderOrderCard(o, true))}
+                                </div>
+                            </div>
+
+                            {/* Column 4: Completed */}
+                            <div className="w-[300px] lg:flex-1 flex flex-col bg-[#121316] rounded-2xl border border-zinc-800/60 shrink-0">
+                                <div className="p-4 border-b border-zinc-800/60 bg-[#16171B] rounded-t-2xl flex items-center justify-between">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Completed</h3>
+                                    <span className="bg-zinc-800 text-zinc-500 border border-zinc-700 text-[10px] px-2 py-0.5 rounded-full font-mono">{completedHistory.length}</span>
+                                </div>
+                                <div className="p-4 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
+                                    {isLoading ? <><SkeletonCard/></> : completedHistory.length === 0 ? (
+                                        <p className="text-xs text-zinc-600 text-center mt-10">No completed orders</p>
+                                    ) : completedHistory.map(o => renderOrderCard(o, false))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* OVERVIEW TAB */}
+                {activeTab === "overview" && (
+                    <div className="p-6 lg:p-12 overflow-y-auto custom-scrollbar h-full">
+                        <div className="max-w-4xl mx-auto space-y-8">
+                            <div><h1 className="text-3xl font-extrabold">Dashboard Overview</h1><p className="text-zinc-500 text-xs mt-1">High-level statistics for {shopDisplayName}</p></div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {[
+                                    { label: "New Inquiries", value: newInquiries.length, color: "text-white" },
+                                    { label: "Pending Quotes", value: pendingClient.length, color: "text-[#F5CA53]" },
+                                    { label: "Active Orders", value: activeWorkshop.length, color: "text-emerald-400" },
+                                    { label: "Completed", value: completedHistory.length, color: "text-zinc-400" },
+                                ].map((stat, i) => (
+                                    <div key={i} className="bg-[#121316] border border-zinc-800/60 p-5 rounded-2xl">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">{stat.label}</p>
+                                        <p className={`text-3xl font-black ${stat.color}`}>{stat.value}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
+                {/* EARNINGS TAB */}
+                {activeTab === "earnings" && (
+                    <div className="p-6 lg:p-12 overflow-y-auto custom-scrollbar h-full">
+                        <div className="max-w-4xl mx-auto space-y-8">
+                            <div><h1 className="text-3xl font-extrabold">Earnings & Revenue</h1><p className="text-zinc-500 text-xs mt-1">Financial overview for {shopDisplayName}</p></div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="bg-[#121316] border border-zinc-800/60 p-6 rounded-2xl">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Total Earned</p>
+                                    <p className="text-4xl font-black text-emerald-400">LKR {totalRevenue.toLocaleString()}</p>
+                                </div>
+                                <div className="bg-[#121316] border border-zinc-800/60 p-6 rounded-2xl">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Pipeline Value (In Progress)</p>
+                                    <p className="text-4xl font-black text-[#F5CA53]">LKR {pipelineValue.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
+                {/* SETTINGS TAB */}
+                {activeTab === "settings" && (
+                    <div className="p-6 lg:p-12 overflow-y-auto custom-scrollbar h-full">
+                        <div className="max-w-2xl mx-auto space-y-8">
+                            <div><h1 className="text-3xl font-extrabold">Tailor Settings</h1><p className="text-zinc-500 text-xs mt-1">Manage your professional profile.</p></div>
+                            <form className="bg-[#121316] border border-zinc-800/60 rounded-2xl p-6 sm:p-8 space-y-5">
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Firebase Email</label>
+                                    <div className="w-full bg-[#18191E] border border-zinc-700/60 rounded-xl px-4 py-3 text-sm text-zinc-500 cursor-not-allowed">{user?.email}</div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Verification</label>
+                                    <div className="w-full bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-4 py-3 text-sm text-emerald-400 flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400"/>
+                                        {tailorProfile?.is_verified ? "Verified Identity" : "Pending Verification"}
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </main>
         </div>
     );
 }

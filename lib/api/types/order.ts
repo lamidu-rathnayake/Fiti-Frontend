@@ -10,12 +10,13 @@
 
 // ── Clothing Requests (Client-side) ───────────────────────────────────
 
-export type FabricStatus = "client_provided" | "tailor_provided";
+export type FabricStatus = "client_provided" | "shop_provides";
 export type ServiceType = "online" | "physical_visit";
 export type ClothingRequestType = "direct" | "bidding";
 export type Gender = "male" | "female" | "unisex";
 export type ClothingRequestStatus = "open" | "in_progress" | "completed" | "cancelled";
 export type OrderStatus = "in_progress" | "completed" | "cancelled";
+export type ShopRequestStatus = "pending" | "quoted" | "accepted" | "rejected" | "withdrawn";
 
 /**
  * Request body for POST /api/v1/orders/requests
@@ -89,7 +90,7 @@ export interface ShopRequest {
     request_id: number;
     shop_id: number;
     offered_price: number | null;
-    status: string;
+    status: ShopRequestStatus;
 }
 
 // ── Bids (Tailor-side) ────────────────────────────────────────────────

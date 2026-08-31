@@ -22,7 +22,7 @@ export default function NewTailoringRequestPage() {
     const shopIdParam = searchParams.get("shop_id");
 
     const [garmentType, setGarmentType] = useState("TWO-PIECE SUIT");
-    const [fabricChoice, setFabricChoice] = useState("tailor_provided");
+    const [fabricChoice, setFabricChoice] = useState("shop_provides");
     const [gender, setGender] = useState<"male" | "female" | "unisex">("male");
     const [serviceType, setServiceType] = useState<"online" | "physical_visit">("online");
     const [notes, setNotes] = useState("");
@@ -119,7 +119,7 @@ export default function NewTailoringRequestPage() {
                 longitude: longitude,
                 service_type: serviceType,
                 request_type: shopIdParam ? "direct" : "bidding",
-                fabric_status: fabricChoice as "client_provided" | "tailor_provided",
+                fabric_status: fabricChoice as "client_provided" | "shop_provides",
                 gender: gender,
                 target_budget: targetBudget ? parseFloat(targetBudget) : undefined,
                 target_date: targetDate || undefined,
@@ -245,8 +245,8 @@ export default function NewTailoringRequestPage() {
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 type="button"
-                                onClick={() => setFabricChoice("tailor_provided")}
-                                className={`py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all flex flex-col items-center gap-1 ${fabricChoice === "tailor_provided"
+                                onClick={() => setFabricChoice("shop_provides")}
+                                className={`py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all flex flex-col items-center gap-1 ${fabricChoice === "shop_provides"
                                     ? "bg-accent text-cream-bg border-accent shadow-sm"
                                     : "bg-warm-beige/60 text-earth-text/80 border-accent/30 hover:border-accent"
                                     }`}

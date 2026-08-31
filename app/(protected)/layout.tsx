@@ -39,7 +39,7 @@ export default function ProtectedLayout({
 
     if (loading || !authorized) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0A0B0E] text-xs text-[#F5CA53] font-mono tracking-widest uppercase">
+            <div className="min-h-screen flex items-center justify-center bg-warm-beige text-xs text-accent font-mono tracking-widest uppercase animate-pulse">
                 Checking access...
             </div>
         );
@@ -48,44 +48,44 @@ export default function ProtectedLayout({
     const homeUrl = `/${dbRole}/home`;
 
     return (
-        <div className="min-h-screen bg-[#07080A] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans relative">
+        <div className="min-h-screen bg-warm-beige text-earth-text flex flex-col justify-between selection:bg-accent selection:text-cream-bg font-sans relative">
             {/* TOP NAVIGATION HEADER */}
-            <header className="w-full border-b border-zinc-900/90 bg-[#0A0B0E]/95 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
+            <header className="w-full border-b border-accent/30 bg-cream-bg/95 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
                 <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
                     {/* Left: Atelier Logo */}
                     <div className="flex items-center gap-4">
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="relative h-9 px-3 py-1 flex items-center justify-center transition-all duration-300 group-hover:scale-105 ">
-                                <img
-                                    src="/logo_dark.png"
-                                    alt="FITI Atelier Digital Logo"
-                                    className="h-7 w-auto object-contain"
-                                />
-                            </div>
+                            <img
+                                src="/logo_light.png"
+                                alt="FITI Atelier Digital Logo"
+                                width={220}
+                                height={80}
+                                className="h-12 sm:h-14 w-auto object-contain transition-transform group-hover:scale-105"
+                            />
                         </Link>
                     </div>
 
                     {/* Middle Navigation Links */}
-                    <nav className="hidden lg:flex items-center space-x-8 text-xs font-bold tracking-wider text-zinc-400">
+                    <nav className="hidden lg:flex items-center space-x-8 text-xs font-bold tracking-wider text-earth-text/70">
                         {dbRole !== "tailor" && (
-                            <Link href="/client/storefront" className={pathname === '/client/storefront' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                            <Link href="/client/storefront" className={pathname === '/client/storefront' ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
                                 Storefront
                             </Link>
                         )}
-                        <Link href={homeUrl} className={pathname === homeUrl ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                        <Link href={homeUrl} className={pathname === homeUrl ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
                             {dbRole !== "tailor" ? "Home" : "Dashboard"}
                         </Link>
-                        <Link href={`/${dbRole}/orders`} className={pathname === `/${dbRole}/orders` ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                        <Link href={`/${dbRole}/orders`} className={pathname === `/${dbRole}/orders` ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
                             Orders
                         </Link>
 
                         {/*show tailors if only a client*/}
                         {dbRole !== "tailor" && (
                             <>
-                                <Link href="/client/tailors" className={pathname === '/client/tailors' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                                <Link href="/client/tailors" className={pathname === '/client/tailors' ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
                                     Tailors
                                 </Link>
-                                <Link href="/client/biddingRequest" className={pathname === '/client/biddingRequest' ? 'text-white font-extrabold relative pb-1 border-b-2 border-[#F5CA53]' : 'hover:text-[#F5CA53] transition-colors'}>
+                                <Link href="/client/biddingRequest" className={pathname === '/client/biddingRequest' ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
                                     Broadcast
                                 </Link>
                             </>
@@ -96,7 +96,7 @@ export default function ProtectedLayout({
                     <div className="flex items-center space-x-3">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="p-1 hover:bg-[#141519] rounded-lg transition-colors text-zinc-400 hover:text-[#F5CA53]"
+                            className="p-1 hover:bg-card-bg/40 rounded-lg transition-colors text-earth-text hover:text-accent"
                             title="Menu"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,21 +113,21 @@ export default function ProtectedLayout({
             </main>
 
             {/* ATELIER DIGITAL FOOTER */}
-            <footer className="w-full border-t border-zinc-900/90 bg-[#07080A] py-8 px-4 sm:px-8 mt-auto relative z-20">
+            <footer className="w-full border-t border-accent/30 bg-cream-bg py-8 px-4 sm:px-8 mt-auto relative z-20">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
                     <div>
-                        <span className="font-extrabold text-sm tracking-widest text-white uppercase font-heading block">
+                        <span className="font-extrabold text-sm tracking-widest text-earth-text uppercase font-heading block">
                             ATELIER DIGITAL
                         </span>
-                        <p className="text-zinc-500 text-[11px] mt-1 font-mono">
+                        <p className="text-earth-text/60 text-[11px] mt-1 font-mono">
                             &copy; {new Date().getFullYear()} ATELIER DIGITAL. ALL RIGHTS RESERVED.
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-6 text-zinc-400 font-mono text-[11px]">
-                        <Link href="/terms" className="hover:text-[#F5CA53] transition-colors">Terms of Service</Link>
-                        <Link href="/privacy" className="hover:text-[#F5CA53] transition-colors">Privacy Policy</Link>
-                        <Link href="/contact" className="hover:text-[#F5CA53] transition-colors">Contact Support</Link>
+                    <div className="flex flex-wrap items-center gap-6 text-earth-text/80 font-mono text-[11px]">
+                        <Link href="/terms" className="hover:text-accent transition-colors">Terms of Service</Link>
+                        <Link href="/privacy" className="hover:text-accent transition-colors">Privacy Policy</Link>
+                        <Link href="/contact" className="hover:text-accent transition-colors">Contact Support</Link>
                     </div>
                 </div>
             </footer>

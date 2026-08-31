@@ -9,7 +9,7 @@ import { reverseGeocode, geocode } from "@/lib/geocoding";
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
     ssr: false,
     loading: () => (
-        <div className="w-full h-full bg-[#0A0B0E] animate-pulse flex items-center justify-center text-zinc-500 text-xs font-mono">
+        <div className="w-full h-full bg-cream-bg animate-pulse flex items-center justify-center text-earth-text/60 text-xs font-mono">
             Loading Atelier Map...
         </div>
     ),
@@ -150,7 +150,7 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
 
     return (
         <>
-            <div className="w-full bg-[#121318] border border-zinc-800/80 rounded-[24px] overflow-hidden shadow-2xl flex flex-col group mt-4 transition-all hover:border-zinc-700">
+            <div className="w-full bg-cream-bg border border-accent/20 rounded-[24px] overflow-hidden shadow-lg flex flex-col group mt-4 transition-all hover:border-accent/40">
                 {/* Map Area */}
                 <div className="w-full h-72 sm:h-80 relative z-0">
                     {locationInitialized ? (
@@ -163,26 +163,23 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
                             }}
                         />
                     ) : (
-                        <div className="w-full h-full bg-[#0A0B0E] animate-pulse flex items-center justify-center text-xs text-zinc-500 font-mono">
+                        <div className="w-full h-full bg-cream-bg animate-pulse flex items-center justify-center text-xs text-earth-text/60 font-mono">
                             Loading map data...
                         </div>
                     )}
                 </div>
 
                 {/* Unified Info Panel Area */}
-                <div className="w-full p-5 sm:p-6 bg-gradient-to-b from-[#16171D] to-[#121318] flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-t border-zinc-800/80 relative">
-                    {/* Subtle top highlight for the panel */}
-                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#F5CA53]/20 to-transparent"></div>
-
+                <div className="w-full p-5 sm:p-6 bg-cream-bg flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-t border-accent/20 relative">
                     <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-full bg-[#F5CA53]/10 border border-[#F5CA53]/30 flex items-center justify-center text-[#F5CA53] shrink-0 mt-0.5 shadow-[0_0_15px_rgba(245,202,83,0.1)]">
+                        <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center text-accent shrink-0 mt-0.5 shadow-sm">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                         </div>
                         <div>
-                            <span className="text-[9px] font-mono tracking-[0.25em] uppercase text-zinc-400 block mb-1">
+                            <span className="text-[9px] font-mono tracking-[0.25em] uppercase text-earth-text/60 block mb-1 font-bold">
                                 Current Location
                             </span>
-                            <p className="text-sm sm:text-base font-extrabold text-white leading-tight font-heading">
+                            <p className="text-sm sm:text-base font-extrabold text-earth-text leading-tight font-heading">
                                 {selectedAddress}
                             </p>
                         </div>
@@ -193,7 +190,7 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
                             setCustomAddressInput(selectedAddress);
                             setIsLocationModalOpen(true);
                         }}
-                        className="w-full sm:w-auto px-6 py-3 bg-white text-black font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 hover:bg-[#F5CA53]"
+                        className="w-full sm:w-auto px-6 py-3 bg-accent text-cream-bg font-extrabold text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-md shrink-0 transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 hover:bg-earth-text"
                     >
                         Change Area
                     </button>
@@ -204,31 +201,31 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
                 <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <div 
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+                        className="absolute inset-0 bg-earth-text/40 backdrop-blur-sm animate-fade-in"
                         onClick={() => setIsLocationModalOpen(false)}
                     />
                     
                     {/* Modal Content */}
-                    <div className="bg-[#121318] border border-zinc-800 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative z-10 flex flex-col">
+                    <div className="bg-cream-bg border border-accent/30 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative z-10 flex flex-col">
                         
                         {/* Header */}
-                        <div className="px-6 sm:px-8 py-6 border-b border-zinc-800/80 bg-zinc-900/30 flex items-start justify-between">
+                        <div className="px-6 sm:px-8 py-6 border-b border-accent/20 bg-warm-beige/40 flex items-start justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-[#F5CA53]/10 flex items-center justify-center shrink-0">
-                                    <svg className="w-5 h-5 text-[#F5CA53]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-white tracking-tight">
+                                    <h3 className="text-lg font-bold text-earth-text tracking-tight font-heading">
                                         Update Location
                                     </h3>
-                                    <p className="text-xs text-zinc-400 mt-0.5 font-medium">
+                                    <p className="text-xs text-earth-text/70 mt-0.5 font-medium">
                                         Enter your delivery and atelier search area
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setIsLocationModalOpen(false)}
-                                className="w-8 h-8 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+                                className="w-8 h-8 rounded-full hover:bg-warm-beige flex items-center justify-center text-earth-text/60 hover:text-earth-text transition-colors"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
@@ -238,23 +235,23 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
                         <div className="p-6 sm:p-8">
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
+                                    <label className="text-[11px] font-bold text-earth-text/80 uppercase tracking-wider block mb-2 font-mono">
                                         Address or Area
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                            <svg className="w-4 h-4 text-earth-text/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                                         </div>
                                         <input
                                             type="text"
                                             value={customAddressInput}
                                             onChange={(e) => setCustomAddressInput(e.target.value)}
                                             placeholder="e.g. Main Road, Colombo 12"
-                                            className="w-full pl-11 pr-4 py-3.5 bg-[#1A1B22] border border-zinc-800 focus:border-[#F5CA53] rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none transition-all shadow-inner"
+                                            className="w-full pl-11 pr-4 py-3.5 bg-warm-beige/60 border border-accent/30 focus:border-accent rounded-xl text-sm text-earth-text placeholder-earth-text/50 focus:outline-none transition-all shadow-inner font-medium"
                                             autoFocus
                                         />
                                     </div>
-                                    <p className="text-[11px] text-zinc-500 mt-2 font-medium">
+                                    <p className="text-[11px] text-earth-text/60 mt-2 font-medium">
                                         Please provide a recognizable street or city name for best results.
                                     </p>
                                 </div>
@@ -262,16 +259,16 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
                         </div>
 
                         {/* Footer */}
-                        <div className="px-6 sm:px-8 py-5 border-t border-zinc-800/80 bg-zinc-900/30 flex justify-end gap-3">
+                        <div className="px-6 sm:px-8 py-5 border-t border-accent/20 bg-warm-beige/40 flex justify-end gap-3">
                             <button
                                 onClick={() => setIsLocationModalOpen(false)}
-                                className="px-5 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+                                className="px-5 py-2.5 rounded-xl text-xs font-bold text-earth-text/70 hover:text-earth-text hover:bg-warm-beige transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => handleApplyLocation(customAddressInput || "Main Road, Colombo 12")}
-                                className="px-6 py-2.5 bg-[#F5CA53] text-black text-xs font-extrabold uppercase tracking-wider rounded-xl hover:bg-white transition-all shadow-[0_0_15px_rgba(245,202,83,0.2)] hover:shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                                className="px-6 py-2.5 bg-accent text-cream-bg text-xs font-extrabold uppercase tracking-wider rounded-xl hover:bg-earth-text transition-all shadow-md"
                             >
                                 Confirm Location
                             </button>

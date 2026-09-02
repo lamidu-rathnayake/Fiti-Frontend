@@ -19,7 +19,6 @@ export default function NewTailoringRequestPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user, logout } = useAuth();
-    
     const shopIdParam = searchParams.get("shop_id");
 
     const [garmentType, setGarmentType] = useState("TWO-PIECE SUIT");
@@ -38,7 +37,7 @@ export default function NewTailoringRequestPage() {
     const [savedMeasurements, setSavedMeasurements] = useState<Measurements | null>(null);
     const [shopName, setShopName] = useState<string | null>(null);
     const [mapKey, setMapKey] = useState(0);
-    
+
     // Measurement Modal State
     const [isMeasurementModalOpen, setIsMeasurementModalOpen] = useState(false);
     const [savingMeasurements, setSavingMeasurements] = useState(false);
@@ -78,7 +77,7 @@ export default function NewTailoringRequestPage() {
 
     // Inspiration Gallery (Cloudinary)
     const [designImages, setDesignImages] = useState<File[]>([]);
-    
+
     // Voice Note (Firebase Storage)
     const [voiceBlob, setVoiceBlob] = useState<Blob | null>(null);
     const [isRecording, setIsRecording] = useState(false);
@@ -358,9 +357,9 @@ export default function NewTailoringRequestPage() {
                                 </p>
                             </div>
                         </div>
-                        <button 
-                            type="button" 
-                            onClick={() => setIsMeasurementModalOpen(true)} 
+                        <button
+                            type="button"
+                            onClick={() => setIsMeasurementModalOpen(true)}
                             className="text-[10px] font-bold uppercase tracking-widest text-earth-text/80 hover:text-accent transition-colors border border-accent/30 px-3 py-1.5 rounded-lg hover:border-accent bg-cream-bg">
                             Edit
                         </button>
@@ -477,7 +476,7 @@ export default function NewTailoringRequestPage() {
                     </button>
                 </form>
             )}
-            
+
             {/* Measurement Settings Modal */}
             {mounted && isMeasurementModalOpen && createPortal(
                 <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4 pt-20 sm:pt-4 overflow-y-auto">
@@ -486,7 +485,7 @@ export default function NewTailoringRequestPage() {
                             <h2 className="text-xl font-bold text-earth-text font-serif flex items-center gap-2">
                                 <span className="text-accent">03</span> Bespoke Measurements
                             </h2>
-                            <button 
+                            <button
                                 onClick={() => setIsMeasurementModalOpen(false)}
                                 className="text-earth-text/50 hover:text-earth-text transition-colors p-1"
                             >
@@ -501,39 +500,39 @@ export default function NewTailoringRequestPage() {
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-6">
                                     <div>
                                         <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Chest</label>
-                                        <input type="number" step="0.1" value={measurementForm.chest} onChange={e => setMeasurementForm({...measurementForm, chest: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                        <input type="number" step="0.1" value={measurementForm.chest} onChange={e => setMeasurementForm({ ...measurementForm, chest: e.target.value })} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Waist</label>
-                                        <input type="number" step="0.1" value={measurementForm.waist} onChange={e => setMeasurementForm({...measurementForm, waist: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                        <input type="number" step="0.1" value={measurementForm.waist} onChange={e => setMeasurementForm({ ...measurementForm, waist: e.target.value })} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Hips</label>
-                                        <input type="number" step="0.1" value={measurementForm.hip} onChange={e => setMeasurementForm({...measurementForm, hip: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                        <input type="number" step="0.1" value={measurementForm.hip} onChange={e => setMeasurementForm({ ...measurementForm, hip: e.target.value })} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Inseam</label>
-                                        <input type="number" step="0.1" value={measurementForm.inseam} onChange={e => setMeasurementForm({...measurementForm, inseam: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                        <input type="number" step="0.1" value={measurementForm.inseam} onChange={e => setMeasurementForm({ ...measurementForm, inseam: e.target.value })} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Shoulder</label>
-                                        <input type="number" step="0.1" value={measurementForm.shoulder} onChange={e => setMeasurementForm({...measurementForm, shoulder: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                        <input type="number" step="0.1" value={measurementForm.shoulder} onChange={e => setMeasurementForm({ ...measurementForm, shoulder: e.target.value })} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Sleeve</label>
-                                        <input type="number" step="0.1" value={measurementForm.sleeve} onChange={e => setMeasurementForm({...measurementForm, sleeve: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                        <input type="number" step="0.1" value={measurementForm.sleeve} onChange={e => setMeasurementForm({ ...measurementForm, sleeve: e.target.value })} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Neck</label>
-                                        <input type="number" step="0.1" value={measurementForm.neck} onChange={e => setMeasurementForm({...measurementForm, neck: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                        <input type="number" step="0.1" value={measurementForm.neck} onChange={e => setMeasurementForm({ ...measurementForm, neck: e.target.value })} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Full Length</label>
-                                        <input type="number" step="0.1" value={measurementForm.length} onChange={e => setMeasurementForm({...measurementForm, length: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                        <input type="number" step="0.1" value={measurementForm.length} onChange={e => setMeasurementForm({ ...measurementForm, length: e.target.value })} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
                                     </div>
                                     <div className="col-span-2">
                                         <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Fit Preferences & Notes</label>
-                                        <textarea rows={3} value={measurementForm.notes} onChange={e => setMeasurementForm({...measurementForm, notes: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all resize-none font-mono" />
+                                        <textarea rows={3} value={measurementForm.notes} onChange={e => setMeasurementForm({ ...measurementForm, notes: e.target.value })} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all resize-none font-mono" />
                                     </div>
                                 </div>
                                 <div className="pt-4 flex items-center justify-end gap-3">
@@ -556,7 +555,7 @@ export default function NewTailoringRequestPage() {
                         </div>
                     </div>
                 </div>
-            , document.body)}
+                , document.body)}
         </main>
     );
 }

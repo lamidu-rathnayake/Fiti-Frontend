@@ -187,10 +187,15 @@ export default function TailorOrdersPage() {
                 
                 if (mySr && mySr.status === "quoted") {
                     const mapped = mapRequestToOrderDetail(req);
+                    mapped.rawId = mySr.shop_request_id;
                     mapped.status = "QUOTED";
                     quoted.push(mapped);
                 } else if ((mySr && mySr.status === "pending") || (!mySr && isBidding)) {
-                    newInqs.push(mapRequestToOrderDetail(req));
+                    const mapped = mapRequestToOrderDetail(req);
+                    if (mySr) {
+                        mapped.rawId = mySr.shop_request_id;
+                    }
+                    newInqs.push(mapped);
                 }
             });
 
@@ -232,20 +237,6 @@ export default function TailorOrdersPage() {
         fetchTailorData();
     }, [fetchTailorData]);
 
-    const handleAccept = async (req: OrderDetail) => {
-        try {
-            const numericBudget = Number(req.budget.replace(/[^0-9]/g, "")) || 10000;
-            await submitBid({
-                shop_request_id: req.rawId,
-                bid_amount: numericBudget,
-                message: "Accepted tailoring commission.",
-            });
-        } catch (err) {
-            console.error("Failed to accept request:", err);
-        } finally {
-            fetchTailorData();
-        }
-    };
 
     const handleIssueQuotation = async (req: OrderDetail) => {
         try {
@@ -612,10 +603,10 @@ export default function TailorOrdersPage() {
 
                                         <div className="grid grid-cols-2 gap-3 pt-3 mt-3 border-t border-zinc-800/60">
                                             <button
-                                                onClick={() => handleAccept(req)}
+                                                onClick={(e) => { e.stopPropagation(); setSelectedOrder(req); }}
                                                 className="w-full bg-[#F5CA53] text-black font-bold text-xs uppercase tracking-widest py-3 rounded-xl hover:bg-[#e4bb49] transition-all shadow-md shadow-[#F5CA53]/20 active:scale-[0.98] flex items-center justify-center gap-1.5"
                                             >
-                                                Accept Order
+                                                Issue Quote
                                                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
                                             </button>
                                             <button

@@ -38,6 +38,7 @@ export interface ClothingRequestPayload {
     radius_km?: number;
     design_image_urls?: string[];
     target_shop_ids?: number[];
+    measurement_profile_id?: number | null;
     measurement?: {
         chest?: number | null;
         waist?: number | null;

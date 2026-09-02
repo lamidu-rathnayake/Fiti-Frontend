@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthContext";
 
 import { createClothingRequest } from "@/lib/api/endpoints/orders";
-import { getMeasurements } from "@/lib/api/endpoints/profiles";
+import { getMeasurements, updateMeasurements } from "@/lib/api/endpoints/profiles";
 import type { Measurements } from "@/lib/api/types/profile";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -37,11 +38,36 @@ export default function NewTailoringRequestPage() {
     const [savedMeasurements, setSavedMeasurements] = useState<Measurements | null>(null);
     const [shopName, setShopName] = useState<string | null>(null);
     const [mapKey, setMapKey] = useState(0);
+    
+    // Measurement Modal State
+    const [isMeasurementModalOpen, setIsMeasurementModalOpen] = useState(false);
+    const [savingMeasurements, setSavingMeasurements] = useState(false);
+    const [measurementForm, setMeasurementForm] = useState({
+        chest: "", waist: "", hip: "", shoulder: "",
+        sleeve: "", neck: "", inseam: "", length: "", notes: ""
+    });
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         if (user) {
             getMeasurements(user.uid)
-                .then(setSavedMeasurements)
+                .then(measurements => {
+                    setSavedMeasurements(measurements);
+                    if (measurements) {
+                        setMeasurementForm({
+                            chest: measurements.chest?.toString() || "",
+                            waist: measurements.waist?.toString() || "",
+                            hip: measurements.hip?.toString() || "",
+                            shoulder: measurements.shoulder?.toString() || "",
+                            sleeve: measurements.sleeve?.toString() || "",
+                            neck: measurements.neck?.toString() || "",
+                            inseam: measurements.inseam?.toString() || "",
+                            length: measurements.length?.toString() || "",
+                            notes: measurements.notes || ""
+                        });
+                    }
+                })
                 .catch(err => console.log("No saved measurements found", err));
         }
         // In a real app we'd fetch the shop name using shopIdParam here too
@@ -126,16 +152,7 @@ export default function NewTailoringRequestPage() {
                 design_image_urls: uploadedImageUrls,
                 voice_note_url: voiceUrl || undefined,
                 target_shop_ids: shopIdParam ? [parseInt(shopIdParam)] : undefined,
-                measurement: savedMeasurements ? {
-                    chest: savedMeasurements.chest ? Number(savedMeasurements.chest) : null,
-                    waist: savedMeasurements.waist ? Number(savedMeasurements.waist) : null,
-                    shoulder: savedMeasurements.shoulder ? Number(savedMeasurements.shoulder) : null,
-                    sleeve: savedMeasurements.sleeve ? Number(savedMeasurements.sleeve) : null,
-                    neck: savedMeasurements.neck ? Number(savedMeasurements.neck) : null,
-                    hip: savedMeasurements.hip ? Number(savedMeasurements.hip) : null,
-                    inseam: savedMeasurements.inseam ? Number(savedMeasurements.inseam) : null,
-                    length: savedMeasurements.length ? Number(savedMeasurements.length) : null,
-                } : undefined,
+                measurement_profile_id: savedMeasurements ? savedMeasurements.id : undefined,
             });
             setSubmitted(true);
             setTimeout(() => {
@@ -146,6 +163,33 @@ export default function NewTailoringRequestPage() {
             setError(msg);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleSaveMeasurements = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+        setSavingMeasurements(true);
+        try {
+            await updateMeasurements(user.uid, {
+                chest: measurementForm.chest ? parseFloat(measurementForm.chest) : undefined,
+                waist: measurementForm.waist ? parseFloat(measurementForm.waist) : undefined,
+                hip: measurementForm.hip ? parseFloat(measurementForm.hip) : undefined,
+                shoulder: measurementForm.shoulder ? parseFloat(measurementForm.shoulder) : undefined,
+                sleeve: measurementForm.sleeve ? parseFloat(measurementForm.sleeve) : undefined,
+                neck: measurementForm.neck ? parseFloat(measurementForm.neck) : undefined,
+                inseam: measurementForm.inseam ? parseFloat(measurementForm.inseam) : undefined,
+                length: measurementForm.length ? parseFloat(measurementForm.length) : undefined,
+                notes: measurementForm.notes || null,
+            });
+            // refresh
+            const updated = await getMeasurements(user.uid);
+            setSavedMeasurements(updated);
+            setIsMeasurementModalOpen(false);
+        } catch (err) {
+            console.error("Failed to save measurements", err);
+        } finally {
+            setSavingMeasurements(false);
         }
     };
 
@@ -314,9 +358,12 @@ export default function NewTailoringRequestPage() {
                                 </p>
                             </div>
                         </div>
-                        <Link href="/client/profile" className="text-[10px] font-bold uppercase tracking-widest text-earth-text/80 hover:text-accent transition-colors border border-accent/30 px-3 py-1.5 rounded-lg hover:border-accent bg-cream-bg">
+                        <button 
+                            type="button" 
+                            onClick={() => setIsMeasurementModalOpen(true)} 
+                            className="text-[10px] font-bold uppercase tracking-widest text-earth-text/80 hover:text-accent transition-colors border border-accent/30 px-3 py-1.5 rounded-lg hover:border-accent bg-cream-bg">
                             Edit
-                        </Link>
+                        </button>
                     </div>
 
                     {/* TARGET BUDGET & DATE (two-column) */}
@@ -430,6 +477,86 @@ export default function NewTailoringRequestPage() {
                     </button>
                 </form>
             )}
+            
+            {/* Measurement Settings Modal */}
+            {mounted && isMeasurementModalOpen && createPortal(
+                <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4 pt-20 sm:pt-4 overflow-y-auto">
+                    <div className="bg-cream-bg rounded-2xl border border-accent/20 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="p-6 border-b border-accent/10 flex items-center justify-between sticky top-0 bg-cream-bg z-10">
+                            <h2 className="text-xl font-bold text-earth-text font-serif flex items-center gap-2">
+                                <span className="text-accent">03</span> Bespoke Measurements
+                            </h2>
+                            <button 
+                                onClick={() => setIsMeasurementModalOpen(false)}
+                                className="text-earth-text/50 hover:text-earth-text transition-colors p-1"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-6">
+                            <p className="text-xs text-earth-text/70">
+                                Save these once, and automatically apply them to all future bespoke requests. All values in inches.
+                            </p>
+                            <form onSubmit={handleSaveMeasurements} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+                                    <div>
+                                        <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Chest</label>
+                                        <input type="number" step="0.1" value={measurementForm.chest} onChange={e => setMeasurementForm({...measurementForm, chest: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Waist</label>
+                                        <input type="number" step="0.1" value={measurementForm.waist} onChange={e => setMeasurementForm({...measurementForm, waist: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Hips</label>
+                                        <input type="number" step="0.1" value={measurementForm.hip} onChange={e => setMeasurementForm({...measurementForm, hip: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Inseam</label>
+                                        <input type="number" step="0.1" value={measurementForm.inseam} onChange={e => setMeasurementForm({...measurementForm, inseam: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Shoulder</label>
+                                        <input type="number" step="0.1" value={measurementForm.shoulder} onChange={e => setMeasurementForm({...measurementForm, shoulder: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Sleeve</label>
+                                        <input type="number" step="0.1" value={measurementForm.sleeve} onChange={e => setMeasurementForm({...measurementForm, sleeve: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Neck</label>
+                                        <input type="number" step="0.1" value={measurementForm.neck} onChange={e => setMeasurementForm({...measurementForm, neck: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Full Length</label>
+                                        <input type="number" step="0.1" value={measurementForm.length} onChange={e => setMeasurementForm({...measurementForm, length: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all text-center font-mono" />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="text-[10px] font-mono tracking-widest text-accent uppercase block mb-1 font-semibold">Fit Preferences & Notes</label>
+                                        <textarea rows={3} value={measurementForm.notes} onChange={e => setMeasurementForm({...measurementForm, notes: e.target.value})} className="w-full px-4 py-3 bg-white/90 border border-accent/20 focus:border-accent rounded-xl text-sm text-earth-text focus:outline-none transition-all resize-none font-mono" />
+                                    </div>
+                                </div>
+                                <div className="pt-4 flex items-center justify-end gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsMeasurementModalOpen(false)}
+                                        className="px-5 py-2.5 rounded-xl border border-earth-text/20 text-earth-text text-xs font-bold uppercase tracking-widest hover:bg-earth-text/5 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={savingMeasurements}
+                                        className="px-5 py-2.5 bg-accent text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-accent-hover transition-all shadow-md disabled:opacity-50"
+                                    >
+                                        {savingMeasurements ? "Saving..." : "Save Measurements"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            , document.body)}
         </main>
     );
 }

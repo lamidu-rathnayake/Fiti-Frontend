@@ -8,6 +8,7 @@ import {
     listOpenRequests,
     cancelRequest,
     submitBid,
+    updateOrderStatus,
 } from "@/lib/api/endpoints/orders";
 import { listTailorShops } from "@/lib/api/endpoints/shops";
 import type { ClothingRequest, Order } from "@/lib/api/types/order";
@@ -269,6 +270,16 @@ export default function TailorOrdersPage() {
             await cancelRequest(req.rawId);
         } catch (err) {
             console.error("Failed to decline request:", err);
+        } finally {
+            fetchTailorData();
+        }
+    };
+
+    const handleCompleteOrder = async (ord: OrderDetail) => {
+        try {
+            await updateOrderStatus(ord.rawId, "completed");
+        } catch (err) {
+            console.error("Failed to complete order:", err);
         } finally {
             fetchTailorData();
         }
@@ -687,14 +698,22 @@ export default function TailorOrdersPage() {
                                             </div>
                                         </div>
 
-                                        <div className="space-y-1.5 pt-3 mt-3 border-t border-zinc-800/50">
-                                            <div className="flex justify-between items-center text-[11px] font-medium">
-                                                <span className="text-zinc-400">Fitting Timeline</span>
-                                                <span className="text-white">{ord.progress ?? 0}%</span>
+                                        <div className="space-y-3 pt-3 mt-3 border-t border-zinc-800/50">
+                                            <div className="space-y-1.5">
+                                                <div className="flex justify-between items-center text-[11px] font-medium">
+                                                    <span className="text-zinc-400">Fitting Timeline</span>
+                                                    <span className="text-white">{ord.progress ?? 0}%</span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-[#26282D] rounded-full overflow-hidden">
+                                                    <div className="h-full bg-[#F5CA53] transition-all duration-500" style={{ width: `${ord.progress ?? 0}%` }}></div>
+                                                </div>
                                             </div>
-                                            <div className="w-full h-1.5 bg-[#26282D] rounded-full overflow-hidden">
-                                                <div className="h-full bg-[#F5CA53] transition-all duration-500" style={{ width: `${ord.progress ?? 0}%` }}></div>
-                                            </div>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleCompleteOrder(ord); }}
+                                                className="w-full bg-[#26282D] text-[#F5CA53] font-bold text-[10px] uppercase tracking-widest py-2 rounded-xl hover:bg-[#F5CA53]/10 border border-[#F5CA53]/30 hover:border-[#F5CA53] transition-all active:scale-[0.98]"
+                                            >
+                                                Mark as Complete
+                                            </button>
                                         </div>
                                     </div>
                                 ))}

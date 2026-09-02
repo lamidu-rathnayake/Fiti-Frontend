@@ -43,6 +43,8 @@ export default function TailorHomePage() {
     const [submittingBidFor, setSubmittingBidFor] = useState<number | null>(null);
     const [completingOrderId, setCompletingOrderId] = useState<number | null>(null);
     const [actionToast, setActionToast] = useState<{ msg: string; ok: boolean } | null>(null);
+    const [selectedRequestView, setSelectedRequestView] = useState<RequestView | null>(null);
+    const [selectedOrderView, setSelectedOrderView] = useState<{ order: Order; isActive: boolean } | null>(null);
     
     // Form state
     const [bidPrices, setBidPrices] = useState<Record<number, string>>({});
@@ -207,13 +209,13 @@ export default function TailorHomePage() {
 
     const renderInquiryCard = (view: RequestView) => {
         const { req, myShopRequest, isDirect } = view;
-        const srId = myShopRequest?.shop_request_id;
-        const isSubmitting = srId != null && submittingBidFor === srId;
-        const priceVal = srId != null ? (bidPrices[srId] ?? "") : "";
-        const canSubmit = srId != null;
 
         return (
-            <div key={req.request_id} className="bg-[#18191E] border border-zinc-800/80 rounded-xl overflow-hidden flex flex-col hover:border-zinc-700 transition-colors shadow-sm relative group">
+            <div 
+                key={req.request_id} 
+                onClick={() => setSelectedRequestView(view)}
+                className="bg-[#18191E] border border-zinc-800/80 rounded-xl overflow-hidden flex flex-col hover:border-[#F5CA53]/50 transition-colors shadow-sm relative group cursor-pointer"
+            >
                 <div className={`absolute top-0 left-0 w-1 h-full ${isDirect ? "bg-sky-400" : "bg-amber-400"}`} />
                 <div className="p-4 pl-5 flex-1">
                     <div className="flex justify-between items-start mb-2">
@@ -230,38 +232,6 @@ export default function TailorHomePage() {
                     </p>
                     {req.description && <p className="text-[10px] text-zinc-500 italic line-clamp-2 bg-[#141519] p-2 rounded-lg border border-zinc-800">"{req.description}"</p>}
                 </div>
-                
-                {canSubmit ? (
-                    <div className="p-3 bg-[#141519] border-t border-zinc-800/80 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                            <input 
-                                type="number" 
-                                placeholder="Your Price (LKR)" 
-                                value={priceVal}
-                                onChange={(e) => srId != null && setBidPrices((p) => ({ ...p, [srId]: e.target.value }))}
-                                className="w-full bg-[#1A1B20] border border-zinc-700/60 focus:border-[#F5CA53]/60 rounded-lg px-2 py-1.5 text-[10px] text-white placeholder-zinc-600 outline-none transition-colors" 
-                            />
-                            <input 
-                                type="text" 
-                                placeholder="Short message..." 
-                                value={srId != null ? (bidMessages[srId] ?? "") : ""}
-                                onChange={(e) => srId != null && setBidMessages((p) => ({ ...p, [srId]: e.target.value }))}
-                                className="w-full bg-[#1A1B20] border border-zinc-700/60 focus:border-[#F5CA53]/60 rounded-lg px-2 py-1.5 text-[10px] text-white placeholder-zinc-600 outline-none transition-colors" 
-                            />
-                        </div>
-                        <button 
-                            onClick={() => handleSubmitQuote(view)} 
-                            disabled={isSubmitting || !priceVal || Number(priceVal) <= 0}
-                            className="w-full bg-[#F5CA53] hover:bg-[#f7d369] disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-black font-black text-[10px] uppercase tracking-widest py-2 rounded-lg transition-all flex items-center justify-center gap-2"
-                        >
-                            {isSubmitting ? "Submitting..." : "Send Quote"}
-                        </button>
-                    </div>
-                ) : (
-                    <div className="p-3 bg-[#141519] border-t border-zinc-800/80 text-center">
-                        <span className="text-[10px] text-zinc-500">Shop request not initialized</span>
-                    </div>
-                )}
             </div>
         );
     };
@@ -269,7 +239,11 @@ export default function TailorHomePage() {
     const renderPendingCard = (view: RequestView) => {
         const { req, myShopRequest } = view;
         return (
-            <div key={req.request_id} className="bg-[#18191E] border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm relative opacity-80 hover:opacity-100 transition-opacity">
+            <div 
+                key={req.request_id} 
+                onClick={() => setSelectedRequestView(view)}
+                className="bg-[#18191E] border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm relative opacity-80 hover:opacity-100 hover:border-[#F5CA53]/50 transition-all cursor-pointer"
+            >
                 <div className="absolute top-0 left-0 w-1 h-full bg-[#F5CA53]" />
                 <div className="p-4 pl-5">
                     <div className="flex justify-between items-start mb-2">
@@ -287,9 +261,12 @@ export default function TailorHomePage() {
     };
 
     const renderOrderCard = (ord: Order, isActive: boolean) => {
-        const isCompleting = completingOrderId === ord.order_id;
         return (
-            <div key={ord.order_id} className={`bg-[#18191E] border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm relative ${!isActive && 'opacity-60 grayscale hover:grayscale-0 transition-all'}`}>
+            <div 
+                key={ord.order_id} 
+                onClick={() => setSelectedOrderView({ order: ord, isActive })}
+                className={`bg-[#18191E] border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm relative cursor-pointer hover:border-emerald-500/50 ${!isActive && 'opacity-60 grayscale hover:grayscale-0 transition-all'}`}
+            >
                 <div className={`absolute top-0 left-0 w-1 h-full ${isActive ? "bg-emerald-400" : "bg-zinc-600"}`} />
                 <div className="p-4 pl-5">
                     <div className="flex justify-between items-start mb-1">
@@ -299,13 +276,9 @@ export default function TailorHomePage() {
                     <p className="text-xs font-black text-emerald-400 mb-3">LKR {Number(ord.accepted_price).toLocaleString()}</p>
                     
                     {isActive ? (
-                        <button 
-                            onClick={() => handleMarkComplete(ord.order_id)} 
-                            disabled={isCompleting}
-                            className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold text-[10px] uppercase tracking-widest py-2 rounded-lg transition-all flex items-center justify-center gap-2"
-                        >
-                            {isCompleting ? "Completing..." : "✓ Mark Completed"}
-                        </button>
+                        <div className="bg-emerald-500/5 rounded-lg p-2 text-center border border-emerald-500/10">
+                            <span className="text-[10px] text-emerald-500 uppercase font-bold tracking-widest">In Progress</span>
+                        </div>
                     ) : (
                         <div className="bg-zinc-800/50 rounded-lg p-2 text-center border border-zinc-700/50">
                             <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-widest">Finished</span>
@@ -491,6 +464,174 @@ export default function TailorHomePage() {
                                     </div>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* MODALS */}
+                {selectedRequestView && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedRequestView(null)}>
+                        <div className="bg-[#121316] border border-zinc-800 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                            {/* Header */}
+                            <div className="px-6 py-4 border-b border-zinc-800 flex justify-between items-center bg-[#16171B] shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-zinc-500 font-mono text-xs">#{selectedRequestView.req.request_id}</span>
+                                    <h2 className="text-lg font-black text-white">{selectedRequestView.req.clothing_category || "Custom Garment Request"}</h2>
+                                </div>
+                                <button onClick={() => setSelectedRequestView(null)} className="text-zinc-500 hover:text-white transition-colors p-1">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                            
+                            {/* Content */}
+                            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+                                {/* Main Details */}
+                                <div className="flex-1 p-6 overflow-y-auto custom-scrollbar border-b md:border-b-0 md:border-r border-zinc-800 space-y-6">
+                                    <div className="space-y-2">
+                                        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Description</h3>
+                                        <p className="text-sm text-zinc-300 bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 leading-relaxed min-h-[100px]">
+                                            {selectedRequestView.req.description || "No description provided."}
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 flex flex-col justify-center">
+                                            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Target Budget</h3>
+                                            <p className="text-sm font-black text-[#F5CA53]">
+                                                {selectedRequestView.req.target_budget ? `LKR ${selectedRequestView.req.target_budget.toLocaleString()}` : "Open Budget"}
+                                            </p>
+                                        </div>
+                                        <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 flex flex-col justify-center">
+                                            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Target Date</h3>
+                                            <p className="text-sm font-bold text-white">
+                                                {selectedRequestView.req.target_date ? new Date(selectedRequestView.req.target_date).toLocaleDateString() : "Flexible"}
+                                            </p>
+                                        </div>
+                                        <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 flex flex-col justify-center">
+                                            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Fabric Status</h3>
+                                            <p className="text-sm font-bold text-white capitalize">
+                                                {selectedRequestView.req.fabric_status ? selectedRequestView.req.fabric_status.replace("_", " ") : "Not specified"}
+                                            </p>
+                                        </div>
+                                        <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 flex flex-col justify-center">
+                                            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Gender Fit</h3>
+                                            <p className="text-sm font-bold text-white capitalize">
+                                                {selectedRequestView.req.gender || "Custom"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Sidebar / Actions */}
+                                <div className="w-full md:w-80 p-6 bg-[#16171B] overflow-y-auto custom-scrollbar flex flex-col space-y-6 shrink-0">
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Status & Actions</h3>
+                                        
+                                        {/* Status indicator */}
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${selectedRequestView.myShopRequest?.status === 'quoted' ? 'bg-[#F5CA53]' : 'bg-sky-400'}`} />
+                                            <span className="text-sm font-bold text-white">
+                                                {selectedRequestView.myShopRequest?.status === 'quoted' ? 'Quoted / Pending Approval' : 'New Inquiry'}
+                                            </span>
+                                        </div>
+                                        
+                                        {/* Action Area */}
+                                        {selectedRequestView.myShopRequest?.status === 'quoted' ? (
+                                            <div className="bg-[#18191E] border border-[#F5CA53]/20 rounded-xl p-4">
+                                                <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Your Submitted Offer</h4>
+                                                <p className="text-xl font-black text-[#F5CA53]">LKR {Number(selectedRequestView.myShopRequest.offered_price || 0).toLocaleString()}</p>
+                                                <p className="text-xs text-zinc-400 mt-2">Waiting for client to accept or reject.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-[#18191E] border border-zinc-800 rounded-xl p-4 space-y-4">
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Quote Amount (LKR)</label>
+                                                    <input 
+                                                        type="number" 
+                                                        placeholder="e.g. 5000" 
+                                                        value={selectedRequestView.myShopRequest?.shop_request_id ? (bidPrices[selectedRequestView.myShopRequest.shop_request_id] ?? "") : ""}
+                                                        onChange={(e) => selectedRequestView.myShopRequest?.shop_request_id && setBidPrices((p) => ({ ...p, [selectedRequestView.myShopRequest!.shop_request_id]: e.target.value }))}
+                                                        className="w-full bg-[#121316] border border-zinc-700/60 focus:border-[#F5CA53]/60 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none transition-colors" 
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Message to Client</label>
+                                                    <textarea 
+                                                        placeholder="Brief description of your offer..." 
+                                                        value={selectedRequestView.myShopRequest?.shop_request_id ? (bidMessages[selectedRequestView.myShopRequest.shop_request_id] ?? "") : ""}
+                                                        onChange={(e) => selectedRequestView.myShopRequest?.shop_request_id && setBidMessages((p) => ({ ...p, [selectedRequestView.myShopRequest!.shop_request_id]: e.target.value }))}
+                                                        className="w-full bg-[#121316] border border-zinc-700/60 focus:border-[#F5CA53]/60 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 outline-none transition-colors resize-none h-20" 
+                                                    />
+                                                </div>
+                                                <button 
+                                                    onClick={() => { handleSubmitQuote(selectedRequestView); setSelectedRequestView(null); }} 
+                                                    disabled={!selectedRequestView.myShopRequest?.shop_request_id || submittingBidFor === selectedRequestView.myShopRequest.shop_request_id}
+                                                    className="w-full bg-[#F5CA53] hover:bg-[#f7d369] disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-black font-black text-xs uppercase tracking-widest py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(245,202,83,0.15)]"
+                                                >
+                                                    {submittingBidFor === selectedRequestView.myShopRequest?.shop_request_id ? "Submitting..." : "Send Quote"}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {selectedOrderView && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedOrderView(null)}>
+                        <div className="bg-[#121316] border border-zinc-800 w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                            <div className="px-6 py-4 border-b border-zinc-800 flex justify-between items-center bg-[#16171B] shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-zinc-500 font-mono text-xs">#{selectedOrderView.order.order_id}</span>
+                                    <h2 className="text-lg font-black text-white">Order Details</h2>
+                                </div>
+                                <button onClick={() => setSelectedOrderView(null)} className="text-zinc-500 hover:text-white transition-colors p-1">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                            
+                            <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
+                                <div className="flex items-center justify-between p-4 bg-[#18191E] border border-zinc-800/80 rounded-xl">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Accepted Price</p>
+                                        <p className="text-2xl font-black text-emerald-400">LKR {Number(selectedOrderView.order.accepted_price).toLocaleString()}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Status</p>
+                                        <div className="inline-block px-3 py-1 rounded-full border bg-emerald-500/10 border-emerald-500/20">
+                                            <p className="text-xs font-bold text-emerald-400 capitalize">{selectedOrderView.order.order_status.replace("_", " ")}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 flex flex-col justify-center">
+                                        <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Started Date</h3>
+                                        <p className="text-sm font-bold text-white">
+                                            {selectedOrderView.order.started_date ? new Date(selectedOrderView.order.started_date).toLocaleDateString() : "N/A"}
+                                        </p>
+                                    </div>
+                                    <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 flex flex-col justify-center">
+                                        <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Ref Request ID</h3>
+                                        <p className="text-sm font-mono text-white">#{selectedOrderView.order.shop_request_id}</p>
+                                    </div>
+                                </div>
+                                
+                                {selectedOrderView.isActive && (
+                                    <div className="pt-4 border-t border-zinc-800">
+                                        <button 
+                                            onClick={() => { handleMarkComplete(selectedOrderView.order.order_id); setSelectedOrderView(null); }} 
+                                            disabled={completingOrderId === selectedOrderView.order.order_id}
+                                            className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black text-sm uppercase tracking-widest py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.15)] disabled:bg-zinc-700 disabled:text-zinc-500 disabled:shadow-none"
+                                        >
+                                            {completingOrderId === selectedOrderView.order.order_id ? "Processing..." : "✓ Mark as Completed"}
+                                        </button>
+                                        <p className="text-center text-xs text-zinc-500 mt-3">This action will notify the client and finalize the order.</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

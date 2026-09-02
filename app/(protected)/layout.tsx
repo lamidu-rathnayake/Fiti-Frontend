@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import NavSidebar from "@/components/navigation/NavSidebar";
 import FullPageLock from "@/components/FullPageLock";
+import ThemeToggle from "@/components/ThemeToggle";
+import Logo from "@/components/Logo";
 
 export default function ProtectedLayout({
     children,
@@ -59,12 +61,11 @@ export default function ProtectedLayout({
                     {/* Left: Atelier Logo */}
                     <div className="flex items-center gap-4">
                         <Link href="/" className="flex items-center gap-3 group">
-                            <img
-                                src="/logo_light.png"
-                                alt="FITI Atelier Digital Logo"
+                            <Logo
                                 width={220}
                                 height={80}
                                 className="h-12 sm:h-14 w-auto object-contain transition-transform group-hover:scale-105"
+                                priority
                             />
                         </Link>
                     </div>
@@ -96,11 +97,12 @@ export default function ProtectedLayout({
                         )}
                     </nav>
 
-                    {/* Right: Hamburger Menu */}
+                    {/* Right: Theme Toggle & Hamburger Menu */}
                     <div className="flex items-center space-x-3">
+                        <ThemeToggle />
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="p-1 hover:bg-card-bg/40 rounded-lg transition-colors text-earth-text hover:text-accent"
+                            className="p-1.5 hover:bg-card-bg/40 rounded-lg transition-colors text-earth-text hover:text-accent cursor-pointer"
                             title="Menu"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

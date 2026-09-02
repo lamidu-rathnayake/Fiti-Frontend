@@ -4,6 +4,8 @@ import { useAuth } from "@/lib/firebase/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+import ThemeToggle from "@/components/ThemeToggle";
+
 interface NavSidebarProps {
     isOpen: boolean;
     onClose: () => void;
@@ -71,9 +73,10 @@ export default function NavSidebar({ isOpen, onClose }: NavSidebarProps) {
 
             {/* Sidebar */}
             <div className={`fixed top-0 right-0 h-full w-72 bg-cream-bg border-l border-accent/40 z-[101] transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"} flex flex-col p-6 shadow-2xl`}>
-                {/* Header with Close Button */}
-                <div className="flex justify-start mb-8">
-                    <button onClick={onClose} className="w-8 h-8 rounded-full border border-accent/40 flex items-center justify-center text-earth-text hover:text-accent hover:border-accent transition-all">
+                {/* Header with Theme Toggle & Close Button */}
+                <div className="flex items-center justify-between mb-8 border-b border-accent/20 pb-4">
+                    <ThemeToggle />
+                    <button onClick={onClose} className="w-8 h-8 rounded-full border border-accent/40 flex items-center justify-center text-earth-text hover:text-accent hover:border-accent transition-all cursor-pointer">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>

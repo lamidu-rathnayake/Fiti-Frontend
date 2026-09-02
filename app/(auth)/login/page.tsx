@@ -127,10 +127,10 @@ export default function LoginPage() {
 
             {/* FLOATING CARD CONTAINER */}
             <div className="relative z-10 w-full max-w-5xl bg-transparent rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
-                
+
                 {/* LEFT COLUMN: TORN PAPER FORM SECTION */}
                 <div className="lg:col-span-6 bg-cream-bg relative p-8 sm:p-12 flex flex-col justify-between z-20">
-                    
+
                     {/* TORN PAPER JAGGED SVG EDGE (Right border on desktop) */}
                     <svg
                         className="absolute top-0 -right-7 h-full w-8 z-30 text-cream-bg fill-current hidden lg:block pointer-events-none drop-shadow-[4px_0_6px_rgba(0,0,0,0.15)]"

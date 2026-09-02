@@ -525,11 +525,10 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                         <button
                             type="button"
                             onClick={() => setStep(1)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
-                                step === 1
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${step === 1
                                     ? "bg-accent text-cream-bg shadow-md"
                                     : "bg-card-bg/40 text-earth-text hover:bg-card-bg/60"
-                            }`}
+                                }`}
                         >
                             <span className="w-5 h-5 rounded-full bg-cream-bg text-earth-text flex items-center justify-center text-[10px]">1</span>
                             <span>Personal Details</span>
@@ -546,11 +545,10 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     handleNextStep(e);
                                 }
                             }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
-                                step === 2
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${step === 2
                                     ? "bg-accent text-cream-bg shadow-md"
                                     : "bg-card-bg/40 text-earth-text hover:bg-card-bg/60"
-                            }`}
+                                }`}
                         >
                             <span className="w-5 h-5 rounded-full bg-cream-bg text-earth-text flex items-center justify-center text-[10px]">2</span>
                             <span>Shop Details</span>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Manrope, Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/firebase/AuthContext";
+import { ThemeProvider } from "@/lib/context/ThemeContext";
 import "@/app/globals.css";
 
 const manrope = Manrope({
@@ -29,12 +30,14 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
+        <html lang="en" className={`${manrope.variable} ${inter.variable}`} suppressHydrationWarning>
             <body
                 suppressHydrationWarning
-                className="antialiased bg-[#0A0B0E] text-white font-sans"
+                className="antialiased bg-warm-beige text-earth-text font-sans transition-colors duration-300 min-h-screen"
             >
-                <AuthProvider>{children}</AuthProvider>
+                <ThemeProvider>
+                    <AuthProvider>{children}</AuthProvider>
+                </ThemeProvider>
             </body>
         </html>
     );

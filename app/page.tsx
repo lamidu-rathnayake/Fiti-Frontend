@@ -11,6 +11,8 @@ import { FitiApiError } from "@/lib/api/client";
 import { getMyRole } from "@/lib/api/endpoints/auth";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { auth, googleProvider } from "@/lib/firebase/config";
+import ThemeToggle from "@/components/ThemeToggle";
+import Logo from "@/components/Logo";
 
 // --- DATA STRUCTURES FOR FITI TEXTILE & TAILORING E-COMMERCE ---
 
@@ -145,9 +147,7 @@ export default function HomePage() {
                     {/* Logo & Main Nav */}
                     <div className="flex items-center gap-8 lg:gap-12">
                         <Link href="/" className="flex items-center gap-2 group">
-                            <Image
-                                src="/logo_light.png"
-                                alt="FITI Atelier"
+                            <Logo
                                 width={180}
                                 height={60}
                                 priority
@@ -172,11 +172,11 @@ export default function HomePage() {
 
 
                     {/* Right Utility Navigation */}
-                    <div className="flex items-center gap-4 sm:gap-6">
-
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <ThemeToggle />
                         <Link
                             href="/login"
-                            className="bg-accent hover:bg-earth-text text-cream-bg text-xs font-semibold px-5 py-2.5 rounded-full transition-all shadow-xs hover:shadow-md cursor-pointer ml-1"
+                            className="bg-accent hover:bg-earth-text text-cream-bg text-xs font-semibold px-5 py-2.5 rounded-full transition-all shadow-xs hover:shadow-md cursor-pointer"
                         >
                             Start Request
                         </Link>
@@ -705,9 +705,7 @@ export default function HomePage() {
                 <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-5 gap-8 mb-12">
 
                     <div className="md:col-span-2 space-y-4">
-                        <Image
-                            src="/logo_light.png"
-                            alt="FITI Atelier"
+                        <Logo
                             width={160}
                             height={50}
                             className="h-9 w-auto object-contain"

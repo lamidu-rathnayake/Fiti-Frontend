@@ -6,20 +6,58 @@
     --font-sans: var(--font-sans, "Inter", sans-serif);
     
     /* -------------------------------------------------------------
-     * STRICT ATELIER COLOR PALETTE TOKENS
+     * STRICT ATELIER COLOR PALETTE TOKENS (LIGHT THEME DEFAULT)
      * 1. Text: #4e220f (Earth Brown), #363634 (Slate Muted), #394027 (Olive Muted)
      * 2. Background: #f7f1de (Cream), #E4E1D7 (Warm Beige Canvas)
      * 3. Cards & Components: #B0BA99 (Sage Green / Card Background)
      * 4. Accents/Buttons/Borders: #9d6638 (Gold-Brown Accent)
      * ------------------------------------------------------------- */
-    --text-primary: #4e220f;
-    --text-muted-dark: #363634;
-    --text-olive-dark: #394027;
-    --bg-primary: #f7f1de;
-    --bg-warm-beige: #E4E1D7;
+    --earth-text: #4e220f;
+    --muted-dark: #363634;
+    --olive-dark: #394027;
+    --cream-bg: #f7f1de;
+    --warm-beige: #E4E1D7;
     --card-bg: #B0BA99;
-    --accent-primary: #9d6638;
+    --sage: #B0BA99;
+    --accent: #9d6638;
     --accent-hover: #4e220f;
+    
+    --text-primary: var(--earth-text);
+    --text-muted-dark: var(--muted-dark);
+    --text-olive-dark: var(--olive-dark);
+    --bg-primary: var(--cream-bg);
+    --bg-warm-beige: var(--warm-beige);
+    --card-bg-token: var(--card-bg);
+    --accent-primary: var(--accent);
+    --accent-hover-token: var(--accent-hover);
+}
+
+.dark, [data-theme="dark"] {
+    /* -------------------------------------------------------------
+     * LUXURY ATELIER COLOR PALETTE TOKENS (DARK THEME)
+     * 1. Text: #f5efe0 (Warm Vanilla Cream Text)
+     * 2. Background: #1c1917 (Deep Cocoa Charcoal), #12100e (Obsidian Dark)
+     * 3. Cards & Components: #292524 (Dark Walnut Slate Card)
+     * 4. Accents/Buttons/Borders: #d97706 (Warm Amber Gold)
+     * ------------------------------------------------------------- */
+    --earth-text: #f5efe0;
+    --muted-dark: #cbd5e1;
+    --olive-dark: #a3e635;
+    --cream-bg: #1c1917;
+    --warm-beige: #12100e;
+    --card-bg: #292524;
+    --sage: #383430;
+    --accent: #d97706;
+    --accent-hover: #f59e0b;
+
+    --text-primary: var(--earth-text);
+    --text-muted-dark: var(--muted-dark);
+    --text-olive-dark: var(--olive-dark);
+    --bg-primary: var(--cream-bg);
+    --bg-warm-beige: var(--warm-beige);
+    --card-bg-token: var(--card-bg);
+    --accent-primary: var(--accent);
+    --accent-hover-token: var(--accent-hover);
 }
 
 @theme {
@@ -27,43 +65,44 @@
     --font-heading: var(--font-heading);
     --font-sans: var(--font-sans);
     
-    /* Tailwind CSS v4 Theme Colors */
-    --color-earth-text: #4e220f;
-    --color-muted-dark: #363634;
-    --color-olive-dark: #394027;
-    --color-cream-bg: #f7f1de;
-    --color-warm-beige: #E4E1D7;
-    --color-card-bg: #B0BA99;
-    --color-sage: #B0BA99;
-    --color-accent: #9d6638;
-    --color-accent-hover: #4e220f;
+    /* Tailwind CSS v4 Dynamic Theme Colors */
+    --color-earth-text: var(--earth-text);
+    --color-muted-dark: var(--muted-dark);
+    --color-olive-dark: var(--olive-dark);
+    --color-cream-bg: var(--cream-bg);
+    --color-warm-beige: var(--warm-beige);
+    --color-card-bg: var(--card-bg);
+    --color-sage: var(--sage);
+    --color-accent: var(--accent);
+    --color-accent-hover: var(--accent-hover);
 }
 
-/* Global body styling with user specified colors */
+/* Global body styling with dynamic palette */
 body {
-    background-color: #E4E1D7;
-    color: #4e220f;
+    background-color: var(--warm-beige);
+    color: var(--earth-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Custom Scrollbar using strict palette */
+/* Custom Scrollbar using dynamic palette */
 ::-webkit-scrollbar {
     width: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #E4E1D7;
+    background: var(--warm-beige);
 }
 ::-webkit-scrollbar-thumb {
-    background: #9d6638;
+    background: var(--accent);
     border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #4e220f;
+    background: var(--earth-text);
 }
 
 /* Selection Highlight */
 ::selection {
-    background-color: #9d6638;
-    color: #f7f1de;
+    background-color: var(--accent);
+    color: var(--cream-bg);
 }
 
 /* -------------------------------------------------------------
@@ -72,61 +111,61 @@ body {
 
 /* Page Background Containers */
 .bg-cream-canvas {
-    background-color: #f7f1de;
+    background-color: var(--cream-bg);
 }
 
 .bg-warm-canvas {
-    background-color: #E4E1D7;
+    background-color: var(--warm-beige);
 }
 
 .bg-sage-card {
-    background-color: #B0BA99;
+    background-color: var(--card-bg);
 }
 
 /* Atelier Cards & Containers */
 .atelier-card {
-    background-color: #B0BA99;
-    border: 1px solid rgba(157, 102, 56, 0.4);
-    color: #4e220f;
+    background-color: var(--card-bg);
+    border: 1px solid var(--accent);
+    color: var(--earth-text);
 }
 
 .atelier-card-cream {
-    background-color: #f7f1de;
-    border: 1px solid rgba(157, 102, 56, 0.4);
-    color: #4e220f;
+    background-color: var(--cream-bg);
+    border: 1px solid var(--accent);
+    color: var(--earth-text);
 }
 
 /* Atelier Buttons */
 .atelier-btn-primary {
-    background-color: #9d6638;
-    color: #f7f1de;
+    background-color: var(--accent);
+    color: var(--cream-bg);
     font-weight: 700;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .atelier-btn-primary:hover {
-    background-color: #4e220f;
-    color: #f7f1de;
+    background-color: var(--accent-hover);
+    color: var(--cream-bg);
 }
 
 .atelier-btn-secondary {
-    background-color: #B0BA99;
-    color: #4e220f;
-    border: 1px solid rgba(157, 102, 56, 0.4);
+    background-color: var(--card-bg);
+    color: var(--earth-text);
+    border: 1px solid var(--accent);
     font-weight: 700;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .atelier-btn-secondary:hover {
-    background-color: #9d6638;
-    color: #f7f1de;
+    background-color: var(--accent);
+    color: var(--cream-bg);
 }
 
 /* Atelier Input Styling */
 .atelier-input {
-    background-color: rgba(228, 225, 215, 0.6);
-    border: 1px solid rgba(157, 102, 56, 0.4);
-    color: #4e220f;
+    background-color: var(--warm-beige);
+    border: 1px solid var(--accent);
+    color: var(--earth-text);
     border-radius: 1rem;
     padding: 0.75rem 1rem;
     font-size: 0.75rem;
@@ -135,9 +174,9 @@ body {
 }
 
 .atelier-input:focus {
-    border-color: #4e220f;
+    border-color: var(--earth-text);
     outline: none;
-    background-color: #f7f1de;
+    background-color: var(--cream-bg);
 }
 
 /* Auth Page Overlay & Card Utilities */
@@ -150,7 +189,7 @@ body {
     padding: 1rem;
     overflow: hidden;
     font-family: var(--font-sans);
-    background-color: #E4E1D7;
+    background-color: var(--warm-beige);
 }
 
 .auth-bg-overlay {
@@ -162,7 +201,7 @@ body {
 .auth-bg-overlay-dark {
     position: absolute;
     inset: 0;
-    background-color: rgba(78, 34, 15, 0.25);
+    background-color: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(3px);
 }
 
@@ -179,8 +218,8 @@ body {
 }
 
 .auth-torn-paper-side {
-    background-color: #f7f1de;
-    color: #4e220f;
+    background-color: var(--cream-bg);
+    color: var(--earth-text);
     position: relative;
     padding: 2rem;
     display: flex;
@@ -288,31 +327,31 @@ body {
 
 /* Custom Text Gradient */
 .gold-gradient-text {
-    color: #4e220f;
+    color: var(--earth-text);
 }
 
-/* Card Component Background: #B0BA99 */
+/* Card Component Background */
 .glass-card {
-    background: #B0BA99;
-    border: 1px solid #9d6638;
-    box-shadow: 0 12px 30px rgba(78, 34, 15, 0.08);
+    background: var(--card-bg);
+    border: 1px solid var(--accent);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
-    border-color: #4e220f;
-    box-shadow: 0 16px 40px rgba(157, 102, 56, 0.2);
+    border-color: var(--earth-text);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
 }
 
-/* Accent Button Effect: #9d6638 */
+/* Accent Button Effect */
 .btn-gold-shimmer {
     position: relative;
     overflow: hidden;
-    background: #9d6638;
-    color: #f7f1de;
+    background: var(--accent);
+    color: var(--cream-bg);
     font-weight: 800;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 4px 16px rgba(157, 102, 56, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .btn-gold-shimmer::after {
@@ -322,7 +361,7 @@ body {
     left: 0;
     width: 50%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(247, 241, 222, 0.4), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     transform: translateX(-100%);
 }
 
@@ -331,10 +370,10 @@ body {
 }
 
 .btn-gold-shimmer:hover {
-    background: #4e220f;
-    color: #f7f1de;
+    background: var(--accent-hover);
+    color: var(--cream-bg);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(78, 34, 15, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .btn-gold-shimmer:active {
@@ -350,7 +389,7 @@ body {
     content: '';
     position: absolute;
     inset: 4px;
-    border: 1px dashed #9d6638;
+    border: 1px dashed var(--accent);
     border-radius: inherit;
     pointer-events: none;
 }
@@ -368,8 +407,8 @@ body {
     height: 1px;
     background: repeating-linear-gradient(
         90deg,
-        #9d6638 0,
-        #9d6638 6px,
+        var(--accent) 0,
+        var(--accent) 6px,
         transparent 6px,
         transparent 14px
     );
@@ -397,12 +436,12 @@ body {
 }
 .lift-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 20px 48px rgba(78, 34, 15, 0.15);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
 }
 
 /* Focus Ring */
 :focus-visible {
-    outline: 2px solid #9d6638;
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
 
@@ -423,8 +462,8 @@ body {
 
 .fiti-landing {
     font-family: var(--font-sans);
-    background-color: #E4E1D7;
-    color: #4e220f;
+    background-color: var(--warm-beige);
+    color: var(--earth-text);
 }
 
 .landing-ruler span {
@@ -434,8 +473,8 @@ body {
     justify-content: flex-end;
     gap: 0.25rem;
     padding-right: 0.35rem;
-    background: #B0BA99;
-    color: #4e220f;
+    background: var(--card-bg);
+    color: var(--earth-text);
     font-size: 8px;
     font-weight: 800;
 }
@@ -444,5 +483,5 @@ body {
     content: "";
     width: 0.65rem;
     height: 1px;
-    background: #4e220f;
+    background: var(--earth-text);
 }

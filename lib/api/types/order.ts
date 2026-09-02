@@ -73,6 +73,25 @@ export interface ClothingRequest {
     /** Nested bids if any */
     bids?: ShopRequestBid[];
     shop_requests?: ShopRequest[];
+    /** Client details if returned by backend */
+    client?: {
+        first_name?: string;
+        last_name?: string;
+        phone?: string;
+        city?: string;
+    } | null;
+    /** Measurements if returned by backend */
+    measurement?: {
+        chest?: number | null;
+        waist?: number | null;
+        shoulder?: number | null;
+        sleeve?: number | null;
+        neck?: number | null;
+        hip?: number | null;
+        inseam?: number | null;
+        length?: number | null;
+        notes?: string | null;
+    } | null;
 }
 
 /** Nested bid inside a clothing request response */

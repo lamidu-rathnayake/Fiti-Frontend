@@ -209,6 +209,10 @@ export default function TailorHomePage() {
 
     const renderInquiryCard = (view: RequestView) => {
         const { req, myShopRequest, isDirect } = view;
+        const srId = myShopRequest?.shop_request_id;
+        const isSubmitting = srId != null && submittingBidFor === srId;
+        const priceVal = srId != null ? (bidPrices[srId] ?? "") : "";
+        const canSubmit = srId != null;
 
         return (
             <div 
@@ -232,6 +236,38 @@ export default function TailorHomePage() {
                     </p>
                     {req.description && <p className="text-[10px] text-zinc-500 italic line-clamp-2 bg-[#141519] p-2 rounded-lg border border-zinc-800">"{req.description}"</p>}
                 </div>
+                
+                {canSubmit ? (
+                    <div className="p-3 bg-[#141519] border-t border-zinc-800/80 space-y-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="grid grid-cols-2 gap-2">
+                            <input 
+                                type="number" 
+                                placeholder="Your Price (LKR)" 
+                                value={priceVal}
+                                onChange={(e) => srId != null && setBidPrices((p) => ({ ...p, [srId]: e.target.value }))}
+                                className="w-full bg-[#1A1B20] border border-zinc-700/60 focus:border-[#F5CA53]/60 rounded-lg px-2 py-1.5 text-[10px] text-white placeholder-zinc-600 outline-none transition-colors" 
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Short message..." 
+                                value={srId != null ? (bidMessages[srId] ?? "") : ""}
+                                onChange={(e) => srId != null && setBidMessages((p) => ({ ...p, [srId]: e.target.value }))}
+                                className="w-full bg-[#1A1B20] border border-zinc-700/60 focus:border-[#F5CA53]/60 rounded-lg px-2 py-1.5 text-[10px] text-white placeholder-zinc-600 outline-none transition-colors" 
+                            />
+                        </div>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleSubmitQuote(view); }} 
+                            disabled={isSubmitting || !priceVal || Number(priceVal) <= 0}
+                            className="w-full bg-[#F5CA53] hover:bg-[#f7d369] disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed text-black font-black text-[10px] uppercase tracking-widest py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+                        >
+                            {isSubmitting ? "Submitting..." : "Send Quote"}
+                        </button>
+                    </div>
+                ) : (
+                    <div className="p-3 bg-[#141519] border-t border-zinc-800/80 text-center" onClick={(e) => e.stopPropagation()}>
+                        <span className="text-[10px] text-zinc-500">Shop request not initialized</span>
+                    </div>
+                )}
             </div>
         );
     };
@@ -494,6 +530,17 @@ export default function TailorHomePage() {
                                         </p>
                                     </div>
                                     
+                                    {selectedRequestView.req.design_image_urls && selectedRequestView.req.design_image_urls.length > 0 && (
+                                        <div className="space-y-2">
+                                            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Design Images</h3>
+                                            <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+                                                {selectedRequestView.req.design_image_urls.map((url, i) => (
+                                                    <img key={i} src={url} alt="Design" className="h-32 w-32 object-cover rounded-xl border border-zinc-800" />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 flex flex-col justify-center">
                                             <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Target Budget</h3>
@@ -520,6 +567,57 @@ export default function TailorHomePage() {
                                             </p>
                                         </div>
                                     </div>
+                                    
+                                    {selectedRequestView.req.client && (
+                                        <div className="space-y-2 pt-4 border-t border-zinc-800">
+                                            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Client Details</h3>
+                                            <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Name</h3>
+                                                    <p className="text-sm font-bold text-white">{selectedRequestView.req.client.first_name} {selectedRequestView.req.client.last_name}</p>
+                                                </div>
+                                                {selectedRequestView.req.client.phone && (
+                                                    <div>
+                                                        <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Contact</h3>
+                                                        <p className="text-sm font-bold text-white">{selectedRequestView.req.client.phone}</p>
+                                                    </div>
+                                                )}
+                                                {selectedRequestView.req.client.city && (
+                                                    <div className="col-span-2">
+                                                        <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Location</h3>
+                                                        <p className="text-sm font-bold text-white">{selectedRequestView.req.client.city}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {selectedRequestView.req.measurement && Object.values(selectedRequestView.req.measurement).some(val => val !== null && val !== "") && (
+                                        <div className="space-y-2 pt-4 border-t border-zinc-800">
+                                            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4" /></svg>
+                                                Measurements
+                                            </h3>
+                                            <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 grid grid-cols-3 gap-y-4 gap-x-2">
+                                                {['chest', 'waist', 'shoulder', 'sleeve', 'neck', 'hip', 'inseam', 'length'].map((part) => {
+                                                    const val = selectedRequestView.req.measurement![part as keyof typeof selectedRequestView.req.measurement];
+                                                    if (val == null) return null;
+                                                    return (
+                                                        <div key={part}>
+                                                            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">{part}</h3>
+                                                            <p className="text-sm font-bold text-white">{val} cm</p>
+                                                        </div>
+                                                    );
+                                                })}
+                                                {selectedRequestView.req.measurement.notes && (
+                                                    <div className="col-span-3 mt-2">
+                                                        <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Notes</h3>
+                                                        <p className="text-sm text-zinc-300 italic">"{selectedRequestView.req.measurement.notes}"</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 
                                 {/* Sidebar / Actions */}

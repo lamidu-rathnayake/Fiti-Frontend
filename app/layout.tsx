@@ -30,7 +30,10 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
-            <body className="antialiased bg-[#0A0B0E] text-white font-sans">
+            <body
+                suppressHydrationWarning
+                className="antialiased bg-[#0A0B0E] text-white font-sans"
+            >
                 <AuthProvider>{children}</AuthProvider>
             </body>
         </html>

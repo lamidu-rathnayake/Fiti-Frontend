@@ -117,6 +117,7 @@ export default function LoginPage() {
                     src="/images/orders/mens_charcoal_suit.jpg"
                     alt="Atelier Studio Background"
                     fill
+                    sizes="100vw"
                     className="object-cover brightness-[0.4] scale-105"
                     priority
                 />

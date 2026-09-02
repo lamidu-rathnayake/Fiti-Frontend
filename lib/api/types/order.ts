@@ -65,7 +65,7 @@ export interface ClothingRequest {
     description: string | null;
     voice_note_url: string | null;
     request_location: string | null;
-    design_image_urls: string[];
+    design_images?: { image_url: string }[];
     /** Backend field name: status (ClothingRequestStatusEnum) */
     status: ClothingRequestStatus;
     created_at: string;
@@ -75,8 +75,7 @@ export interface ClothingRequest {
     shop_requests?: ShopRequest[];
     /** Client details if returned by backend */
     client?: {
-        first_name?: string;
-        last_name?: string;
+        display_name?: string;
         phone?: string;
         city?: string;
     } | null;
@@ -110,6 +109,7 @@ export interface ShopRequest {
     shop_id: number;
     offered_price: number | null;
     status: ShopRequestStatus;
+    clothing_request?: ClothingRequest;
 }
 
 // ── Bids (Tailor-side) ────────────────────────────────────────────────
@@ -152,6 +152,7 @@ export interface Order {
     accepted_price: number;
     started_date: string | null;
     completed_date: string | null;
+    clothing_request?: ClothingRequest;
     created_at: string;
 }
 

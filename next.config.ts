@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
                 headers: [
                     {
                         key: "Cross-Origin-Opener-Policy",
-                        value: "same-origin",
+                        value: "unsafe-none",
                     },
                 ],
             },
@@ -28,7 +28,17 @@ const nextConfig: NextConfig = {
                 headers: [
                     {
                         key: "Cross-Origin-Opener-Policy",
-                        value: "same-origin-allow-popups",
+                        value: "unsafe-none",
+                    },
+                ],
+            },
+            {
+                // 🔑 2.5 Landing page — allows Google popup for login
+                source: "/",
+                headers: [
+                    {
+                        key: "Cross-Origin-Opener-Policy",
+                        value: "unsafe-none",
                     },
                 ],
             },
@@ -38,7 +48,7 @@ const nextConfig: NextConfig = {
                 headers: [
                     {
                         key: "Cross-Origin-Opener-Policy",
-                        value: "same-origin-allow-popups",
+                        value: "unsafe-none",
                     },
                 ],
             },
@@ -48,7 +58,7 @@ const nextConfig: NextConfig = {
                 headers: [
                     {
                         key: "Cross-Origin-Opener-Policy",
-                        value: "same-origin-allow-popups",
+                        value: "unsafe-none",
                     },
                 ],
             },
@@ -58,7 +68,7 @@ const nextConfig: NextConfig = {
                 headers: [
                     {
                         key: "Cross-Origin-Opener-Policy",
-                        value: "same-origin-allow-popups",
+                        value: "unsafe-none",
                     },
                 ],
             },
@@ -68,7 +78,7 @@ const nextConfig: NextConfig = {
                 headers: [
                     {
                         key: "Cross-Origin-Opener-Policy",
-                        value: "same-origin-allow-popups",
+                        value: "unsafe-none",
                     },
                 ],
             },

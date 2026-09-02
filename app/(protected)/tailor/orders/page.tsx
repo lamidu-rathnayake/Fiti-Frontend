@@ -40,15 +40,18 @@ export default function TailorOrdersPage() {
     const { user } = useAuth();
     
     const [previewImage, setPreviewImage] = useState<string | null>(null);
-    const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-    const [highlightedSection, setHighlightedSection] = useState<string | null>(null);
+    const [quotePrice, setQuotePrice] = useState<string>("");
+    const [quoteMessage, setQuoteMessage] = useState<string>("");
+    const [activeTab, setActiveTab] = useState<"requests" | "quoted" | "ongoing" | "complete">("requests");
+    const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isDbConnected, setIsDbConnected] = useState(false);
 
     const [shopName, setShopName] = useState("");
     const [requests, setRequests] = useState<OrderDetail[]>([]);
-    const [pendingOrders, setPendingOrders] = useState<OrderDetail[]>([]);
+    const [pendingQuotes, setPendingQuotes] = useState<OrderDetail[]>([]);
     const [ongoingOrders, setOngoingOrders] = useState<OrderDetail[]>([]);
+    const [completeOrders, setCompleteOrders] = useState<OrderDetail[]>([]);
 
     const mapRequestToOrderDetail = (req: ClothingRequest): OrderDetail => {
         const isFemale = req.gender === "female";
@@ -64,13 +67,15 @@ export default function TailorOrdersPage() {
                 ? "/images/orders/cashmere_belted_coat.jpg"
                 : "/images/orders/mens_charcoal_suit.jpg";
 
-        const anyReq = req as unknown as Record<string, string | number | undefined>;
+        const clientName = req.client?.display_name
+            ? req.client.display_name
+            : req.client_id ? (req.client_id.length > 15 ? req.client_id.substring(0, 10) + "..." : req.client_id) : "Client";
 
         return {
             id: `REQ-${req.request_id}`,
             rawId: req.request_id,
             title: req.clothing_category || "Bespoke Commission",
-            client: req.client_id ? (req.client_id.length > 15 ? req.client_id.substring(0, 10) + "..." : req.client_id) : "Client",
+            client: clientName,
             date: req.created_at ? new Date(req.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—",
             targetDate: req.target_date ? new Date(req.target_date).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : "TBD",
             budget: req.target_budget ? `LKR ${Number(req.target_budget).toLocaleString()}` : "Custom Quote",
@@ -78,14 +83,14 @@ export default function TailorOrdersPage() {
             fitPreference: isFemale ? "Women's Fit" : req.gender === "unisex" ? "Unisex" : req.gender === "male" ? "Men's Fit" : "Not specified",
             materialSourcing: req.fabric_status === "client_provided" ? "Providing Fabric" : req.fabric_status ? "Need Sourcing" : "Not specified",
             measurements: {
-                chest: anyReq.chest_measurement ? String(anyReq.chest_measurement) : "Not specified",
-                waist: anyReq.waist_measurement ? String(anyReq.waist_measurement) : "Not specified",
-                sleeve: anyReq.sleeve_measurement ? String(anyReq.sleeve_measurement) : "Not specified",
-                neck: anyReq.neck_measurement ? String(anyReq.neck_measurement) : "Not specified",
-                shoulder: anyReq.shoulder_measurement ? String(anyReq.shoulder_measurement) : "Not specified",
+                chest: req.measurement?.chest ? String(req.measurement.chest) : "Not specified",
+                waist: req.measurement?.waist ? String(req.measurement.waist) : "Not specified",
+                sleeve: req.measurement?.sleeve ? String(req.measurement.sleeve) : "Not specified",
+                neck: req.measurement?.neck ? String(req.measurement.neck) : "Not specified",
+                shoulder: req.measurement?.shoulder ? String(req.measurement.shoulder) : "Not specified",
             },
             designNotes: req.description || "No design notes provided.",
-            images: req.design_image_urls && req.design_image_urls.length > 0 ? req.design_image_urls : [defaultImg],
+            images: req.design_images && req.design_images.length > 0 ? req.design_images.map(img => img.image_url) : [defaultImg],
             status: "REQUESTED",
         };
     };
@@ -93,26 +98,44 @@ export default function TailorOrdersPage() {
     const mapOrderToOrderDetail = (ord: Order): OrderDetail => {
         const orderStatus = ord.order_status;
         const statusLabel = orderStatus === "in_progress" ? "IN FITTING" : (orderStatus || "pending").replace(/_/g, " ").toUpperCase();
+        
+        const req = ord.clothing_request;
+        const clientName = req?.client?.display_name 
+            ? req.client.display_name 
+            : req?.client_id ? (req.client_id.length > 15 ? req.client_id.substring(0, 10) + "..." : req.client_id) : `Client #${ord.shop_request_id}`;
+
+        const isFemale = req?.gender === "female";
+        const garmentTypeStr = req?.clothing_category 
+            ? req.clothing_category.charAt(0).toUpperCase() + req.clothing_category.slice(1) 
+            : "Suit";
+            
+        // Map string to literal type, fallback to Suit if unknown
+        let garmentType: "Suit" | "Shirt" | "Overcoat" | "Trousers" = "Suit";
+        if (garmentTypeStr.includes("Shirt") || garmentTypeStr.includes("shirt")) garmentType = "Shirt";
+        else if (garmentTypeStr.includes("Coat") || garmentTypeStr.includes("coat")) garmentType = "Overcoat";
+        else if (garmentTypeStr.includes("Trouser") || garmentTypeStr.includes("Pant") || garmentTypeStr.includes("trouser") || garmentTypeStr.includes("pant")) garmentType = "Trousers";
+
+            
         return {
             id: `ORD-${ord.order_id}`,
             rawId: ord.order_id,
             title: `Order #${ord.order_id}`,
-            client: `Client #${ord.shop_request_id}`,
+            client: clientName,
             date: ord.created_at ? new Date(ord.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—",
             targetDate: ord.completed_date ? new Date(ord.completed_date).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : "TBD",
             budget: ord.accepted_price ? `LKR ${Number(ord.accepted_price).toLocaleString()}` : "Pending",
-            garmentType: "Suit",
-            fitPreference: "Not specified",
-            materialSourcing: "Not specified",
+            garmentType,
+            fitPreference: isFemale ? "Women's Fit" : req?.gender === "unisex" ? "Unisex" : req?.gender === "male" ? "Men's Fit" : "Not specified",
+            materialSourcing: req?.fabric_status === "client_provided" ? "Providing Fabric" : req?.fabric_status ? "Need Sourcing" : "Not specified",
             measurements: {
-                chest: "Not specified",
-                waist: "Not specified",
-                sleeve: "Not specified",
-                neck: "Not specified",
-                shoulder: "Not specified",
+                chest: req?.measurement?.chest ? String(req.measurement.chest) : "Not specified",
+                waist: req?.measurement?.waist ? String(req.measurement.waist) : "Not specified",
+                sleeve: req?.measurement?.sleeve ? String(req.measurement.sleeve) : "Not specified",
+                neck: req?.measurement?.neck ? String(req.measurement.neck) : "Not specified",
+                shoulder: req?.measurement?.shoulder ? String(req.measurement.shoulder) : "Not specified",
             },
-            designNotes: "No additional design notes on file for this order.",
-            images: [],
+            designNotes: req?.description || "No additional design notes on file for this order.",
+            images: req?.design_images && req.design_images.length > 0 ? req.design_images.map(img => img.image_url) : [],
             status: statusLabel,
             progress: orderStatus === "completed" ? 100 : orderStatus === "in_progress" ? 60 : 20,
         };
@@ -142,30 +165,53 @@ export default function TailorOrdersPage() {
                 shopOrdersPromise,
             ]);
 
-            const loadedRequests: OrderDetail[] =
-                openReqs.status === "fulfilled" && openReqs.value && openReqs.value.length > 0
-                    ? openReqs.value.map(mapRequestToOrderDetail)
-                    : shopReqs.status === "fulfilled" && shopReqs.value && shopReqs.value.length > 0
-                        ? shopReqs.value.map(mapRequestToOrderDetail)
-                        : [];
-            setRequests(loadedRequests);
+            const allReqsMap = new Map<number, ClothingRequest>();
+            if (openReqs.status === "fulfilled" && openReqs.value) {
+                openReqs.value.forEach(r => allReqsMap.set(r.request_id, r));
+            }
+            if (shopReqs.status === "fulfilled" && shopReqs.value) {
+                shopReqs.value.forEach(sr => {
+                    if (sr.clothing_request) {
+                        allReqsMap.set(sr.request_id, sr.clothing_request);
+                    }
+                });
+            }
+
+            const newInqs: OrderDetail[] = [];
+            const quoted: OrderDetail[] = [];
+
+            Array.from(allReqsMap.values()).forEach(req => {
+                const mySr = shopId ? req.shop_requests?.find(sr => sr.shop_id === shopId) : null;
+                const isBidding = req.request_type === "bidding";
+                
+                if (mySr && mySr.status === "quoted") {
+                    const mapped = mapRequestToOrderDetail(req);
+                    mapped.status = "QUOTED";
+                    quoted.push(mapped);
+                } else if ((mySr && mySr.status === "pending") || (!mySr && isBidding)) {
+                    newInqs.push(mapRequestToOrderDetail(req));
+                }
+            });
+
+            setRequests(newInqs);
+            setPendingQuotes(quoted);
 
             if (shopOrders.status === "fulfilled" && shopOrders.value) {
                 const ongoing: OrderDetail[] = [];
-                const pending: OrderDetail[] = [];
+                const complete: OrderDetail[] = [];
                 shopOrders.value.forEach((ord) => {
                     const mapped = mapOrderToOrderDetail(ord);
                     if (ord.order_status === "in_progress") {
                         ongoing.push(mapped);
-                    } else {
-                        pending.push(mapped);
+                    } else if (ord.order_status === "completed") {
+                        complete.push(mapped);
                     }
                 });
                 setOngoingOrders(ongoing);
-                setPendingOrders(pending);
+                setCompleteOrders(complete);
             } else {
                 setOngoingOrders([]);
-                setPendingOrders([]);
+                setCompleteOrders([]);
             }
 
             setIsDbConnected(
@@ -183,19 +229,6 @@ export default function TailorOrdersPage() {
         const lastSelected = localStorage.getItem("tailorSelectedShop");
         if (lastSelected) setShopName(lastSelected);
         fetchTailorData();
-
-        const hash = window.location.hash.replace("#", "");
-        if (hash) {
-            setHighlightedSection(hash);
-            const timerScroll = setTimeout(() => {
-                document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "center" });
-            }, 100);
-            const timerHighlight = setTimeout(() => setHighlightedSection(null), 2500);
-            return () => {
-                clearTimeout(timerScroll);
-                clearTimeout(timerHighlight);
-            };
-        }
     }, [fetchTailorData]);
 
     const handleAccept = async (req: OrderDetail) => {
@@ -213,6 +246,24 @@ export default function TailorOrdersPage() {
         }
     };
 
+    const handleIssueQuotation = async (req: OrderDetail) => {
+        try {
+            if (!quotePrice) return;
+            await submitBid({
+                shop_request_id: req.rawId,
+                bid_amount: Number(quotePrice),
+                message: quoteMessage || "Quotation submitted.",
+            });
+            setSelectedOrder(null);
+            setQuotePrice("");
+            setQuoteMessage("");
+        } catch (err) {
+            console.error("Failed to issue quotation:", err);
+        } finally {
+            fetchTailorData();
+        }
+    };
+
     const handleDeny = async (req: OrderDetail) => {
         try {
             await cancelRequest(req.rawId);
@@ -221,16 +272,6 @@ export default function TailorOrdersPage() {
         } finally {
             fetchTailorData();
         }
-    };
-
-    const toggleExpand = (orderId: string) => {
-        setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
-    };
-
-    const scrollTo = (id: string) => {
-        setHighlightedSection(id);
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" });
-        setTimeout(() => setHighlightedSection(null), 2500);
     };
 
     const renderOrderAtelierDetails = (order: OrderDetail) => (
@@ -405,6 +446,47 @@ export default function TailorOrdersPage() {
                     </div>
                 </div>
             </div>
+
+            {order.status === "REQUESTED" && (
+                <div className="bg-[#121316] rounded-2xl p-4 border border-[#F5CA53]/50 space-y-4 mt-4 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#F5CA53] to-transparent"></div>
+                    <div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53] block mb-0.5">Issue Quotation</span>
+                        <p className="text-[11px] text-zinc-400">Submit your bid and message to the client directly.</p>
+                    </div>
+
+                    <div className="space-y-3">
+                        <div>
+                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-1.5">OFFERED PRICE (LKR)</label>
+                            <input
+                                type="number"
+                                value={quotePrice}
+                                onChange={(e) => setQuotePrice(e.target.value)}
+                                placeholder="e.g. 15000"
+                                className="w-full bg-[#18191E] border border-zinc-800 focus:border-[#F5CA53]/60 px-3.5 py-2.5 rounded-lg text-sm text-[#F5CA53] font-bold font-mono outline-none transition-colors"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-1.5">MESSAGE TO CLIENT</label>
+                            <textarea
+                                value={quoteMessage}
+                                onChange={(e) => setQuoteMessage(e.target.value)}
+                                placeholder="e.g. I can tailor this suit in 2 weeks. The fabric is included in the price."
+                                rows={3}
+                                className="w-full bg-[#18191E] border border-zinc-800 focus:border-[#F5CA53]/60 px-3.5 py-2.5 rounded-lg text-sm text-zinc-200 font-sans outline-none transition-colors resize-none"
+                            />
+                        </div>
+                        <button
+                            onClick={() => handleIssueQuotation(order)}
+                            disabled={!quotePrice}
+                            className="w-full bg-[#F5CA53] disabled:bg-zinc-700 disabled:text-zinc-500 text-black font-bold text-xs uppercase tracking-widest py-3 rounded-xl hover:bg-[#e4bb49] transition-all shadow-md shadow-[#F5CA53]/20 active:scale-[0.98] flex items-center justify-center gap-1.5"
+                        >
+                            Submit Quotation
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
@@ -446,50 +528,57 @@ export default function TailorOrdersPage() {
 
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
                     <button
-                        onClick={() => scrollTo("requests")}
-                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${highlightedSection === "requests"
+                        onClick={() => setActiveTab("requests")}
+                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === "requests"
                             ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
                             : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
                             }`}
                     >
-                        Requests ({requests.length})
+                        New Inquiries ({requests.length})
                     </button>
                     <button
-                        onClick={() => scrollTo("pending")}
-                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${highlightedSection === "pending"
+                        onClick={() => setActiveTab("quoted")}
+                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === "quoted"
                             ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
                             : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
                             }`}
                     >
-                        Pending ({pendingOrders.length})
+                        Pending Quotations ({pendingQuotes.length})
                     </button>
                     <button
-                        onClick={() => scrollTo("ongoing")}
-                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${highlightedSection === "ongoing"
+                        onClick={() => setActiveTab("ongoing")}
+                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === "ongoing"
                             ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
                             : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
                             }`}
                     >
                         On Going ({ongoingOrders.length})
                     </button>
+                    <button
+                        onClick={() => setActiveTab("complete")}
+                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === "complete"
+                            ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
+                            : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
+                            }`}
+                    >
+                        Complete ({completeOrders.length})
+                    </button>
                 </div>
 
-                <div id="requests" className={`space-y-4 scroll-mt-36 p-2 rounded-[28px] transition-all duration-700 ${highlightedSection === "requests" ? "ring-2 ring-[#F5CA53] bg-[#F5CA53]/5 shadow-[0_0_30px_rgba(245,202,83,0.15)]" : ""
-                    }`}>
-                    <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#F5CA53]">New Requests ({requests.length})</h2>
+                {activeTab === "requests" && (
+                    <div className="space-y-4 p-2 rounded-[28px] animate-fadeIn">
+                        <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#F5CA53]">New Inquiries ({requests.length})</h2>
 
-                    {requests.length === 0 ? (
-                        <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
-                            {isLoading ? "Loading requests…" : "No open client requests right now."}
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {requests.map((req) => {
-                                const isExpanded = expandedOrderId === req.id;
-                                return (
+                        {requests.length === 0 ? (
+                            <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
+                                {isLoading ? "Loading requests…" : "No open client requests right now."}
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {requests.map((req) => (
                                     <div key={req.id} className="bg-[#18191E] border border-[#F5CA53]/30 rounded-[24px] p-5 shadow-lg shadow-[#F5CA53]/5 relative overflow-hidden transition-all">
                                         <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#F5CA53] to-transparent"></div>
-                                        <div onClick={() => toggleExpand(req.id)} className="flex justify-between items-start cursor-pointer group">
+                                        <div onClick={() => setSelectedOrder(req)} className="flex justify-between items-start cursor-pointer group">
                                             <div className="flex items-center gap-3">
                                                 {req.images && req.images[0] && (
                                                     <img src={req.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-[#F5CA53]/30 shrink-0" />
@@ -504,13 +593,11 @@ export default function TailorOrdersPage() {
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-[13px] font-bold text-[#F5CA53] bg-[#26282D] px-3 py-1 rounded-lg border border-zinc-700/50 block">{req.budget}</span>
-                                                <span className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors mt-1 block">
-                                                    {isExpanded ? "Collapse ▲" : "View Full Specs ▼"}
+                                                <span className="text-[10px] text-zinc-500 hover:text-[#F5CA53] transition-colors mt-1 block">
+                                                    Open Details ↗
                                                 </span>
                                             </div>
                                         </div>
-
-                                        {isExpanded && renderOrderAtelierDetails(req)}
 
                                         <div className="grid grid-cols-2 gap-3 pt-3 mt-3 border-t border-zinc-800/60">
                                             <button
@@ -528,27 +615,25 @@ export default function TailorOrdersPage() {
                                             </button>
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                <div id="pending" className={`space-y-4 scroll-mt-36 p-2 rounded-[28px] transition-all duration-700 ${highlightedSection === "pending" ? "ring-2 ring-[#F5CA53] bg-[#F5CA53]/5 shadow-[0_0_30px_rgba(245,202,83,0.15)]" : ""
-                    }`}>
-                    <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">Pending ({pendingOrders.length})</h2>
+                {activeTab === "quoted" && (
+                    <div className="space-y-4 p-2 rounded-[28px] animate-fadeIn">
+                        <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">Pending Quotations ({pendingQuotes.length})</h2>
 
-                    {pendingOrders.length === 0 ? (
-                        <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
-                            {isLoading ? "Loading…" : "No pending orders."}
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {pendingOrders.map((ord) => {
-                                const isExpanded = expandedOrderId === ord.id;
-                                return (
+                        {pendingQuotes.length === 0 ? (
+                            <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
+                                {isLoading ? "Loading…" : "No pending quotations."}
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {pendingQuotes.map((ord) => (
                                     <div key={ord.id} className="bg-[#18191E] border border-zinc-800/80 rounded-[20px] p-5 shadow-lg transition-all">
-                                        <div onClick={() => toggleExpand(ord.id)} className="flex justify-between items-start cursor-pointer group">
+                                        <div onClick={() => setSelectedOrder(ord)} className="flex justify-between items-start cursor-pointer group">
                                             <div className="flex items-center gap-3">
                                                 {ord.images && ord.images[0] && (
                                                     <img src={ord.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-zinc-700 shrink-0" />
@@ -560,34 +645,31 @@ export default function TailorOrdersPage() {
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-800/50 border border-zinc-700 px-2.5 py-1 rounded-full">{ord.status}</span>
-                                                <span className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors mt-1 block">
-                                                    {isExpanded ? "Collapse ▲" : "View Full Specs ▼"}
+                                                <span className="text-[10px] text-zinc-500 hover:text-[#F5CA53] transition-colors mt-1 block">
+                                                    Open Details ↗
                                                 </span>
                                             </div>
                                         </div>
-                                        {isExpanded && renderOrderAtelierDetails(ord)}
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                <div id="ongoing" className={`space-y-4 scroll-mt-36 p-2 rounded-[28px] transition-all duration-700 ${highlightedSection === "ongoing" ? "ring-2 ring-[#F5CA53] bg-[#F5CA53]/5 shadow-[0_0_30px_rgba(245,202,83,0.15)]" : ""
-                    }`}>
-                    <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">On Going ({ongoingOrders.length})</h2>
+                {activeTab === "ongoing" && (
+                    <div className="space-y-4 p-2 rounded-[28px] animate-fadeIn">
+                        <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">On Going ({ongoingOrders.length})</h2>
 
-                    {ongoingOrders.length === 0 ? (
-                        <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
-                            {isLoading ? "Loading…" : "No orders in progress."}
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {ongoingOrders.map((ord) => {
-                                const isExpanded = expandedOrderId === ord.id;
-                                return (
+                        {ongoingOrders.length === 0 ? (
+                            <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
+                                {isLoading ? "Loading…" : "No orders in progress."}
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {ongoingOrders.map((ord) => (
                                     <div key={ord.id} className="bg-[#18191E] border border-zinc-800/80 hover:border-[#F5CA53]/30 rounded-[24px] p-5 shadow-lg transition-all">
-                                        <div onClick={() => toggleExpand(ord.id)} className="flex justify-between items-start cursor-pointer group">
+                                        <div onClick={() => setSelectedOrder(ord)} className="flex justify-between items-start cursor-pointer group">
                                             <div className="flex items-center gap-3">
                                                 {ord.images && ord.images[0] && (
                                                     <img src={ord.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-[#F5CA53]/30 shrink-0" />
@@ -599,8 +681,8 @@ export default function TailorOrdersPage() {
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-[9px] font-bold text-[#F5CA53] uppercase tracking-widest bg-[#F5CA53]/10 border border-[#F5CA53]/30 px-2.5 py-1 rounded-full">{ord.status}</span>
-                                                <span className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors mt-1 block">
-                                                    {isExpanded ? "Collapse ▲" : "View Full Specs ▼"}
+                                                <span className="text-[10px] text-zinc-500 hover:text-[#F5CA53] transition-colors mt-1 block">
+                                                    Open Details ↗
                                                 </span>
                                             </div>
                                         </div>
@@ -614,15 +696,75 @@ export default function TailorOrdersPage() {
                                                 <div className="h-full bg-[#F5CA53] transition-all duration-500" style={{ width: `${ord.progress ?? 0}%` }}></div>
                                             </div>
                                         </div>
-
-                                        {isExpanded && renderOrderAtelierDetails(ord)}
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === "complete" && (
+                    <div className="space-y-4 p-2 rounded-[28px] animate-fadeIn">
+                        <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">Complete ({completeOrders.length})</h2>
+
+                        {completeOrders.length === 0 ? (
+                            <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
+                                {isLoading ? "Loading…" : "No completed orders."}
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {completeOrders.map((ord) => (
+                                    <div key={ord.id} className="bg-[#18191E] border border-zinc-800/80 hover:border-[#F5CA53]/30 rounded-[24px] p-5 shadow-lg transition-all">
+                                        <div onClick={() => setSelectedOrder(ord)} className="flex justify-between items-start cursor-pointer group">
+                                            <div className="flex items-center gap-3">
+                                                {ord.images && ord.images[0] && (
+                                                    <img src={ord.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-[#F5CA53]/30 shrink-0" />
+                                                )}
+                                                <div>
+                                                    <h3 className="text-[15px] font-medium text-white group-hover:text-[#F5CA53] transition-colors">{ord.title}</h3>
+                                                    <p className="text-[11px] text-zinc-400 mt-0.5">Client: {ord.client} &bull; <span className="text-zinc-500">{ord.id}</span></p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-[9px] font-bold text-[#F5CA53] uppercase tracking-widest bg-[#F5CA53]/10 border border-[#F5CA53]/30 px-2.5 py-1 rounded-full">{ord.status}</span>
+                                                <span className="text-[10px] text-zinc-500 hover:text-[#F5CA53] transition-colors mt-1 block">
+                                                    Open Details ↗
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </main>
+
+            {/* POPUP MODAL */}
+            {selectedOrder && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[999] flex items-center justify-center p-4 sm:p-6" onClick={() => setSelectedOrder(null)}>
+                    <div 
+                        className="bg-[#121316] w-full max-w-2xl max-h-[90vh] rounded-3xl border border-[#F5CA53]/30 shadow-2xl flex flex-col overflow-hidden animate-fadeIn"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-5 border-b border-zinc-800 flex justify-between items-center bg-[#18191E]">
+                            <div className="flex items-center gap-3">
+                                <span className="text-[#F5CA53] bg-[#F5CA53]/10 px-2.5 py-1 rounded-lg text-xs font-bold font-mono border border-[#F5CA53]/20">{selectedOrder.id}</span>
+                                <h3 className="text-lg font-black text-white">{selectedOrder.title}</h3>
+                            </div>
+                            <button 
+                                onClick={() => setSelectedOrder(null)}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto custom-scrollbar relative">
+                            {renderOrderAtelierDetails(selectedOrder)}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

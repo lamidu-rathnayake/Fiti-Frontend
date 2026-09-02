@@ -312,6 +312,7 @@ export default function LoginPage() {
                         src="/images/orders/mens_charcoal_suit.jpg"
                         alt="Bespoke Suit Studio"
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         className="object-cover brightness-90 scale-105"
                         priority
                     />

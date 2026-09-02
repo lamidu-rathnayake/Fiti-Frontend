@@ -16,6 +16,7 @@ import type {
     Payment,
     RatingPayload,
     Rating,
+    ShopRequest,
 } from "@/lib/api/types/order";
 
 // ── Clothing Requests (Client-side) ───────────────────────────────────
@@ -89,8 +90,8 @@ export async function cancelRequest(requestId: number): Promise<ClothingRequest>
  * GET /api/v1/orders/shop-requests/shop/{id}
  * (Auth: Public)
  */
-export async function listShopRequests(shopId: number): Promise<ClothingRequest[]> {
-    return apiFetch<ClothingRequest[]>(`/orders/shop-requests/shop/${shopId}`, {
+export async function listShopRequests(shopId: number): Promise<ShopRequest[]> {
+    return apiFetch<ShopRequest[]>(`/orders/shop-requests/shop/${shopId}`, {
         authenticated: false,
     });
 }

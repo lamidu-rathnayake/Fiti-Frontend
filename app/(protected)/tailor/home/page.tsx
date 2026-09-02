@@ -466,12 +466,12 @@ export default function TailorHomePage() {
                                         </p>
                                     </div>
                                     
-                                    {selectedRequestView.req.design_image_urls && selectedRequestView.req.design_image_urls.length > 0 && (
-                                        <div className="space-y-2">
-                                            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Design Images</h3>
-                                            <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
-                                                {selectedRequestView.req.design_image_urls.map((url, i) => (
-                                                    <img key={i} src={url} alt="Design" className="h-32 w-32 object-cover rounded-xl border border-zinc-800" />
+                                    {selectedRequestView.req.design_images && selectedRequestView.req.design_images.length > 0 && (
+                                        <div className="mb-6">
+                                            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Reference Images</h3>
+                                            <div className="flex gap-3 overflow-x-auto pb-2 snap-x">
+                                                {selectedRequestView.req.design_images.map((img, i) => (
+                                                    <img key={i} src={img.image_url} alt={`Ref ${i+1}`} className="h-32 w-32 object-cover rounded-xl border border-zinc-800 snap-start" />
                                                 ))}
                                             </div>
                                         </div>
@@ -510,7 +510,7 @@ export default function TailorHomePage() {
                                             <div className="bg-[#18191E] p-4 rounded-xl border border-zinc-800/80 grid grid-cols-2 gap-4">
                                                 <div>
                                                     <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Name</h3>
-                                                    <p className="text-sm font-bold text-white">{selectedRequestView.req.client.first_name} {selectedRequestView.req.client.last_name}</p>
+                                                    <p className="text-sm font-bold text-white">{selectedRequestView.req.client.display_name || "Unknown Client"}</p>
                                                 </div>
                                                 {selectedRequestView.req.client.phone && (
                                                     <div>

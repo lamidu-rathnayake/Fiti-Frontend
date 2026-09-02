@@ -416,6 +416,7 @@ export default function HomePage() {
                                 alt="New Arrivals"
                                 fill
                                 sizes="144px"
+                                priority
                                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                         </div>

@@ -26,7 +26,7 @@ type Tab = "overview" | "pipeline" | "earnings" | "settings";
 
 export default function TailorHomePage() {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<Tab>("pipeline");
+    const [activeTab, setActiveTab] = useState<Tab>("overview");
     const [tailorShops, setTailorShops] = useState<Shop[]>([]);
     const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
     
@@ -339,7 +339,6 @@ export default function TailorHomePage() {
                     <span className="text-[#F5CA53] font-serif font-black text-xl tracking-tighter">Atelier Mode</span>
                     <nav className="hidden sm:flex items-center gap-1">
                         {[
-                            { key: "pipeline", label: "Pipeline" },
                             { key: "overview", label: "Overview" },
                             { key: "earnings", label: "Earnings" },
                             { key: "settings", label: "Settings" }
@@ -377,69 +376,6 @@ export default function TailorHomePage() {
             </header>
 
             <main className="flex-1 overflow-hidden flex flex-col bg-[#0B0C10]">
-                {/* PIPELINE VIEW */}
-                {activeTab === "pipeline" && (
-                    <div className="flex-1 overflow-x-auto flex flex-col p-6 lg:px-12">
-                        <div className="mb-6 shrink-0">
-                            <h1 className="text-2xl font-extrabold text-white tracking-tight">Order Pipeline</h1>
-                            <p className="text-xs text-zinc-500 mt-1">Track and manage the entire lifecycle of your commissions.</p>
-                        </div>
-                        
-                        <div className="flex-1 min-h-0 flex gap-6 pb-6 w-max lg:w-full">
-                            {/* Column 1: New Inquiries */}
-                            <div className="w-[300px] lg:flex-1 flex flex-col bg-[#121316] rounded-2xl border border-zinc-800/60 shrink-0">
-                                <div className="p-4 border-b border-zinc-800/60 bg-[#16171B] rounded-t-2xl flex items-center justify-between">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-white">New Inquiries</h3>
-                                    <span className="bg-zinc-800 text-zinc-300 text-[10px] px-2 py-0.5 rounded-full font-mono">{newInquiries.length}</span>
-                                </div>
-                                <div className="p-4 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
-                                    {isLoading ? <><SkeletonCard/><SkeletonCard/></> : newInquiries.length === 0 ? (
-                                        <p className="text-xs text-zinc-600 text-center mt-10">No new requests</p>
-                                    ) : newInquiries.map(renderInquiryCard)}
-                                </div>
-                            </div>
-
-                            {/* Column 2: Pending Client */}
-                            <div className="w-[300px] lg:flex-1 flex flex-col bg-[#121316] rounded-2xl border border-zinc-800/60 shrink-0">
-                                <div className="p-4 border-b border-zinc-800/60 bg-[#16171B] rounded-t-2xl flex items-center justify-between">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Pending Client</h3>
-                                    <span className="bg-[#F5CA53]/10 text-[#F5CA53] border border-[#F5CA53]/20 text-[10px] px-2 py-0.5 rounded-full font-mono">{pendingClient.length}</span>
-                                </div>
-                                <div className="p-4 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
-                                    {isLoading ? <><SkeletonCard/></> : pendingClient.length === 0 ? (
-                                        <p className="text-xs text-zinc-600 text-center mt-10">No pending quotes</p>
-                                    ) : pendingClient.map(renderPendingCard)}
-                                </div>
-                            </div>
-
-                            {/* Column 3: Active Workshop */}
-                            <div className="w-[300px] lg:flex-1 flex flex-col bg-[#121316] rounded-2xl border border-zinc-800/60 shrink-0">
-                                <div className="p-4 border-b border-zinc-800/60 bg-[#16171B] rounded-t-2xl flex items-center justify-between">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-white">Active Workshop</h3>
-                                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-0.5 rounded-full font-mono">{activeWorkshop.length}</span>
-                                </div>
-                                <div className="p-4 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
-                                    {isLoading ? <><SkeletonCard/></> : activeWorkshop.length === 0 ? (
-                                        <p className="text-xs text-zinc-600 text-center mt-10">No active orders</p>
-                                    ) : activeWorkshop.map(o => renderOrderCard(o, true))}
-                                </div>
-                            </div>
-
-                            {/* Column 4: Completed */}
-                            <div className="w-[300px] lg:flex-1 flex flex-col bg-[#121316] rounded-2xl border border-zinc-800/60 shrink-0">
-                                <div className="p-4 border-b border-zinc-800/60 bg-[#16171B] rounded-t-2xl flex items-center justify-between">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500">Completed</h3>
-                                    <span className="bg-zinc-800 text-zinc-500 border border-zinc-700 text-[10px] px-2 py-0.5 rounded-full font-mono">{completedHistory.length}</span>
-                                </div>
-                                <div className="p-4 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
-                                    {isLoading ? <><SkeletonCard/></> : completedHistory.length === 0 ? (
-                                        <p className="text-xs text-zinc-600 text-center mt-10">No completed orders</p>
-                                    ) : completedHistory.map(o => renderOrderCard(o, false))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* OVERVIEW TAB */}
                 {activeTab === "overview" && (

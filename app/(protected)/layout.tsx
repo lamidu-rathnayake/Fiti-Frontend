@@ -75,11 +75,9 @@ export default function ProtectedLayout({
                         <Link href={homeUrl} className={pathname === homeUrl ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
                             {dbRole !== "tailor" ? "Home" : "Dashboard"}
                         </Link>
-                        {dbRole !== "tailor" && (
-                            <Link href={`/${dbRole}/orders`} className={pathname === `/${dbRole}/orders` ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
-                                Orders
-                            </Link>
-                        )}
+                        <Link href={`/${dbRole}/orders`} className={pathname === `/${dbRole}/orders` ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
+                            Orders
+                        </Link>
 
                         {/*show tailors if only a client*/}
                         {dbRole !== "tailor" && (

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { createShop } from "@/lib/api/endpoints/shops";
+import FullPageLock from "@/components/FullPageLock";
 
 export default function AddShopPage() {
     const router = useRouter();
@@ -63,34 +64,39 @@ export default function AddShopPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#070707] text-white font-sans relative overflow-x-hidden selection:bg-[#F5CA53] selection:text-black">
-            {/* Background Gradient Effect */}
-            <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-br from-[#5D5735]/40 via-[#2A2715]/20 to-transparent pointer-events-none z-0"></div>
-
+        <div className="min-h-screen bg-warm-beige text-earth-text font-sans relative overflow-x-hidden selection:bg-accent selection:text-cream-bg">
+            <FullPageLock
+                isSubmitting={isLoading}
+                title="Creating Atelier Shop"
+                message="Please wait while we establish your digital atelier presence..."
+            />
             <div className="relative z-10 max-w-lg mx-auto pt-16 pb-24 px-6 flex flex-col items-center">
                 {/* Header Section */}
-                <div className="text-center mb-10 space-y-3">
-                    <h1 className="text-3xl font-medium text-white tracking-tight">Add Your Shop</h1>
-                    <p className="text-[13px] text-zinc-400 max-w-[280px] mx-auto leading-relaxed">
+                <div className="text-center mb-8 space-y-2">
+                    <span className="text-[10px] font-mono tracking-[0.25em] text-earth-text/60 uppercase block font-bold">
+                        ATELIER REGISTRATION
+                    </span>
+                    <h1 className="text-3xl font-extrabold text-earth-text tracking-tight font-heading">Add Your Shop</h1>
+                    <p className="text-xs text-earth-text/70 max-w-[300px] mx-auto leading-relaxed">
                         Create your digital atelier presence and connect with clients.
                     </p>
                 </div>
 
                 {/* Form Container */}
-                <div className="w-full bg-[#18191E]/60 backdrop-blur-md border border-zinc-700/50 rounded-[28px] overflow-hidden shadow-2xl">
+                <div className="w-full bg-cream-bg border border-accent/20 rounded-3xl overflow-hidden shadow-md">
                     <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-5">
 
                         {/* Error Banner */}
                         {error && (
-                            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium">
+                            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-800 text-xs font-bold">
                                 {error}
                             </div>
                         )}
 
                         {/* Shop Name */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-[#B5B099]">
-                                Shop Name <span className="text-rose-400">*</span>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                Shop Name <span className="text-accent">*</span>
                             </label>
                             <input
                                 type="text"
@@ -98,79 +104,79 @@ export default function AddShopPage() {
                                 onChange={(e) => setShopName(e.target.value)}
                                 placeholder="e.g. SAVILE & SONS"
                                 required
-                                className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors"
+                                className="w-full bg-warm-beige border border-accent/20 focus:border-accent/60 rounded-xl px-4 py-3 text-xs text-earth-text placeholder-earth-text/40 outline-none transition-all shadow-sm"
                             />
                         </div>
 
                         {/* Specialty */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-[#B5B099]">Specialty</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Specialty</label>
                             <input
                                 type="text"
                                 value={specialty}
                                 onChange={(e) => setSpecialty(e.target.value)}
                                 placeholder="e.g. Bespoke Suits, Wedding Attire"
-                                className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors"
+                                className="w-full bg-warm-beige border border-accent/20 focus:border-accent/60 rounded-xl px-4 py-3 text-xs text-earth-text placeholder-earth-text/40 outline-none transition-all shadow-sm"
                             />
                         </div>
 
                         {/* Shop Bio */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-[#B5B099]">Shop Bio</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Shop Bio</label>
                             <textarea
                                 value={shopBio}
                                 onChange={(e) => setShopBio(e.target.value)}
                                 placeholder="The craft of timeless silhouettes..."
                                 rows={3}
-                                className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors resize-none"
+                                className="w-full bg-warm-beige border border-accent/20 focus:border-accent/60 rounded-xl px-4 py-3 text-xs text-earth-text placeholder-earth-text/40 outline-none transition-all resize-none shadow-sm"
                             />
                         </div>
 
                         {/* Street Address */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-[#B5B099]">Street Address</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Street Address</label>
                             <input
                                 type="text"
                                 value={shopAddress}
                                 onChange={(e) => setShopAddress(e.target.value)}
                                 placeholder="No. 42 Artisans Row, Colombo 07"
-                                className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors"
+                                className="w-full bg-warm-beige border border-accent/20 focus:border-accent/60 rounded-xl px-4 py-3 text-xs text-earth-text placeholder-earth-text/40 outline-none transition-all shadow-sm"
                             />
                         </div>
 
                         {/* City */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-[#B5B099]">City</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">City</label>
                             <input
                                 type="text"
                                 value={city}
                                 onChange={(e) => setCity(e.target.value)}
                                 placeholder="e.g. Colombo"
-                                className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors"
+                                className="w-full bg-warm-beige border border-accent/20 focus:border-accent/60 rounded-xl px-4 py-3 text-xs text-earth-text placeholder-earth-text/40 outline-none transition-all shadow-sm"
                             />
                         </div>
 
                         {/* Phone Number */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-[#B5B099]">Phone Number</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Phone Number</label>
                             <input
                                 type="tel"
                                 value={contactNumber}
                                 onChange={(e) => setContactNumber(e.target.value)}
                                 placeholder="+94 77 123 4567"
-                                className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors"
+                                className="w-full bg-warm-beige border border-accent/20 focus:border-accent/60 rounded-xl px-4 py-3 text-xs text-earth-text placeholder-earth-text/40 outline-none transition-all shadow-sm"
                             />
                         </div>
 
                         {/* Registration Number */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-[#B5B099]">Registration Number</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Registration Number</label>
                             <input
                                 type="text"
                                 value={registrationNumber}
                                 onChange={(e) => setRegistrationNumber(e.target.value)}
                                 placeholder="e.g. BR-0092-LK"
-                                className="w-full bg-[#1F2025] border border-zinc-700 focus:border-[#F5CA53] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-colors"
+                                className="w-full bg-warm-beige border border-accent/20 focus:border-accent/60 rounded-xl px-4 py-3 text-xs text-earth-text placeholder-earth-text/40 outline-none transition-all shadow-sm"
                             />
                         </div>
 
@@ -179,11 +185,11 @@ export default function AddShopPage() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full bg-[#F5CA53] hover:bg-[#e4bb49] text-black font-bold text-xs uppercase tracking-widest py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-70 shadow-lg shadow-[#F5CA53]/20"
+                                className="w-full bg-accent hover:bg-accent-hover text-cream-bg font-bold text-xs uppercase tracking-wider py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-70 shadow-sm"
                             >
                                 {isLoading ? (
                                     <>
-                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <svg className="w-4 h-4 animate-spin text-cream-bg" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                                         </svg>
@@ -202,19 +208,18 @@ export default function AddShopPage() {
                     </form>
 
                     {/* Bottom Image */}
-                    <div className="w-full h-40 md:h-48 mt-2 relative">
-                        <div className="absolute inset-0 bg-gradient-to-t from-transparent to-[#18191E]/60 z-10"></div>
+                    <div className="w-full h-40 md:h-48 relative overflow-hidden border-t border-accent/15">
                         <img
                             src="https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=600&q=80"
                             alt="Tailor sewing"
-                            className="w-full h-full object-cover grayscale opacity-70 contrast-125"
+                            className="w-full h-full object-cover opacity-60 contrast-125 mix-blend-multiply"
                         />
                     </div>
                 </div>
 
                 <div className="mt-6">
-                    <Link href="/tailor/home" className="text-xs text-zinc-500 hover:text-white transition-colors">
-                        Cancel and return to dashboard
+                    <Link href="/tailor/home" className="text-xs font-bold text-earth-text/60 hover:text-earth-text transition-colors">
+                        ← Cancel and return to dashboard
                     </Link>
                 </div>
             </div>

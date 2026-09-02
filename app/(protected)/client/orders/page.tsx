@@ -8,6 +8,7 @@ import {
     acceptBid
 } from "@/lib/api/endpoints/orders";
 import type { ClothingRequest, Order, ShopRequest } from "@/lib/api/types/order";
+import FullPageLock from "@/components/FullPageLock";
 
 type Tab = "pending" | "quotations" | "orders";
 
@@ -317,6 +318,12 @@ export default function ClientOrdersPage() {
                     </>
                 )}
             </div>
+            <FullPageLock
+                isSubmitting={acceptingQuoteId !== null}
+                badgeText="ORDER CONFIRMATION"
+                title="Accepting Quotation"
+                message="Converting quotation into an active commission order..."
+            />
         </main>
     );
 }

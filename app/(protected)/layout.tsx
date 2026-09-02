@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import NavSidebar from "@/components/navigation/NavSidebar";
+import FullPageLock from "@/components/FullPageLock";
 
 export default function ProtectedLayout({
     children,
@@ -39,9 +40,12 @@ export default function ProtectedLayout({
 
     if (loading || !authorized) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-warm-beige text-xs text-accent font-mono tracking-widest uppercase animate-pulse">
-                Checking access...
-            </div>
+            <FullPageLock
+                isLoading={true}
+                badgeText="ATELIER SECURITY"
+                title="Verifying Access"
+                message="Checking session authorization & credentials..."
+            />
         );
     }
 

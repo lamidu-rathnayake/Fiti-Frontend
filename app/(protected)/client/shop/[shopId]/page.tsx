@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getShop } from "@/lib/api/endpoints/shops";
 import type { Shop } from "@/lib/api/types/shop";
+import FullPageLock from "@/components/FullPageLock";
 
 export default function ShopProfilePage() {
     const params = useParams();
@@ -34,11 +35,11 @@ export default function ShopProfilePage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="font-mono text-xs text-accent uppercase tracking-widest animate-pulse">
-                    Loading Atelier Profile...
-                </div>
-            </div>
+            <FullPageLock
+                isLoading={true}
+                title="Loading Atelier Profile"
+                message="Retrieving tailor details and signature services..."
+            />
         );
     }
 

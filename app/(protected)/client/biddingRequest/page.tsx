@@ -13,6 +13,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase/config";
 import MapWithOverlay from "@/components/map/MapWithOverlay";
 import { reverseGeocode } from "@/lib/geocoding";
+import FullPageLock from "@/components/FullPageLock";
 
 export default function BiddingRequestPage() {
     const router = useRouter();
@@ -146,6 +147,11 @@ export default function BiddingRequestPage() {
 
     return (
         <main className="max-w-3xl w-full mx-auto px-4 sm:px-8 py-8 flex-1 space-y-8 bg-warm-beige min-h-screen text-earth-text selection:bg-accent selection:text-cream-bg">
+            <FullPageLock
+                isSubmitting={submitting}
+                title="Broadcasting Commission"
+                message="Transmitting your specification to master tailors across Sri Lanka..."
+            />
             <div className="bg-cream-bg border border-accent/20 rounded-2xl p-6 sm:p-8 shadow-md">
                 <span className="text-[10px] font-mono tracking-[0.25em] text-earth-text/60 uppercase block mb-1 font-bold">
                     BESPOKE COMMISSION

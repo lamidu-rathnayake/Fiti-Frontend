@@ -13,6 +13,7 @@ import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCre
 import { auth } from "@/lib/firebase/config";
 import { uploadToCloudinary, extractPublicIdFromUrl } from "@/lib/cloudinary";
 import Link from "next/link";
+import FullPageLock from "@/components/FullPageLock";
 
 export default function ClientProfilePage() {
     const { user } = useAuth();
@@ -196,10 +197,11 @@ export default function ClientProfilePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
-                <div className="w-8 h-8 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
-                <p className="text-earth-text/50 font-mono text-xs uppercase tracking-widest">Loading Profile...</p>
-            </div>
+            <FullPageLock
+                isLoading={true}
+                title="Loading Profile"
+                message="Retrieving your bespoke measurements and account preferences..."
+            />
         );
     }
 
@@ -420,6 +422,11 @@ export default function ClientProfilePage() {
                     </div>
                 </div>
             </main>
+            <FullPageLock
+                isSubmitting={savingBase || savingMeasurements || savingAuth}
+                title="Updating Profile"
+                message="Updating your profile data and securing Atelier records..."
+            />
         </div>
     );
 }

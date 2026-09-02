@@ -14,6 +14,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase/config";
 import MapWithOverlay from "@/components/map/MapWithOverlay";
 import { reverseGeocode } from "@/lib/geocoding";
+import FullPageLock from "@/components/FullPageLock";
 
 export default function NewTailoringRequestPage() {
     const router = useRouter();
@@ -194,6 +195,11 @@ export default function NewTailoringRequestPage() {
 
     return (
         <main className="max-w-3xl w-full mx-auto px-4 sm:px-8 py-8 flex-1 space-y-8 bg-warm-beige min-h-screen text-earth-text selection:bg-accent selection:text-cream-bg">
+            <FullPageLock
+                isSubmitting={submitting}
+                title="Dispatching Commission"
+                message="Uploading attachments and transmitting your bespoke request..."
+            />
             <div className="bg-cream-bg border border-accent/20 rounded-2xl p-6 sm:p-8 shadow-md">
                 {shopIdParam && (
                     <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/30 rounded-full mb-4">

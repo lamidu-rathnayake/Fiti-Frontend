@@ -12,6 +12,7 @@ import {
 } from "@/lib/api/endpoints/orders";
 import { listTailorShops } from "@/lib/api/endpoints/shops";
 import type { ClothingRequest, Order } from "@/lib/api/types/order";
+import FullPageLock from "@/components/FullPageLock";
 
 export interface OrderDetail {
     id: string;
@@ -46,6 +47,7 @@ export default function TailorOrdersPage() {
     const [activeTab, setActiveTab] = useState<"requests" | "quoted" | "ongoing" | "complete">("requests");
     const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isActionSubmitting, setIsActionSubmitting] = useState(false);
     const [isDbConnected, setIsDbConnected] = useState(false);
 
     const [shopName, setShopName] = useState("");
@@ -110,13 +112,11 @@ export default function TailorOrdersPage() {
             ? req.clothing_category.charAt(0).toUpperCase() + req.clothing_category.slice(1) 
             : "Suit";
             
-        // Map string to literal type, fallback to Suit if unknown
         let garmentType: "Suit" | "Shirt" | "Overcoat" | "Trousers" = "Suit";
         if (garmentTypeStr.includes("Shirt") || garmentTypeStr.includes("shirt")) garmentType = "Shirt";
         else if (garmentTypeStr.includes("Coat") || garmentTypeStr.includes("coat")) garmentType = "Overcoat";
         else if (garmentTypeStr.includes("Trouser") || garmentTypeStr.includes("Pant") || garmentTypeStr.includes("trouser") || garmentTypeStr.includes("pant")) garmentType = "Trousers";
 
-            
         return {
             id: `ORD-${ord.order_id}`,
             rawId: ord.order_id,
@@ -237,10 +237,10 @@ export default function TailorOrdersPage() {
         fetchTailorData();
     }, [fetchTailorData]);
 
-
     const handleIssueQuotation = async (req: OrderDetail) => {
+        if (!quotePrice) return;
+        setIsActionSubmitting(true);
         try {
-            if (!quotePrice) return;
             await submitBid({
                 shop_request_id: req.rawId,
                 bid_amount: Number(quotePrice),
@@ -252,64 +252,69 @@ export default function TailorOrdersPage() {
         } catch (err) {
             console.error("Failed to issue quotation:", err);
         } finally {
-            fetchTailorData();
+            await fetchTailorData();
+            setIsActionSubmitting(false);
         }
     };
 
     const handleDeny = async (req: OrderDetail) => {
+        setIsActionSubmitting(true);
         try {
             await cancelRequest(req.rawId);
         } catch (err) {
             console.error("Failed to decline request:", err);
         } finally {
-            fetchTailorData();
+            await fetchTailorData();
+            setIsActionSubmitting(false);
         }
     };
 
     const handleCompleteOrder = async (ord: OrderDetail) => {
+        setIsActionSubmitting(true);
         try {
             await updateOrderStatus(ord.rawId, "completed");
         } catch (err) {
             console.error("Failed to complete order:", err);
         } finally {
-            fetchTailorData();
+            await fetchTailorData();
+            setIsActionSubmitting(false);
         }
     };
 
     const renderOrderAtelierDetails = (order: OrderDetail) => (
-        <div className="space-y-4 pt-4 border-t border-zinc-800/80 animate-fadeIn text-left">
+        <div className="space-y-4 pt-4 border-t border-accent/20 text-left">
             <div>
-                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#A39A7C] block mb-0.5">Request Details</span>
-                <p className="text-[11px] text-zinc-400">Live specifics for this bespoke commission.</p>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-earth-text/60 block mb-0.5">Request Details</span>
+                <p className="text-[11px] text-earth-text/70 font-medium">Live specifics for this bespoke commission.</p>
             </div>
 
-            <div className="bg-[#121316] rounded-2xl p-4 border border-zinc-800 space-y-3">
+            <div className="bg-warm-beige rounded-2xl p-4 border border-accent/20 space-y-3">
                 <div>
-                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-1.5">TARGET DATE</label>
-                    <div className="w-full bg-[#18191E] border-b border-[#F5CA53]/60 px-3.5 py-2.5 rounded-lg text-sm text-zinc-200 font-mono">
+                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">TARGET DATE</label>
+                    <div className="w-full bg-cream-bg border-b border-accent/30 px-3.5 py-2.5 rounded-lg text-xs text-earth-text font-mono font-bold">
                         {order.targetDate}
                     </div>
                 </div>
                 <div>
-                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-1.5">BUDGET</label>
-                    <div className="w-full bg-[#18191E] border-b border-[#F5CA53]/60 px-3.5 py-2.5 rounded-lg text-sm text-[#F5CA53] font-bold font-mono">
+                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">BUDGET</label>
+                    <div className="w-full bg-cream-bg border-b border-accent/30 px-3.5 py-2.5 rounded-lg text-xs text-accent font-black font-mono">
                         {order.budget}
                     </div>
                 </div>
             </div>
 
-            <div className="bg-[#121316] rounded-2xl p-4 border border-zinc-800 space-y-4">
+            <div className="bg-warm-beige rounded-2xl p-4 border border-accent/20 space-y-4">
                 <div>
-                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-2">GARMENT TYPE</label>
+                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-2">GARMENT TYPE</label>
                     <div className="flex flex-wrap gap-2">
                         {["Suit", "Shirt", "Overcoat", "Trousers"].map((type) => {
                             const isSelected = order.garmentType === type;
                             return (
                                 <span
                                     key={type}
-                                    className={`px-4 py-1.5 rounded-full text-xs font-mono font-medium transition-all ${isSelected
-                                        ? "bg-[#F5CA53] text-black font-bold shadow-md shadow-[#F5CA53]/20"
-                                        : "bg-[#18191E] text-zinc-400 border border-zinc-800"
+                                    className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold transition-all ${isSelected
+                                        ? "bg-accent text-cream-bg shadow-sm"
+                                        : "bg-cream-bg text-earth-text/70 border border-accent/20"
                                         }`}
                                 >
                                     {type}
@@ -320,16 +325,16 @@ export default function TailorOrdersPage() {
                 </div>
 
                 <div>
-                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-2">FIT PREFERENCE</label>
+                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-2">FIT PREFERENCE</label>
                     <div className="flex flex-wrap gap-2">
                         {["Men's Fit", "Women's Fit", "Unisex"].map((fit) => {
                             const isSelected = order.fitPreference === fit;
                             return (
                                 <span
                                     key={fit}
-                                    className={`px-4 py-1.5 rounded-full text-xs font-mono font-medium transition-all ${isSelected
-                                        ? "bg-[#F5CA53] text-black font-bold shadow-md shadow-[#F5CA53]/20"
-                                        : "bg-[#18191E] text-zinc-400 border border-zinc-800"
+                                    className={`px-4 py-1.5 rounded-full text-xs font-mono font-bold transition-all ${isSelected
+                                        ? "bg-accent text-cream-bg shadow-sm"
+                                        : "bg-cream-bg text-earth-text/70 border border-accent/20"
                                         }`}
                                 >
                                     {fit}
@@ -337,7 +342,7 @@ export default function TailorOrdersPage() {
                             );
                         })}
                         {order.fitPreference === "Not specified" && (
-                            <span className="px-4 py-1.5 rounded-full text-xs font-mono font-medium bg-[#18191E] text-zinc-500 border border-dashed border-zinc-700">
+                            <span className="px-4 py-1.5 rounded-full text-xs font-mono font-medium bg-cream-bg text-earth-text/50 border border-dashed border-accent/30">
                                 Not specified
                             </span>
                         )}
@@ -345,70 +350,70 @@ export default function TailorOrdersPage() {
                 </div>
 
                 <div>
-                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-2">MATERIAL SOURCING</label>
+                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-2">MATERIAL SOURCING</label>
                     <div className="grid grid-cols-2 gap-3">
                         <div className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${order.materialSourcing === "Providing Fabric"
-                            ? "bg-[#F5CA53] text-black border-[#F5CA53] font-bold shadow-lg shadow-[#F5CA53]/20"
-                            : "bg-[#18191E] border-zinc-800 text-zinc-400"
+                            ? "bg-accent text-cream-bg border-accent font-bold shadow-sm"
+                            : "bg-cream-bg border-accent/20 text-earth-text/70"
                             }`}>
                             <svg className="w-5 h-5 mb-1 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
-                            <span className="text-[11px] font-mono">Providing Fabric</span>
+                            <span className="text-[11px] font-mono font-bold">Providing Fabric</span>
                         </div>
                         <div className={`p-3.5 rounded-xl border flex flex-col items-center justify-center text-center transition-all ${order.materialSourcing === "Need Sourcing"
-                            ? "bg-[#F5CA53] text-black border-[#F5CA53] font-bold shadow-lg shadow-[#F5CA53]/20"
-                            : "bg-[#18191E] border-zinc-800 text-zinc-400"
+                            ? "bg-accent text-cream-bg border-accent font-bold shadow-sm"
+                            : "bg-cream-bg border-accent/20 text-earth-text/70"
                             }`}>
                             <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                            <span className="text-[11px] font-mono">Need Sourcing</span>
+                            <span className="text-[11px] font-mono font-bold">Need Sourcing</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-[#121316] rounded-2xl p-4 border border-zinc-800 space-y-4">
+            <div className="bg-warm-beige rounded-2xl p-4 border border-accent/20 space-y-4">
                 <div className="flex justify-between items-center">
-                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400">KEY MEASUREMENTS</label>
-                    <span className="text-[10px] font-mono bg-[#1C1D22] border border-zinc-700/80 px-2.5 py-0.5 rounded text-zinc-300">
+                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60">KEY MEASUREMENTS</label>
+                    <span className="text-[10px] font-mono bg-cream-bg border border-accent/20 px-2.5 py-0.5 rounded text-earth-text/70 font-bold">
                         {order.garmentType.toUpperCase()} ▾
                     </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 font-mono">
                     <div>
-                        <span className="text-[9px] font-mono text-zinc-400 block mb-1">CHEST (IN)</span>
-                        <div className="bg-[#18191E] border-b border-[#F5CA53]/50 px-3 py-2 rounded text-sm text-white">
+                        <span className="text-[9px] font-mono text-earth-text/60 font-bold block mb-1">CHEST (CM)</span>
+                        <div className="bg-cream-bg border-b-2 border-accent/40 px-3 py-2 rounded text-xs text-earth-text font-bold">
                             {order.measurements.chest}
                         </div>
                     </div>
                     <div>
-                        <span className="text-[9px] font-mono text-zinc-400 block mb-1">WAIST (IN)</span>
-                        <div className="bg-[#18191E] border-b border-[#F5CA53]/50 px-3 py-2 rounded text-sm text-white">
+                        <span className="text-[9px] font-mono text-earth-text/60 font-bold block mb-1">WAIST (CM)</span>
+                        <div className="bg-cream-bg border-b-2 border-accent/40 px-3 py-2 rounded text-xs text-earth-text font-bold">
                             {order.measurements.waist}
                         </div>
                     </div>
                     <div>
-                        <span className="text-[9px] font-mono text-zinc-400 block mb-1">SLEEVE (IN)</span>
-                        <div className="bg-[#18191E] border-b border-[#F5CA53]/50 px-3 py-2 rounded text-sm text-white">
+                        <span className="text-[9px] font-mono text-earth-text/60 font-bold block mb-1">SLEEVE (CM)</span>
+                        <div className="bg-cream-bg border-b-2 border-accent/40 px-3 py-2 rounded text-xs text-earth-text font-bold">
                             {order.measurements.sleeve}
                         </div>
                     </div>
                     <div>
-                        <span className="text-[9px] font-mono text-zinc-400 block mb-1">NECK (IN)</span>
-                        <div className="bg-[#18191E] border-b border-[#F5CA53]/50 px-3 py-2 rounded text-sm text-white">
+                        <span className="text-[9px] font-mono text-earth-text/60 font-bold block mb-1">NECK (CM)</span>
+                        <div className="bg-cream-bg border-b-2 border-accent/40 px-3 py-2 rounded text-xs text-earth-text font-bold">
                             {order.measurements.neck}
                         </div>
                     </div>
                     <div className="col-span-2">
-                        <span className="text-[9px] font-mono text-zinc-400 block mb-1">SHOULDER (IN)</span>
-                        <div className="bg-[#18191E] border-b border-[#F5CA53]/50 px-3 py-2 rounded text-sm text-white">
+                        <span className="text-[9px] font-mono text-earth-text/60 font-bold block mb-1">SHOULDER (CM)</span>
+                        <div className="bg-cream-bg border-b-2 border-accent/40 px-3 py-2 rounded text-xs text-earth-text font-bold">
                             {order.measurements.shoulder}
                         </div>
                     </div>
                 </div>
-                <p className="text-[10px] text-zinc-500 italic">Measurements not on file yet appear as &quot;Not specified&quot;.</p>
+                <p className="text-[10px] text-earth-text/50 italic">Measurements not on file yet appear as &quot;Not specified&quot;.</p>
 
                 <div>
-                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-2">REFERENCE PHOTOS</label>
+                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-2">REFERENCE PHOTOS</label>
                     {order.images && order.images.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {order.images.map((imgUrl, i) => (
@@ -418,7 +423,7 @@ export default function TailorOrdersPage() {
                                         e.stopPropagation();
                                         setPreviewImage(imgUrl);
                                     }}
-                                    className="group relative rounded-2xl overflow-hidden border border-[#F5CA53]/30 bg-[#161510] aspect-[4/3] shadow-lg cursor-pointer hover:border-[#F5CA53] transition-all"
+                                    className="group relative rounded-2xl overflow-hidden border border-accent/30 bg-cream-bg aspect-[4/3] shadow-sm cursor-pointer hover:border-accent transition-all"
                                 >
                                     <img
                                         src={imgUrl}
@@ -429,59 +434,58 @@ export default function TailorOrdersPage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="border border-dashed border-[#F5CA53]/60 bg-[#161510]/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-2">
-                            <div className="w-10 h-10 rounded-full bg-[#F5CA53]/10 border border-[#F5CA53]/30 flex items-center justify-center text-[#F5CA53]">
+                        <div className="border border-dashed border-accent/40 bg-cream-bg/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-2">
+                            <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                             </div>
                             <div>
-                                <span className="text-xs font-mono font-bold text-white block">No Reference Image</span>
-                                <span className="text-[10px] text-zinc-400">No sketches attached to this order.</span>
+                                <span className="text-xs font-bold text-earth-text block">No Reference Image</span>
+                                <span className="text-[10px] text-earth-text/60">No sketches attached to this order.</span>
                             </div>
                         </div>
                     )}
                 </div>
 
                 <div>
-                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-1.5">DESIGN NOTES</label>
-                    <div className="bg-[#18191E] border border-zinc-800 rounded-xl p-3.5 text-xs text-zinc-300 leading-relaxed font-sans">
+                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">DESIGN NOTES</label>
+                    <div className="bg-cream-bg border border-accent/20 rounded-xl p-3.5 text-xs text-earth-text/80 leading-relaxed font-sans">
                         {order.designNotes}
                     </div>
                 </div>
             </div>
 
             {order.status === "REQUESTED" && (
-                <div className="bg-[#121316] rounded-2xl p-4 border border-[#F5CA53]/50 space-y-4 mt-4 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#F5CA53] to-transparent"></div>
+                <div className="bg-warm-beige rounded-2xl p-4 border border-accent/30 space-y-4 mt-4 relative overflow-hidden">
                     <div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F5CA53] block mb-0.5">Issue Quotation</span>
-                        <p className="text-[11px] text-zinc-400">Submit your bid and message to the client directly.</p>
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-accent block mb-0.5">Issue Quotation</span>
+                        <p className="text-[11px] text-earth-text/70 font-medium">Submit your bid and message to the client directly.</p>
                     </div>
 
                     <div className="space-y-3">
                         <div>
-                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-1.5">OFFERED PRICE (LKR)</label>
+                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">OFFERED PRICE (LKR)</label>
                             <input
                                 type="number"
                                 value={quotePrice}
                                 onChange={(e) => setQuotePrice(e.target.value)}
                                 placeholder="e.g. 15000"
-                                className="w-full bg-[#18191E] border border-zinc-800 focus:border-[#F5CA53]/60 px-3.5 py-2.5 rounded-lg text-sm text-[#F5CA53] font-bold font-mono outline-none transition-colors"
+                                className="w-full bg-cream-bg border border-accent/20 focus:border-accent/60 px-3.5 py-2.5 rounded-xl text-xs text-earth-text font-bold font-mono outline-none shadow-sm transition-colors"
                             />
                         </div>
                         <div>
-                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-400 block mb-1.5">MESSAGE TO CLIENT</label>
+                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">MESSAGE TO CLIENT</label>
                             <textarea
                                 value={quoteMessage}
                                 onChange={(e) => setQuoteMessage(e.target.value)}
                                 placeholder="e.g. I can tailor this suit in 2 weeks. The fabric is included in the price."
                                 rows={3}
-                                className="w-full bg-[#18191E] border border-zinc-800 focus:border-[#F5CA53]/60 px-3.5 py-2.5 rounded-lg text-sm text-zinc-200 font-sans outline-none transition-colors resize-none"
+                                className="w-full bg-cream-bg border border-accent/20 focus:border-accent/60 px-3.5 py-2.5 rounded-xl text-xs text-earth-text font-sans outline-none shadow-sm transition-colors resize-none"
                             />
                         </div>
                         <button
                             onClick={() => handleIssueQuotation(order)}
                             disabled={!quotePrice}
-                            className="w-full bg-[#F5CA53] disabled:bg-zinc-700 disabled:text-zinc-500 text-black font-bold text-xs uppercase tracking-widest py-3 rounded-xl hover:bg-[#e4bb49] transition-all shadow-md shadow-[#F5CA53]/20 active:scale-[0.98] flex items-center justify-center gap-1.5"
+                            className="w-full bg-accent disabled:opacity-50 text-cream-bg font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl hover:bg-accent-hover transition-all shadow-sm flex items-center justify-center gap-1.5"
                         >
                             Submit Quotation
                             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
@@ -493,19 +497,24 @@ export default function TailorOrdersPage() {
     );
 
     return (
-        <div className="min-h-screen bg-[#07080A] text-white flex flex-col justify-between selection:bg-[#F5CA53] selection:text-black font-sans">
+        <div className="min-h-screen bg-warm-beige text-earth-text flex flex-col justify-between selection:bg-accent selection:text-cream-bg font-sans">
+            <FullPageLock
+                isSubmitting={isActionSubmitting}
+                title="Processing Order Action"
+                message="Submitting quotation and updating commission status..."
+            />
             {previewImage && (
                 <div
                     onClick={() => setPreviewImage(null)}
-                    className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-earth-text/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4"
                 >
-                    <div className="relative max-w-lg w-full bg-[#18191E] rounded-3xl overflow-hidden border border-[#F5CA53]/40 shadow-2xl p-2">
+                    <div className="relative max-w-lg w-full bg-cream-bg rounded-3xl overflow-hidden border border-accent/40 shadow-2xl p-2">
                         <img src={previewImage} alt="Enlarged Reference" className="w-full rounded-2xl object-cover max-h-[75vh]" />
                         <div className="p-4 flex items-center justify-between">
-                            <span className="text-xs font-mono text-[#F5CA53]">Client Reference Photo</span>
+                            <span className="text-xs font-mono text-accent font-bold">Client Reference Photo</span>
                             <button
                                 onClick={() => setPreviewImage(null)}
-                                className="px-3 py-1 bg-[#26282D] text-white text-xs font-bold rounded-lg border border-zinc-700 hover:bg-zinc-700"
+                                className="px-3 py-1 bg-warm-beige text-earth-text text-xs font-bold rounded-lg border border-accent/30 hover:bg-accent hover:text-cream-bg transition-all"
                             >
                                 Close ✕
                             </button>
@@ -517,50 +526,50 @@ export default function TailorOrdersPage() {
             <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-12 flex-1 space-y-8">
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-0.5">
+                        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-earth-text/60 mb-0.5">
                             {shopName || "Your Shop"} Dashboard
                         </p>
-                        <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-heading">Manage Orders</h1>
+                        <h1 className="text-3xl sm:text-4xl font-extrabold text-earth-text tracking-tight font-heading">Manage Orders</h1>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-[#141418] rounded-full border border-zinc-800 text-[10px] text-zinc-400">
-                        <span className={`w-2 h-2 rounded-full ${isDbConnected ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" : "bg-amber-400"}`}></span>
-                        <span className="font-semibold uppercase tracking-wider">{isDbConnected ? "Live" : "Connecting"}</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-cream-bg rounded-full border border-accent/20 text-[10px] text-earth-text/70 shadow-sm">
+                        <span className={`w-2 h-2 rounded-full ${isDbConnected ? "bg-emerald-600 shadow-sm" : "bg-amber-600"}`}></span>
+                        <span className="font-bold font-mono uppercase tracking-wider">{isDbConnected ? "Live" : "Connecting"}</span>
                     </div>
                 </div>
 
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
                     <button
                         onClick={() => setActiveTab("requests")}
-                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === "requests"
-                            ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
-                            : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
+                        className={`px-4 py-2 rounded-full font-bold transition-all whitespace-nowrap ${activeTab === "requests"
+                            ? "bg-accent text-cream-bg shadow-sm"
+                            : "bg-cream-bg text-earth-text/70 border border-accent/20 hover:text-earth-text"
                             }`}
                     >
                         New Inquiries ({requests.length})
                     </button>
                     <button
                         onClick={() => setActiveTab("quoted")}
-                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === "quoted"
-                            ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
-                            : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
+                        className={`px-4 py-2 rounded-full font-bold transition-all whitespace-nowrap ${activeTab === "quoted"
+                            ? "bg-accent text-cream-bg shadow-sm"
+                            : "bg-cream-bg text-earth-text/70 border border-accent/20 hover:text-earth-text"
                             }`}
                     >
                         Pending Quotations ({pendingQuotes.length})
                     </button>
                     <button
                         onClick={() => setActiveTab("ongoing")}
-                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === "ongoing"
-                            ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
-                            : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
+                        className={`px-4 py-2 rounded-full font-bold transition-all whitespace-nowrap ${activeTab === "ongoing"
+                            ? "bg-accent text-cream-bg shadow-sm"
+                            : "bg-cream-bg text-earth-text/70 border border-accent/20 hover:text-earth-text"
                             }`}
                     >
                         On Going ({ongoingOrders.length})
                     </button>
                     <button
                         onClick={() => setActiveTab("complete")}
-                        className={`px-4 py-1.5 rounded-full font-medium transition-all whitespace-nowrap ${activeTab === "complete"
-                            ? "bg-[#F5CA53] text-black shadow-lg shadow-[#F5CA53]/20"
-                            : "bg-[#18191E] text-zinc-400 border border-zinc-800 hover:text-white"
+                        className={`px-4 py-2 rounded-full font-bold transition-all whitespace-nowrap ${activeTab === "complete"
+                            ? "bg-accent text-cream-bg shadow-sm"
+                            : "bg-cream-bg text-earth-text/70 border border-accent/20 hover:text-earth-text"
                             }`}
                     >
                         Complete ({completeOrders.length})
@@ -568,50 +577,50 @@ export default function TailorOrdersPage() {
                 </div>
 
                 {activeTab === "requests" && (
-                    <div className="space-y-4 p-2 rounded-[28px] animate-fadeIn">
-                        <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#F5CA53]">New Inquiries ({requests.length})</h2>
+                    <div className="space-y-4 p-2 rounded-[28px]">
+                        <h2 className="text-[11px] font-mono font-bold tracking-[0.2em] uppercase text-accent">New Inquiries ({requests.length})</h2>
 
                         {requests.length === 0 ? (
-                            <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
+                            <div className="bg-cream-bg border border-accent/20 rounded-2xl p-8 text-center text-xs text-earth-text/60 shadow-sm font-medium">
                                 {isLoading ? "Loading requests…" : "No open client requests right now."}
                             </div>
                         ) : (
                             <div className="space-y-4">
                                 {requests.map((req) => (
-                                    <div key={req.id} className="bg-[#18191E] border border-[#F5CA53]/30 rounded-[24px] p-5 shadow-lg shadow-[#F5CA53]/5 relative overflow-hidden transition-all">
-                                        <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#F5CA53] to-transparent"></div>
+                                    <div key={req.id} className="bg-cream-bg border border-accent/20 hover:border-accent/50 rounded-2xl p-5 shadow-sm hover:shadow-md relative overflow-hidden transition-all">
+                                        <div className="absolute top-0 left-0 w-1.5 h-full bg-accent"></div>
                                         <div onClick={() => setSelectedOrder(req)} className="flex justify-between items-start cursor-pointer group">
                                             <div className="flex items-center gap-3">
                                                 {req.images && req.images[0] && (
-                                                    <img src={req.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-[#F5CA53]/30 shrink-0" />
+                                                    <img src={req.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-accent/30 shrink-0" />
                                                 )}
                                                 <div>
                                                     <div className="flex items-center gap-2">
-                                                        <h3 className="text-[16px] font-medium text-white group-hover:text-[#F5CA53] transition-colors">{req.title}</h3>
-                                                        <span className="text-[9px] bg-[#F5CA53]/10 text-[#F5CA53] px-2 py-0.5 rounded-full border border-[#F5CA53]/30 font-bold uppercase tracking-wider">{req.garmentType}</span>
+                                                        <h3 className="text-base font-extrabold text-earth-text font-heading group-hover:text-accent transition-colors">{req.title}</h3>
+                                                        <span className="text-[9px] bg-accent/10 text-accent px-2.5 py-0.5 rounded-full border border-accent/20 font-bold uppercase tracking-wider font-mono">{req.garmentType}</span>
                                                     </div>
-                                                    <p className="text-[11px] text-zinc-400 mt-0.5">Client: <span className="text-zinc-200 font-medium">{req.client}</span> &bull; <span className="text-[#F5CA53]">{req.date}</span></p>
+                                                    <p className="text-xs text-earth-text/70 mt-0.5 font-medium">Client: <span className="text-earth-text font-bold">{req.client}</span> &bull; <span className="text-accent font-mono">{req.date}</span></p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-[13px] font-bold text-[#F5CA53] bg-[#26282D] px-3 py-1 rounded-lg border border-zinc-700/50 block">{req.budget}</span>
-                                                <span className="text-[10px] text-zinc-500 hover:text-[#F5CA53] transition-colors mt-1 block">
+                                                <span className="text-xs font-mono font-bold text-accent bg-warm-beige px-3 py-1 rounded-xl border border-accent/20 inline-block">{req.budget}</span>
+                                                <span className="text-[10px] font-bold text-earth-text/50 group-hover:text-accent transition-colors mt-1 block">
                                                     Open Details ↗
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3 pt-3 mt-3 border-t border-zinc-800/60">
+                                        <div className="grid grid-cols-2 gap-3 pt-3 mt-3 border-t border-accent/15">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setSelectedOrder(req); }}
-                                                className="w-full bg-[#F5CA53] text-black font-bold text-xs uppercase tracking-widest py-3 rounded-xl hover:bg-[#e4bb49] transition-all shadow-md shadow-[#F5CA53]/20 active:scale-[0.98] flex items-center justify-center gap-1.5"
+                                                className="w-full bg-accent hover:bg-accent-hover text-cream-bg font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5"
                                             >
                                                 Issue Quote
                                                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
                                             </button>
                                             <button
                                                 onClick={() => handleDeny(req)}
-                                                className="w-full bg-[#26282D] text-white font-bold text-xs uppercase tracking-widest py-3 rounded-xl hover:bg-zinc-800 border border-zinc-700 transition-all active:scale-[0.98]"
+                                                className="w-full bg-warm-beige text-earth-text font-bold text-xs uppercase tracking-wider py-3 rounded-xl hover:bg-earth-text/10 border border-accent/20 transition-all"
                                             >
                                                 Deny
                                             </button>
@@ -624,30 +633,30 @@ export default function TailorOrdersPage() {
                 )}
 
                 {activeTab === "quoted" && (
-                    <div className="space-y-4 p-2 rounded-[28px] animate-fadeIn">
-                        <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">Pending Quotations ({pendingQuotes.length})</h2>
+                    <div className="space-y-4 p-2 rounded-[28px]">
+                        <h2 className="text-[11px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60">Pending Quotations ({pendingQuotes.length})</h2>
 
                         {pendingQuotes.length === 0 ? (
-                            <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
+                            <div className="bg-cream-bg border border-accent/20 rounded-2xl p-8 text-center text-xs text-earth-text/60 shadow-sm font-medium">
                                 {isLoading ? "Loading…" : "No pending quotations."}
                             </div>
                         ) : (
                             <div className="space-y-3">
                                 {pendingQuotes.map((ord) => (
-                                    <div key={ord.id} className="bg-[#18191E] border border-zinc-800/80 rounded-[20px] p-5 shadow-lg transition-all">
+                                    <div key={ord.id} className="bg-cream-bg border border-accent/20 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
                                         <div onClick={() => setSelectedOrder(ord)} className="flex justify-between items-start cursor-pointer group">
                                             <div className="flex items-center gap-3">
                                                 {ord.images && ord.images[0] && (
-                                                    <img src={ord.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-zinc-700 shrink-0" />
+                                                    <img src={ord.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-accent/30 shrink-0" />
                                                 )}
                                                 <div>
-                                                    <h3 className="text-[15px] font-medium text-white group-hover:text-[#F5CA53] transition-colors">{ord.title}</h3>
-                                                    <p className="text-[11px] text-zinc-400 mt-0.5">Client: {ord.client} &bull; {ord.date}</p>
+                                                    <h3 className="text-base font-extrabold text-earth-text font-heading group-hover:text-accent transition-colors">{ord.title}</h3>
+                                                    <p className="text-xs text-earth-text/70 mt-0.5 font-medium">Client: {ord.client} &bull; {ord.date}</p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-800/50 border border-zinc-700 px-2.5 py-1 rounded-full">{ord.status}</span>
-                                                <span className="text-[10px] text-zinc-500 hover:text-[#F5CA53] transition-colors mt-1 block">
+                                                <span className="text-[9px] font-mono font-bold text-accent uppercase tracking-widest bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-full">{ord.status}</span>
+                                                <span className="text-[10px] font-bold text-earth-text/50 group-hover:text-accent transition-colors mt-1 block">
                                                     Open Details ↗
                                                 </span>
                                             </div>
@@ -660,48 +669,48 @@ export default function TailorOrdersPage() {
                 )}
 
                 {activeTab === "ongoing" && (
-                    <div className="space-y-4 p-2 rounded-[28px] animate-fadeIn">
-                        <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">On Going ({ongoingOrders.length})</h2>
+                    <div className="space-y-4 p-2 rounded-[28px]">
+                        <h2 className="text-[11px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60">On Going ({ongoingOrders.length})</h2>
 
                         {ongoingOrders.length === 0 ? (
-                            <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
+                            <div className="bg-cream-bg border border-accent/20 rounded-2xl p-8 text-center text-xs text-earth-text/60 shadow-sm font-medium">
                                 {isLoading ? "Loading…" : "No orders in progress."}
                             </div>
                         ) : (
                             <div className="space-y-4">
                                 {ongoingOrders.map((ord) => (
-                                    <div key={ord.id} className="bg-[#18191E] border border-zinc-800/80 hover:border-[#F5CA53]/30 rounded-[24px] p-5 shadow-lg transition-all">
+                                    <div key={ord.id} className="bg-cream-bg border border-accent/20 hover:border-emerald-700/50 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
                                         <div onClick={() => setSelectedOrder(ord)} className="flex justify-between items-start cursor-pointer group">
                                             <div className="flex items-center gap-3">
                                                 {ord.images && ord.images[0] && (
-                                                    <img src={ord.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-[#F5CA53]/30 shrink-0" />
+                                                    <img src={ord.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-accent/30 shrink-0" />
                                                 )}
                                                 <div>
-                                                    <h3 className="text-[15px] font-medium text-white group-hover:text-[#F5CA53] transition-colors">{ord.title}</h3>
-                                                    <p className="text-[11px] text-zinc-400 mt-0.5">Client: {ord.client} &bull; <span className="text-zinc-500">{ord.id}</span></p>
+                                                    <h3 className="text-base font-extrabold text-earth-text font-heading group-hover:text-accent transition-colors">{ord.title}</h3>
+                                                    <p className="text-xs text-earth-text/70 mt-0.5 font-medium">Client: {ord.client} &bull; <span className="font-mono text-earth-text/50">{ord.id}</span></p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-[9px] font-bold text-[#F5CA53] uppercase tracking-widest bg-[#F5CA53]/10 border border-[#F5CA53]/30 px-2.5 py-1 rounded-full">{ord.status}</span>
-                                                <span className="text-[10px] text-zinc-500 hover:text-[#F5CA53] transition-colors mt-1 block">
+                                                <span className="text-[9px] font-mono font-bold text-emerald-800 uppercase tracking-widest bg-emerald-600/10 border border-emerald-600/20 px-2.5 py-1 rounded-full">{ord.status}</span>
+                                                <span className="text-[10px] font-bold text-earth-text/50 group-hover:text-accent transition-colors mt-1 block">
                                                     Open Details ↗
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-3 pt-3 mt-3 border-t border-zinc-800/50">
+                                        <div className="space-y-3 pt-3 mt-3 border-t border-accent/15">
                                             <div className="space-y-1.5">
-                                                <div className="flex justify-between items-center text-[11px] font-medium">
-                                                    <span className="text-zinc-400">Fitting Timeline</span>
-                                                    <span className="text-white">{ord.progress ?? 0}%</span>
+                                                <div className="flex justify-between items-center text-xs font-bold">
+                                                    <span className="text-earth-text/70">Fitting Timeline</span>
+                                                    <span className="text-earth-text font-mono">{ord.progress ?? 0}%</span>
                                                 </div>
-                                                <div className="w-full h-1.5 bg-[#26282D] rounded-full overflow-hidden">
-                                                    <div className="h-full bg-[#F5CA53] transition-all duration-500" style={{ width: `${ord.progress ?? 0}%` }}></div>
+                                                <div className="w-full h-2 bg-warm-beige rounded-full border border-accent/20 overflow-hidden">
+                                                    <div className="h-full bg-accent transition-all duration-500" style={{ width: `${ord.progress ?? 0}%` }}></div>
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleCompleteOrder(ord); }}
-                                                className="w-full bg-[#26282D] text-[#F5CA53] font-bold text-[10px] uppercase tracking-widest py-2 rounded-xl hover:bg-[#F5CA53]/10 border border-[#F5CA53]/30 hover:border-[#F5CA53] transition-all active:scale-[0.98]"
+                                                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider py-2.5 rounded-xl transition-all shadow-sm"
                                             >
                                                 Mark as Complete
                                             </button>
@@ -714,30 +723,30 @@ export default function TailorOrdersPage() {
                 )}
 
                 {activeTab === "complete" && (
-                    <div className="space-y-4 p-2 rounded-[28px] animate-fadeIn">
-                        <h2 className="text-[11px] font-bold tracking-[0.2em] uppercase text-zinc-500">Complete ({completeOrders.length})</h2>
+                    <div className="space-y-4 p-2 rounded-[28px]">
+                        <h2 className="text-[11px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60">Complete ({completeOrders.length})</h2>
 
                         {completeOrders.length === 0 ? (
-                            <div className="bg-[#121318] border border-zinc-800/80 rounded-2xl p-6 text-center text-xs text-zinc-500">
+                            <div className="bg-cream-bg border border-accent/20 rounded-2xl p-8 text-center text-xs text-earth-text/60 shadow-sm font-medium">
                                 {isLoading ? "Loading…" : "No completed orders."}
                             </div>
                         ) : (
                             <div className="space-y-4">
                                 {completeOrders.map((ord) => (
-                                    <div key={ord.id} className="bg-[#18191E] border border-zinc-800/80 hover:border-[#F5CA53]/30 rounded-[24px] p-5 shadow-lg transition-all">
+                                    <div key={ord.id} className="bg-cream-bg border border-accent/20 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
                                         <div onClick={() => setSelectedOrder(ord)} className="flex justify-between items-start cursor-pointer group">
                                             <div className="flex items-center gap-3">
                                                 {ord.images && ord.images[0] && (
-                                                    <img src={ord.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-[#F5CA53]/30 shrink-0" />
+                                                    <img src={ord.images[0]} alt="Reference thumbnail" className="w-12 h-12 rounded-xl object-cover border border-accent/30 shrink-0" />
                                                 )}
                                                 <div>
-                                                    <h3 className="text-[15px] font-medium text-white group-hover:text-[#F5CA53] transition-colors">{ord.title}</h3>
-                                                    <p className="text-[11px] text-zinc-400 mt-0.5">Client: {ord.client} &bull; <span className="text-zinc-500">{ord.id}</span></p>
+                                                    <h3 className="text-base font-extrabold text-earth-text font-heading group-hover:text-accent transition-colors">{ord.title}</h3>
+                                                    <p className="text-xs text-earth-text/70 mt-0.5 font-medium">Client: {ord.client} &bull; <span className="font-mono text-earth-text/50">{ord.id}</span></p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-[9px] font-bold text-[#F5CA53] uppercase tracking-widest bg-[#F5CA53]/10 border border-[#F5CA53]/30 px-2.5 py-1 rounded-full">{ord.status}</span>
-                                                <span className="text-[10px] text-zinc-500 hover:text-[#F5CA53] transition-colors mt-1 block">
+                                                <span className="text-[9px] font-mono font-bold text-earth-text/70 uppercase tracking-widest bg-warm-beige border border-accent/20 px-2.5 py-1 rounded-full">{ord.status}</span>
+                                                <span className="text-[10px] font-bold text-earth-text/50 group-hover:text-accent transition-colors mt-1 block">
                                                     Open Details ↗
                                                 </span>
                                             </div>
@@ -752,19 +761,19 @@ export default function TailorOrdersPage() {
 
             {/* POPUP MODAL */}
             {selectedOrder && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[999] flex items-center justify-center p-4 sm:p-6" onClick={() => setSelectedOrder(null)}>
+                <div className="fixed inset-0 bg-earth-text/40 backdrop-blur-sm z-[999] flex items-center justify-center p-4 sm:p-6" onClick={() => setSelectedOrder(null)}>
                     <div 
-                        className="bg-[#121316] w-full max-w-2xl max-h-[90vh] rounded-3xl border border-[#F5CA53]/30 shadow-2xl flex flex-col overflow-hidden animate-fadeIn"
+                        className="bg-cream-bg w-full max-w-2xl max-h-[90vh] rounded-3xl border border-accent/30 shadow-2xl flex flex-col overflow-hidden text-earth-text"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="p-5 border-b border-zinc-800 flex justify-between items-center bg-[#18191E]">
+                        <div className="p-5 border-b border-accent/20 flex justify-between items-center bg-warm-beige">
                             <div className="flex items-center gap-3">
-                                <span className="text-[#F5CA53] bg-[#F5CA53]/10 px-2.5 py-1 rounded-lg text-xs font-bold font-mono border border-[#F5CA53]/20">{selectedOrder.id}</span>
-                                <h3 className="text-lg font-black text-white">{selectedOrder.title}</h3>
+                                <span className="text-accent bg-accent/10 px-2.5 py-1 rounded-lg text-xs font-bold font-mono border border-accent/20">{selectedOrder.id}</span>
+                                <h3 className="text-lg font-extrabold text-earth-text font-heading">{selectedOrder.title}</h3>
                             </div>
                             <button 
                                 onClick={() => setSelectedOrder(null)}
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors"
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-cream-bg text-earth-text/60 hover:text-earth-text border border-accent/20 hover:border-accent transition-colors"
                             >
                                 ✕
                             </button>

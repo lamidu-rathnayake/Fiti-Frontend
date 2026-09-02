@@ -10,6 +10,7 @@ import { FirebaseError } from "firebase/app";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { getMyRole } from "@/lib/api/endpoints/auth";
 import { FitiApiError } from "@/lib/api/client";
+import FullPageLock from "@/components/FullPageLock";
 
 /** Map Firebase error codes to human-friendly messages. */
 function firebaseErrorMessage(err: unknown): string {
@@ -329,6 +330,12 @@ export default function LoginPage() {
                 </div>
 
             </div>
+            <FullPageLock
+                isSubmitting={loading}
+                badgeText="ATELIER AUTH"
+                title="Authenticating..."
+                message="Verifying credentials and opening your Atelier session..."
+            />
         </div>
     );
 }

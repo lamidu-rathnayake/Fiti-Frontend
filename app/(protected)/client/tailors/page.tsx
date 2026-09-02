@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { listShops } from "@/lib/api/endpoints/shops";
+import FullPageLock from "@/components/FullPageLock";
 
 export default function TailorsPage() {
     const { role, logout } = useAuth();
@@ -189,6 +190,11 @@ export default function TailorsPage() {
                     </div>
                 )}
             </main>
+            <FullPageLock
+                isLoading={loading}
+                title="Loading Ateliers"
+                message="Fetching master craftsmen and verified ateliers..."
+            />
         </div>
     );
 }

@@ -105,3 +105,17 @@ export async function addShopImage(
         body: JSON.stringify(payload),
     });
 }
+
+/**
+ * Delete a portfolio/shop image.
+ * DELETE /api/v1/shops/{shop_id}/images/{image_id}
+ * (Auth: Tailor Role)
+ */
+export async function deleteShopImage(
+    shopId: number,
+    imageId: number,
+): Promise<void> {
+    return apiFetch<void>(`/shops/${shopId}/images/${imageId}`, {
+        method: "DELETE",
+    });
+}

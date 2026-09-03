@@ -9,7 +9,8 @@ import {
     submitBid,
     updateOrderStatus,
 } from "@/lib/api/endpoints/orders";
-import { listTailorShops } from "@/lib/api/endpoints/shops";
+import { listTailorShops, addShopImage, deleteShopImage } from "@/lib/api/endpoints/shops";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import {
     getTailorProfile,
     updateTailorProfile,
@@ -30,7 +31,7 @@ interface RequestView {
     isDirect: boolean;
 }
 
-type Tab = "overview" | "pipeline" | "earnings" | "settings";
+type Tab = "overview" | "works" | "earnings" | "settings";
 
 export default function TailorHomePage() {
     const { user } = useAuth();
@@ -75,6 +76,10 @@ export default function TailorHomePage() {
     const [settingsAddress, setSettingsAddress] = useState("");
     const [isSavingSettings, setIsSavingSettings] = useState(false);
     const [settingsSaved, setSettingsSaved] = useState(false);
+
+    // Work image upload states
+    const [isUploadingWork, setIsUploadingWork] = useState(false);
+    const [lightboxWorkImage, setLightboxWorkImage] = useState<string | null>(null);
 
     const showToast = (msg: string, ok = true) => {
         setActionToast({ msg, ok });
@@ -285,6 +290,51 @@ export default function TailorHomePage() {
             showToast(err.message || "Failed to update settings", false);
         } finally {
             setIsSavingSettings(false);
+        }
+    };
+
+    const handleWorkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !selectedShop || !user) return;
+
+        setIsUploadingWork(true);
+        try {
+            const imageUrl = await uploadToCloudinary(file, "image");
+            if (!imageUrl) {
+                throw new Error("Image upload failed. Please try again.");
+            }
+            await addShopImage(selectedShop.shop_id, { image_url: imageUrl });
+            showToast("Work photo uploaded successfully!");
+            const shops = await listTailorShops(user.uid);
+            setTailorShops(shops);
+            const updated = shops.find((s) => s.shop_id === selectedShop.shop_id);
+            if (updated) {
+                setSelectedShop(updated);
+            }
+        } catch (err: any) {
+            console.error("Failed to upload work image:", err);
+            showToast(err.message || "Failed to upload work photo.", false);
+        } finally {
+            setIsUploadingWork(false);
+        }
+    };
+
+    const handleDeleteWork = async (imageId: number) => {
+        if (!selectedShop || !user || !imageId) return;
+        if (!confirm("Are you sure you want to delete this work sample photo?")) return;
+
+        try {
+            await deleteShopImage(selectedShop.shop_id, imageId);
+            showToast("Work photo deleted successfully!");
+            const shops = await listTailorShops(user.uid);
+            setTailorShops(shops);
+            const updated = shops.find((s) => s.shop_id === selectedShop.shop_id);
+            if (updated) {
+                setSelectedShop(updated);
+            }
+        } catch (err: any) {
+            console.error("Failed to delete work image:", err);
+            showToast(err.message || "Failed to delete work photo.", false);
         }
     };
 
@@ -514,6 +564,7 @@ export default function TailorHomePage() {
                     <nav className="hidden sm:flex items-center gap-1">
                         {[
                             { key: "overview", label: "Overview" },
+                            { key: "works", label: "My Works" },
                             { key: "earnings", label: "Earnings" },
                             { key: "settings", label: "Settings" },
                         ].map((t) => (
@@ -708,6 +759,161 @@ export default function TailorHomePage() {
                                     )}
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* MY WORKS / PORTFOLIO TAB */}
+                {activeTab === "works" && (
+                    <div className="p-6 lg:p-12 overflow-y-auto custom-scrollbar h-full">
+                        <div className="max-w-5xl mx-auto space-y-8">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-accent/15 pb-6">
+                                <div>
+                                    <span className="text-[10px] font-mono tracking-[0.25em] text-earth-text/60 uppercase block mb-1 font-bold">
+                                        CRAFTSMANSHIP & PORTFOLIO
+                                    </span>
+                                    <h1 className="text-3xl font-extrabold text-earth-text font-heading">
+                                        My Dress & Garment Works
+                                    </h1>
+                                    <p className="text-earth-text/70 text-xs mt-1 font-medium">
+                                        Manage work sample photos for {shopDisplayName}
+                                    </p>
+                                </div>
+
+                                {selectedShop && (
+                                    <div className="flex items-center gap-3">
+                                        <label className="px-5 py-2.5 bg-accent text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-accent-hover transition-all cursor-pointer shadow-md flex items-center gap-2">
+                                            <span>📸</span> {isUploadingWork ? "Uploading Photo..." : "+ Add New Work Photo"}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleWorkUpload}
+                                                className="hidden"
+                                                disabled={isUploadingWork}
+                                            />
+                                        </label>
+                                        <Link
+                                            href={`/client/shop/${selectedShop.shop_id}`}
+                                            className="px-4 py-2.5 bg-cream-bg border border-accent/20 text-earth-text font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-warm-beige transition-all shadow-sm"
+                                        >
+                                            👁️ View Public Shop
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* UPLOAD HERO CARD */}
+                            <div className="bg-gradient-to-r from-amber-950 via-earth-text to-stone-900 p-8 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                                <div className="space-y-2">
+                                    <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-accent font-bold">
+                                        PORTFOLIO SHOWCASE
+                                    </span>
+                                    <h2 className="text-2xl font-bold font-serif">
+                                        Showcase Your Bespoke Creations
+                                    </h2>
+                                    <p className="text-xs text-white/80 max-w-lg leading-relaxed font-medium">
+                                        Upload high-quality images of custom dresses, suits, wedding wear, traditional garments, and alterations. Potential clients browse your portfolio before sending direct garment requests!
+                                    </p>
+                                </div>
+
+                                <label className="px-6 py-3.5 bg-accent text-white font-bold text-xs uppercase tracking-widest rounded-2xl hover:bg-accent-hover transition-all cursor-pointer shadow-lg shrink-0 flex items-center gap-2 border border-white/20">
+                                    <span>✨</span> {isUploadingWork ? "Uploading to Cloud..." : "Upload Dress Sample"}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleWorkUpload}
+                                        className="hidden"
+                                        disabled={isUploadingWork}
+                                    />
+                                </label>
+                            </div>
+
+                            {/* GALLERY GRID */}
+                            {selectedShop?.images && selectedShop.images.length > 0 ? (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-earth-text/60">
+                                            Uploaded Works ({selectedShop.images.length})
+                                        </h3>
+                                        <span className="text-[10px] text-earth-text/50 font-mono">
+                                            Click any image to view in full resolution
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                        {selectedShop.images.map((img, index) => (
+                                            <div
+                                                key={img.image_id || index}
+                                                className="bg-cream-bg border border-accent/20 rounded-2xl overflow-hidden shadow-sm group hover:border-accent hover:shadow-md transition-all aspect-square relative cursor-pointer"
+                                            >
+                                                <img
+                                                    src={img.image_url}
+                                                    alt={`Work sample ${index + 1}`}
+                                                    onClick={() => setLightboxWorkImage(img.image_url)}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                                <div
+                                                    onClick={() => setLightboxWorkImage(img.image_url)}
+                                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center"
+                                                >
+                                                    <span>🔍 View Full Photo</span>
+                                                    <span className="text-[10px] text-white/80 font-mono">Sample #{index + 1}</span>
+                                                </div>
+                                                {img.image_id && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteWork(img.image_id!);
+                                                        }}
+                                                        title="Delete photo"
+                                                        className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+
+                                        <label className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center p-6 text-center hover:border-accent transition-colors cursor-pointer bg-cream-bg/40 aspect-square">
+                                            <span className="text-3xl mb-1">📸</span>
+                                            <span className="text-xs font-bold text-accent uppercase">+ Add Photo</span>
+                                            <span className="text-[10px] text-earth-text/50 mt-1">PNG, JPG up to 10MB</span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleWorkUpload}
+                                                className="hidden"
+                                                disabled={isUploadingWork}
+                                            />
+                                        </label>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="bg-cream-bg border border-accent/20 rounded-3xl p-12 text-center space-y-4 shadow-sm">
+                                    <div className="w-16 h-16 rounded-full bg-warm-beige border border-accent/20 flex items-center justify-center text-accent mx-auto text-3xl">
+                                        👗
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h3 className="text-lg font-bold text-earth-text font-serif">
+                                            No Dress Works Uploaded Yet
+                                        </h3>
+                                        <p className="text-xs text-earth-text/60 max-w-sm mx-auto font-medium">
+                                            Add photos of your completed tailoring projects to display them in your shop portfolio.
+                                        </p>
+                                    </div>
+                                    <label className="inline-block px-6 py-3 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-all cursor-pointer shadow-md">
+                                        Upload Your First Work Photo
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleWorkUpload}
+                                            className="hidden"
+                                            disabled={isUploadingWork}
+                                        />
+                                    </label>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -1405,6 +1611,31 @@ export default function TailorHomePage() {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* LIGHTBOX MODAL FOR DRESS / WORK SAMPLE IMAGES */}
+                {lightboxWorkImage && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                        onClick={() => setLightboxWorkImage(null)}
+                    >
+                        <div
+                            className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-black flex flex-col items-center justify-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                onClick={() => setLightboxWorkImage(null)}
+                                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 text-white font-bold text-xl flex items-center justify-center hover:bg-black/90 transition-colors cursor-pointer"
+                            >
+                                &times;
+                            </button>
+                            <img
+                                src={lightboxWorkImage}
+                                alt="Full-size dress work sample"
+                                className="w-full h-full object-contain max-h-[85vh] rounded-xl"
+                            />
                         </div>
                     </div>
                 )}

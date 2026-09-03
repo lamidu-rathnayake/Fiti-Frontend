@@ -38,6 +38,7 @@ export default function ShopProfilePage() {
     // Portfolio Image upload states
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
     const fetchShopDetails = useCallback(async () => {
         setIsLoading(true);
@@ -364,13 +365,18 @@ export default function ShopProfilePage() {
                                 {shop.images.map((img, i) => (
                                     <div
                                         key={img.image_id || i}
-                                        className="bg-cream-bg border border-accent/15 rounded-2xl overflow-hidden shadow-sm group hover:border-accent/40 transition-all aspect-square relative"
+                                        onClick={() => setLightboxImage(img.image_url)}
+                                        className="bg-cream-bg border border-accent/15 rounded-2xl overflow-hidden shadow-sm group hover:border-accent/60 hover:shadow-md transition-all aspect-square relative cursor-pointer"
                                     >
                                         <img
                                             src={img.image_url}
                                             alt={`${shop.shop_name} work sample ${i + 1}`}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center">
+                                            <span>🔍 View Dress Photo</span>
+                                            <span className="text-[10px] text-white/80 font-mono">Sample #{i + 1}</span>
+                                        </div>
                                     </div>
                                 ))}
 
@@ -542,6 +548,29 @@ export default function ShopProfilePage() {
                                 />
                             </div>
 
+                            <div className="space-y-2 pt-2 border-t border-accent/20">
+                                <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70 block">
+                                    Add Portfolio Work / Dress Image
+                                </label>
+                                <div className="flex items-center gap-3">
+                                    <label className="px-4 py-2.5 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-all cursor-pointer shadow-sm flex items-center gap-2">
+                                        <span>📸</span> {isUploadingImage ? "Uploading..." : "Upload Dress Photo"}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className="hidden"
+                                            disabled={isUploadingImage}
+                                        />
+                                    </label>
+                                    {shop.images && shop.images.length > 0 && (
+                                        <span className="text-xs text-earth-text/60 font-medium">
+                                            ({shop.images.length} photos currently in gallery)
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="flex justify-end gap-3 pt-4 border-t border-accent/20">
                                 <button
                                     type="button"
@@ -559,6 +588,31 @@ export default function ShopProfilePage() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* LIGHTBOX MODAL FOR DRESS / WORK SAMPLE IMAGES */}
+            {lightboxImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                    onClick={() => setLightboxImage(null)}
+                >
+                    <div
+                        className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-black flex flex-col items-center justify-center"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={() => setLightboxImage(null)}
+                            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 text-white font-bold text-xl flex items-center justify-center hover:bg-black/90 transition-colors cursor-pointer"
+                        >
+                            &times;
+                        </button>
+                        <img
+                            src={lightboxImage}
+                            alt="Full-size dress work sample"
+                            className="w-full h-full object-contain max-h-[85vh] rounded-xl"
+                        />
                     </div>
                 </div>
             )}

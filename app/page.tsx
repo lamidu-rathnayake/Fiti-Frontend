@@ -246,7 +246,7 @@ export default function HomePage() {
                                 >
                                     {slide.secondaryCta}
                                 </Link>
-
+                                
                                 <button
                                     type="button"
                                     onClick={handleGoogleLogin}

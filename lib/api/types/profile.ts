@@ -70,7 +70,7 @@ export interface MeasurementsPayload {
 }
 
 export interface Measurements extends MeasurementsPayload {
-    id: number;
+    measurement_id: number;
     client_id: string;
 }
 

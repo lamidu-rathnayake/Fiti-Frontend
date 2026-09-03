@@ -11,28 +11,45 @@ import dynamic from "next/dynamic";
 
 import { auth } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/firebase/AuthContext";
-import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
+import {
+    createClientProfile,
+    createTailorProfile,
+} from "@/lib/api/endpoints/profiles";
 import { createShop } from "@/lib/api/endpoints/shops";
 import { reverseGeocode } from "@/lib/geocoding";
 import { FitiApiError } from "../../lib/api/client";
 
-const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
-    ssr: false,
-    loading: () => (
-        <div className="h-36 w-full bg-card-bg/20 animate-pulse rounded-xl border border-accent/30 flex items-center justify-center text-earth-text/60 font-semibold text-xs uppercase tracking-wider">
-            Loading map...
-        </div>
-    )
-});
+const LocationPicker = dynamic(
+    () => import("@/components/map/LocationPicker"),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="h-36 w-full bg-card-bg/20 animate-pulse rounded-xl border border-accent/30 flex items-center justify-center text-earth-text/60 font-semibold text-xs uppercase tracking-wider">
+                Loading map...
+            </div>
+        ),
+    },
+);
 
 function registrationErrorMessage(error: unknown): string {
     if (error instanceof FitiApiError) return error.detail;
     if (error instanceof FirebaseError) {
-        if (error.code === "auth/email-already-in-use") return "This email is already registered.";
-        if (error.code === "auth/invalid-email") return "Please enter a valid email address.";
-        if (error.code === "auth/weak-password") return "Choose a stronger password.";
+        if (error.code === "auth/email-already-in-use")
+            return "This email is already registered.";
+        if (error.code === "auth/invalid-email")
+            return "Please enter a valid email address.";
+        if (error.code === "auth/weak-password")
+            return "Choose a stronger password.";
+        if (error.code === "auth/operation-not-allowed")
+            return "Email registration is not enabled for this project. Please contact support.";
+        if (error.code === "auth/configuration-not-found")
+            return "Authentication is not configured for this project. Please contact support.";
+        if (error.code === "auth/network-request-failed")
+            return "Network error. Check your connection and try again.";
     }
-    return error instanceof Error ? error.message : "Registration failed. Please try again.";
+    return error instanceof Error
+        ? error.message
+        : "Registration failed. Please try again.";
 }
 
 // ── CLIENT REGISTRATION FORM ─────────────────────
@@ -70,13 +87,15 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
             const userCredential = await createUserWithEmailAndPassword(
                 auth,
                 userEmail,
-                userPass
+                userPass,
             );
             await updateProfile(userCredential.user, { displayName: fullName });
             await userCredential.user.getIdToken(true);
 
             await createClientProfile({
-                phone: whatsapp.trim() ? `+94${whatsapp.replace(/\D/g, "")}` : null,
+                phone: whatsapp.trim()
+                    ? `+94${whatsapp.replace(/\D/g, "")}`
+                    : null,
                 city: city.trim() || null,
                 address: address.trim() || null,
                 latitude: latitude || null,
@@ -134,17 +153,19 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
             {/* MAIN CONTENT AREA */}
             <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-12 relative z-10">
                 <div className="max-w-xl w-full mx-auto bg-cream-bg border border-accent/30 rounded-3xl p-8 sm:p-12 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] relative overflow-hidden backdrop-blur-xl">
-
                     {/* CARD TITLE WITH VERTICAL ACCENT */}
                     <div className="flex items-center gap-3 mb-8 border-b border-accent/20 pb-5">
                         <div className="w-1.5 h-7 bg-accent rounded-full" />
                         <h1 className="text-2xl sm:text-3xl font-black text-earth-text tracking-tight uppercase">
-                            Client Registration
+                            Create client account
                         </h1>
                     </div>
 
                     {error && (
-                        <div aria-live="polite" className="mb-6 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center">
+                        <div
+                            aria-live="polite"
+                            className="mb-6 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center"
+                        >
                             {error}
                         </div>
                     )}
@@ -155,13 +176,16 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-black tracking-widest text-earth-text uppercase mb-2">
-                                    FIRST NAME
+                                    FULL NAME
                                 </label>
                                 <input
                                     type="text"
                                     value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
+                                    onChange={(e) =>
+                                        setFirstName(e.target.value)
+                                    }
                                     placeholder="First Name"
+                                    aria-label="Full name"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
@@ -173,7 +197,9 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                 <input
                                     type="text"
                                     value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
+                                    onChange={(e) =>
+                                        setLastName(e.target.value)
+                                    }
                                     placeholder="PERERA"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
@@ -190,7 +216,10 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                 onChange={async ({ lat, lng }) => {
                                     setLatitude(lat);
                                     setLongitude(lng);
-                                    const location = await reverseGeocode(lat, lng);
+                                    const location = await reverseGeocode(
+                                        lat,
+                                        lng,
+                                    );
                                     if (location) {
                                         setAddress(location.address);
                                         setCity(location.city);
@@ -213,9 +242,24 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
                                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-accent">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                        />
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                        />
                                     </svg>
                                 </div>
                             </div>
@@ -247,7 +291,9 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                 <input
                                     type="tel"
                                     value={whatsapp}
-                                    onChange={(e) => setWhatsapp(e.target.value)}
+                                    onChange={(e) =>
+                                        setWhatsapp(e.target.value)
+                                    }
                                     placeholder="77 123 4567"
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
@@ -265,7 +311,9 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     onChange={(e) => setGender(e.target.value)}
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text outline-none transition focus:border-accent focus:bg-cream-bg appearance-none"
                                 >
-                                    <option value="" disabled>SELECT</option>
+                                    <option value="" disabled>
+                                        SELECT
+                                    </option>
                                     <option value="MALE">MALE</option>
                                     <option value="FEMALE">FEMALE</option>
                                     <option value="OTHER">OTHER</option>
@@ -284,8 +332,18 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                         className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 pr-10 text-sm font-semibold tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                     />
                                     <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-accent">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a2 2 0 002 2h12a2 2 0 002-2l-3-9m-13 0h16" />
+                                        <svg
+                                            className="w-4 h-4"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M3 6l3 1m0 0l-3 9a2 2 0 002 2h12a2 2 0 002-2l-3-9m-13 0h16"
+                                            />
                                         </svg>
                                     </div>
                                 </div>
@@ -315,7 +373,9 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                 <input
                                     type="password"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) =>
+                                        setPassword(e.target.value)
+                                    }
                                     placeholder="••••••••••••"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
@@ -337,7 +397,11 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                             disabled={loading}
                             className="w-full mt-4 rounded-xl bg-accent hover:bg-earth-text py-4 text-xs font-black uppercase tracking-[0.15em] text-cream-bg shadow-md transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                         >
-                            <span>{loading ? "CREATING PROFILE..." : "SUBMIT AND CONTINUE"}</span>
+                            <span>
+                                {loading
+                                    ? "CREATING PROFILE..."
+                                    : "CREATE ACCOUNT"}
+                            </span>
                             <span>&rarr;</span>
                         </button>
                     </form>
@@ -345,7 +409,9 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                     <div className="mt-6 text-center">
                         <button
                             type="button"
-                            onClick={() => onBack ? onBack() : router.push("/register")}
+                            onClick={() =>
+                                onBack ? onBack() : router.push("/register")
+                            }
                             className="text-xs text-earth-text/70 hover:text-accent font-bold uppercase tracking-wider transition-colors"
                         >
                             &larr; Choose Different Role
@@ -362,14 +428,30 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                             FITI
                         </span>
                         <span className="text-[11px] text-earth-text/70">
-                            &copy; {new Date().getFullYear()} FITI Bespoke. All rights reserved.
+                            &copy; {new Date().getFullYear()} FITI Bespoke. All
+                            rights reserved.
                         </span>
                     </div>
 
                     <div className="flex items-center space-x-6 text-xs text-earth-text/80">
-                        <Link href="/privacy" className="hover:text-accent transition-colors">Privacy Policy</Link>
-                        <Link href="/terms" className="hover:text-accent transition-colors">Terms of Service</Link>
-                        <Link href="/contact" className="hover:text-accent transition-colors">Contact Support</Link>
+                        <Link
+                            href="/privacy"
+                            className="hover:text-accent transition-colors"
+                        >
+                            Privacy Policy
+                        </Link>
+                        <Link
+                            href="/terms"
+                            className="hover:text-accent transition-colors"
+                        >
+                            Terms of Service
+                        </Link>
+                        <Link
+                            href="/contact"
+                            className="hover:text-accent transition-colors"
+                        >
+                            Contact Support
+                        </Link>
                     </div>
                 </div>
             </footer>
@@ -436,13 +518,15 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
             const userCredential = await createUserWithEmailAndPassword(
                 auth,
                 userEmail,
-                userPass
+                userPass,
             );
             await updateProfile(userCredential.user, { displayName: fullName });
             await userCredential.user.getIdToken(true);
 
             await createTailorProfile({
-                phone: whatsapp.trim() ? `+94${whatsapp.replace(/\D/g, "")}` : null,
+                phone: whatsapp.trim()
+                    ? `+94${whatsapp.replace(/\D/g, "")}`
+                    : null,
                 city: city.trim() || null,
                 address: address.trim() || null,
                 latitude: latitude || null,
@@ -455,7 +539,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                 shop_bio: shopBio.trim() || null,
                 shop_address: shopAddress.trim() || address.trim() || null,
                 city: city.trim() || null,
-                contact_number: shopContact.trim() ? `+94${shopContact.replace(/\D/g, "")}` : null,
+                contact_number: shopContact.trim()
+                    ? `+94${shopContact.replace(/\D/g, "")}`
+                    : null,
                 registration_number: registrationNumber.trim() || null,
                 latitude: latitude || null,
                 longitude: longitude || null,
@@ -514,10 +600,11 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                 {/* PAGE HEADER */}
                 <div className="mb-6 bg-cream-bg/95 p-6 rounded-2xl border border-accent/30 shadow-lg backdrop-blur-md text-center">
                     <h1 className="text-2xl sm:text-3xl font-black text-earth-text tracking-wider uppercase mb-2">
-                        SELLER REGISTRATION
+                        Create personal profile
                     </h1>
                     <p className="text-xs text-earth-text/80 font-medium max-w-lg mx-auto">
-                        Begin your journey as a master artisan in our digital atelier. Establish your bespoke presence today.
+                        Begin your journey as a master artisan in our digital
+                        atelier. Establish your bespoke presence today.
                     </p>
 
                     {/* STEP PROGRESS INDICATOR */}
@@ -525,12 +612,15 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                         <button
                             type="button"
                             onClick={() => setStep(1)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${step === 1
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
+                                step === 1
                                     ? "bg-accent text-cream-bg shadow-md"
                                     : "bg-card-bg/40 text-earth-text hover:bg-card-bg/60"
-                                }`}
+                            }`}
                         >
-                            <span className="w-5 h-5 rounded-full bg-cream-bg text-earth-text flex items-center justify-center text-[10px]">1</span>
+                            <span className="w-5 h-5 rounded-full bg-cream-bg text-earth-text flex items-center justify-center text-[10px]">
+                                1
+                            </span>
                             <span>Personal Details</span>
                         </button>
 
@@ -545,44 +635,58 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     handleNextStep(e);
                                 }
                             }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${step === 2
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${
+                                step === 2
                                     ? "bg-accent text-cream-bg shadow-md"
                                     : "bg-card-bg/40 text-earth-text hover:bg-card-bg/60"
-                                }`}
+                            }`}
                         >
-                            <span className="w-5 h-5 rounded-full bg-cream-bg text-earth-text flex items-center justify-center text-[10px]">2</span>
+                            <span className="w-5 h-5 rounded-full bg-cream-bg text-earth-text flex items-center justify-center text-[10px]">
+                                2
+                            </span>
                             <span>Shop Details</span>
                         </button>
                     </div>
                 </div>
 
                 {error && (
-                    <div aria-live="polite" className="mb-6 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center">
+                    <div
+                        aria-live="polite"
+                        className="mb-6 rounded-xl border border-rose-900/50 bg-rose-950/30 px-4 py-3 text-xs font-medium text-rose-400 text-center"
+                    >
                         {error}
                     </div>
                 )}
 
                 {/* STEP 1: PERSONAL DETAILS */}
                 {step === 1 && (
-                    <form onSubmit={handleNextStep} className="bg-cream-bg border border-accent/30 rounded-3xl p-6 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl space-y-5">
+                    <form
+                        onSubmit={handleNextStep}
+                        className="bg-cream-bg border border-accent/30 rounded-3xl p-6 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl space-y-5"
+                    >
                         <div className="border-b border-accent/20 pb-4 mb-2 flex items-center justify-between">
                             <span className="text-[10px] font-black uppercase tracking-[0.25em] text-accent block">
-                                STEP 01 — PERSONAL DETAILS
+                                STEP 01 — CREATE PERSONAL PROFILE
                             </span>
-                            <span className="text-xs font-bold text-earth-text/60">1 of 2</span>
+                            <span className="text-xs font-bold text-earth-text/60">
+                                1 of 2
+                            </span>
                         </div>
 
                         {/* FIRST NAME & LAST NAME */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-black tracking-widest text-earth-text uppercase mb-2">
-                                    FIRST NAME *
+                                    FULL NAME *
                                 </label>
                                 <input
                                     type="text"
                                     value={firstName}
-                                    onChange={(e) => setFirstName(e.target.value)}
+                                    onChange={(e) =>
+                                        setFirstName(e.target.value)
+                                    }
                                     placeholder="First Name"
+                                    aria-label="Full name"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
@@ -594,7 +698,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                 <input
                                     type="text"
                                     value={lastName}
-                                    onChange={(e) => setLastName(e.target.value)}
+                                    onChange={(e) =>
+                                        setLastName(e.target.value)
+                                    }
                                     placeholder="Last Name"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
@@ -611,7 +717,10 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                 onChange={async ({ lat, lng }) => {
                                     setLatitude(lat);
                                     setLongitude(lng);
-                                    const location = await reverseGeocode(lat, lng);
+                                    const location = await reverseGeocode(
+                                        lat,
+                                        lng,
+                                    );
                                     if (location) {
                                         setAddress(location.address);
                                         setCity(location.city);
@@ -634,8 +743,18 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
                                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-accent">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                        />
                                     </svg>
                                 </div>
                             </div>
@@ -681,7 +800,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                 <input
                                     type="tel"
                                     value={whatsapp}
-                                    onChange={(e) => setWhatsapp(e.target.value)}
+                                    onChange={(e) =>
+                                        setWhatsapp(e.target.value)
+                                    }
                                     placeholder="77 900 0000"
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
@@ -699,7 +820,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     onChange={(e) => setGender(e.target.value)}
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text outline-none transition focus:border-accent focus:bg-cream-bg appearance-none"
                                 >
-                                    <option value="" disabled>SELECT</option>
+                                    <option value="" disabled>
+                                        SELECT
+                                    </option>
                                     <option value="MALE">MALE</option>
                                     <option value="FEMALE">FEMALE</option>
                                     <option value="OTHER">OTHER</option>
@@ -724,7 +847,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                             type="submit"
                             className="w-full mt-6 rounded-xl bg-accent hover:bg-earth-text py-4 text-xs font-black uppercase tracking-[0.15em] text-cream-bg shadow-md transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 cursor-pointer"
                         >
-                            <span>NEXT: SHOP DETAILS</span>
+                            <span>CONTINUE TO SHOP DETAILS &rarr;</span>
                             <span>&rarr;</span>
                         </button>
                     </form>
@@ -732,12 +855,17 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
 
                 {/* STEP 2: SHOP DETAILS & ACCOUNT CREATION */}
                 {step === 2 && (
-                    <form onSubmit={handleSubmit} className="bg-cream-bg border border-accent/30 rounded-3xl p-6 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl space-y-5">
+                    <form
+                        onSubmit={handleSubmit}
+                        className="bg-cream-bg border border-accent/30 rounded-3xl p-6 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl space-y-5"
+                    >
                         <div className="border-b border-accent/20 pb-4 mb-2 flex items-center justify-between">
                             <span className="text-[10px] font-black uppercase tracking-[0.25em] text-accent block">
                                 STEP 02 — SHOP &amp; ACCOUNT DETAILS
                             </span>
-                            <span className="text-xs font-bold text-earth-text/60">2 of 2</span>
+                            <span className="text-xs font-bold text-earth-text/60">
+                                2 of 2
+                            </span>
                         </div>
 
                         {/* SHOP NAME */}
@@ -778,13 +906,25 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                 <input
                                     type="text"
                                     value={shopAddress}
-                                    onChange={(e) => setShopAddress(e.target.value)}
+                                    onChange={(e) =>
+                                        setShopAddress(e.target.value)
+                                    }
                                     placeholder="SAVILE ROW, MAIN ATELIER"
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 pr-10 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
                                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-accent">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                        />
                                     </svg>
                                 </div>
                             </div>
@@ -802,7 +942,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                 <input
                                     type="tel"
                                     value={shopContact}
-                                    onChange={(e) => setShopContact(e.target.value)}
+                                    onChange={(e) =>
+                                        setShopContact(e.target.value)
+                                    }
                                     placeholder="77 712 3456"
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
@@ -817,7 +959,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                             <input
                                 type="text"
                                 value={registrationNumber}
-                                onChange={(e) => setRegistrationNumber(e.target.value)}
+                                onChange={(e) =>
+                                    setRegistrationNumber(e.target.value)
+                                }
                                 placeholder="REG-123456789"
                                 className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                             />
@@ -845,7 +989,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                 <input
                                     type="password"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) =>
+                                        setPassword(e.target.value)
+                                    }
                                     placeholder="••••••••••••"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
@@ -867,7 +1013,11 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                 disabled={loading}
                                 className="w-full sm:w-2/3 rounded-xl bg-accent hover:bg-earth-text py-4 text-xs font-black uppercase tracking-[0.15em] text-cream-bg shadow-md transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-95 disabled:opacity-50 cursor-pointer"
                             >
-                                <span>{loading ? "CREATING SELLER PROFILE..." : "COMPLETE REGISTRATION"}</span>
+                                <span>
+                                    {loading
+                                        ? "CREATING SELLER PROFILE..."
+                                        : "COMPLETE REGISTRATION"}
+                                </span>
                                 <span>&rarr;</span>
                             </button>
                         </div>
@@ -878,7 +1028,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                 <div className="mt-8 text-center">
                     <button
                         type="button"
-                        onClick={() => onBack ? onBack() : router.push("/register")}
+                        onClick={() =>
+                            onBack ? onBack() : router.push("/register")
+                        }
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-accent/40 bg-cream-bg text-earth-text hover:text-accent hover:border-accent text-xs font-black uppercase tracking-[0.15em] transition-all hover:bg-card-bg/30"
                     >
                         <span>&larr;</span>
@@ -895,14 +1047,30 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                             FITI
                         </span>
                         <span className="text-[11px] text-earth-text/70">
-                            &copy; {new Date().getFullYear()} FITI Bespoke. All rights reserved.
+                            &copy; {new Date().getFullYear()} FITI Bespoke. All
+                            rights reserved.
                         </span>
                     </div>
 
                     <div className="flex items-center space-x-6 text-xs text-earth-text/80">
-                        <Link href="/privacy" className="hover:text-accent transition-colors">Privacy Policy</Link>
-                        <Link href="/terms" className="hover:text-accent transition-colors">Terms of Service</Link>
-                        <Link href="/contact" className="hover:text-accent transition-colors">Contact Support</Link>
+                        <Link
+                            href="/privacy"
+                            className="hover:text-accent transition-colors"
+                        >
+                            Privacy Policy
+                        </Link>
+                        <Link
+                            href="/terms"
+                            className="hover:text-accent transition-colors"
+                        >
+                            Terms of Service
+                        </Link>
+                        <Link
+                            href="/contact"
+                            className="hover:text-accent transition-colors"
+                        >
+                            Contact Support
+                        </Link>
                     </div>
                 </div>
             </footer>

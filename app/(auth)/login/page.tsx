@@ -15,7 +15,9 @@ import FullPageLock from "@/components/FullPageLock";
 /** Map Firebase error codes to human-friendly messages. */
 function firebaseErrorMessage(err: unknown): string {
     if (!(err instanceof FirebaseError)) {
-        return err instanceof Error ? err.message : "An unexpected error occurred. Please try again.";
+        return err instanceof Error
+            ? err.message
+            : "An unexpected error occurred. Please try again.";
     }
     switch (err.code) {
         case "auth/invalid-email":
@@ -30,6 +32,10 @@ function firebaseErrorMessage(err: unknown): string {
             return "Too many failed attempts. Please wait a moment and try again.";
         case "auth/network-request-failed":
             return "Network error. Check your connection and try again.";
+        case "auth/operation-not-allowed":
+            return "Email sign-in is not enabled for this project. Please contact support.";
+        case "auth/configuration-not-found":
+            return "Authentication is not configured for this project. Please contact support.";
         case "auth/popup-closed-by-user":
         case "auth/cancelled-popup-request":
             return ""; // Silently ignore — user dismissed popup
@@ -99,8 +105,13 @@ export default function LoginPage() {
             await handlePostAuthRedirect();
         } catch (err: unknown) {
             if (err instanceof FirebaseError) {
-                if (err.code !== "auth/popup-closed-by-user" && err.code !== "auth/cancelled-popup-request") {
-                    setError("Google sign-in failed. Check your connection and try again.");
+                if (
+                    err.code !== "auth/popup-closed-by-user" &&
+                    err.code !== "auth/cancelled-popup-request"
+                ) {
+                    setError(
+                        "Google sign-in failed. Check your connection and try again.",
+                    );
                 }
             } else {
                 setError("An unexpected error occurred.");
@@ -127,10 +138,8 @@ export default function LoginPage() {
 
             {/* FLOATING CARD CONTAINER */}
             <div className="relative z-10 w-full max-w-5xl bg-transparent rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
-
                 {/* LEFT COLUMN: TORN PAPER FORM SECTION */}
                 <div className="lg:col-span-6 bg-cream-bg relative p-8 sm:p-12 flex flex-col justify-between z-20">
-
                     {/* TORN PAPER JAGGED SVG EDGE (Right border on desktop) */}
                     <svg
                         className="absolute top-0 -right-7 h-full w-8 z-30 text-cream-bg fill-current hidden lg:block pointer-events-none drop-shadow-[4px_0_6px_rgba(0,0,0,0.15)]"
@@ -187,7 +196,11 @@ export default function LoginPage() {
                                 disabled={loading}
                                 className="w-full max-w-md rounded-full bg-cream-bg border border-accent/40 hover:bg-card-bg/30 text-earth-text font-bold text-xs py-3.5 px-6 shadow-sm flex items-center justify-center gap-3 transition-all hover:scale-[1.01]"
                             >
-                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                                <svg
+                                    className="w-4 h-4 shrink-0"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
                                     <path
                                         fill="#4285F4"
                                         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -205,7 +218,7 @@ export default function LoginPage() {
                                         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"
                                     />
                                 </svg>
-                                <span>Sign in with Google</span>
+                                <span>Continue with Google</span>
                             </button>
                         </div>
 
@@ -220,16 +233,30 @@ export default function LoginPage() {
                         </div>
 
                         {/* Form */}
-                        <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
+                        <form
+                            onSubmit={handleSubmit}
+                            className="space-y-4 max-w-md mx-auto"
+                        >
                             {/* Email Pill Input */}
                             <div className="relative flex items-center">
                                 <span className="absolute left-4 text-accent">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                        />
                                     </svg>
                                 </span>
                                 <input
                                     id="login-email"
+                                    aria-label="Email"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -244,15 +271,28 @@ export default function LoginPage() {
                             {/* Password Pill Input */}
                             <div className="relative flex items-center">
                                 <span className="absolute left-4 text-accent">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                        />
                                     </svg>
                                 </span>
                                 <input
                                     id="login-password"
+                                    aria-label="Password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) =>
+                                        setPassword(e.target.value)
+                                    }
                                     placeholder="password"
                                     autoComplete="current-password"
                                     required
@@ -261,7 +301,9 @@ export default function LoginPage() {
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
+                                    onClick={() =>
+                                        setShowPassword(!showPassword)
+                                    }
                                     className="absolute right-4 text-xs font-bold text-accent hover:text-earth-text uppercase"
                                 >
                                     {showPassword ? "Hide" : "Show"}
@@ -274,12 +316,20 @@ export default function LoginPage() {
                                     id="agree-terms"
                                     type="checkbox"
                                     checked={agreeTerms}
-                                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                                    onChange={(e) =>
+                                        setAgreeTerms(e.target.checked)
+                                    }
                                     className="w-4 h-4 rounded border-accent text-accent focus:ring-accent accent-accent cursor-pointer"
                                 />
-                                <label htmlFor="agree-terms" className="text-xs text-earth-text cursor-pointer">
+                                <label
+                                    htmlFor="agree-terms"
+                                    className="text-xs text-earth-text cursor-pointer"
+                                >
                                     I agree to FITI&apos;s{" "}
-                                    <Link href="/terms" className="underline font-medium hover:text-accent">
+                                    <Link
+                                        href="/terms"
+                                        className="underline font-medium hover:text-accent"
+                                    >
                                         terms of service
                                     </Link>
                                     .
@@ -301,7 +351,10 @@ export default function LoginPage() {
 
                     <p className="text-[11px] text-earth-text/70 mt-6">
                         Need an account?{" "}
-                        <Link href="/register" className="text-accent font-bold hover:underline">
+                        <Link
+                            href="/register"
+                            className="text-accent font-bold hover:underline"
+                        >
                             Register here
                         </Link>
                     </p>
@@ -328,7 +381,6 @@ export default function LoginPage() {
                         </p>
                     </div>
                 </div>
-
             </div>
             <FullPageLock
                 isSubmitting={loading}

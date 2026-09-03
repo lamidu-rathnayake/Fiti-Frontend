@@ -77,7 +77,9 @@ export async function getClothingRequest(
  * PATCH /api/v1/orders/requests/{id}/cancel
  * (Auth: Client Role)
  */
-export async function cancelRequest(requestId: number): Promise<ClothingRequest> {
+export async function cancelRequest(
+    requestId: number,
+): Promise<ClothingRequest> {
     return apiFetch<ClothingRequest>(`/orders/requests/${requestId}/cancel`, {
         method: "PATCH",
     });
@@ -91,9 +93,7 @@ export async function cancelRequest(requestId: number): Promise<ClothingRequest>
  * (Auth: Public)
  */
 export async function listShopRequests(shopId: number): Promise<ShopRequest[]> {
-    return apiFetch<ShopRequest[]>(`/orders/shop-requests/shop/${shopId}`, {
-        authenticated: false,
-    });
+    return apiFetch<ShopRequest[]>(`/orders/shop-requests/shop/${shopId}`);
 }
 
 /**
@@ -138,9 +138,12 @@ export async function acceptBid(payload: AcceptBidPayload): Promise<Order> {
  * (Auth: Client Role)
  */
 export async function rejectQuote(shopRequestId: number): Promise<ShopRequest> {
-    return apiFetch<ShopRequest>(`/orders/shop-requests/${shopRequestId}/reject`, {
-        method: "PATCH",
-    });
+    return apiFetch<ShopRequest>(
+        `/orders/shop-requests/${shopRequestId}/reject`,
+        {
+            method: "PATCH",
+        },
+    );
 }
 
 /**
@@ -149,7 +152,7 @@ export async function rejectQuote(shopRequestId: number): Promise<ShopRequest> {
  * (Auth: Public)
  */
 export async function listShopOrders(shopId: number): Promise<Order[]> {
-    return apiFetch<Order[]>(`/orders/shop/${shopId}`, { authenticated: false });
+    return apiFetch<Order[]>(`/orders/shop/${shopId}`);
 }
 
 /**
@@ -158,9 +161,7 @@ export async function listShopOrders(shopId: number): Promise<Order[]> {
  * (Auth: Public)
  */
 export async function listClientOrders(clientId: string): Promise<Order[]> {
-    return apiFetch<Order[]>(`/orders/client/${clientId}`, {
-        authenticated: false,
-    });
+    return apiFetch<Order[]>(`/orders/client/${clientId}`);
 }
 
 /**

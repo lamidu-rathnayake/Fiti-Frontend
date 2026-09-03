@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getShop, updateShop, addShopImage } from "@/lib/api/endpoints/shops";
+import { getShop, updateShop, addShopImage, deleteShopImage } from "@/lib/api/endpoints/shops";
 import type { Shop } from "@/lib/api/types/shop";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { validatePhoneNumber } from "@/lib/phone";
@@ -167,6 +167,18 @@ export default function ShopProfilePage() {
             setUploadError(err.message || "Failed to upload portfolio image.");
         } finally {
             setIsUploadingImage(false);
+        }
+    };
+
+    const handleDeleteImage = async (imageId: number) => {
+        if (!shop) return;
+        if (!confirm("Are you sure you want to delete this photo from your portfolio?")) return;
+
+        try {
+            await deleteShopImage(shop.shop_id, imageId);
+            await fetchShopDetails();
+        } catch (err: any) {
+            alert("Failed to delete image: " + (err.message || "Unknown error"));
         }
     };
 
@@ -365,18 +377,34 @@ export default function ShopProfilePage() {
                                 {shop.images.map((img, i) => (
                                     <div
                                         key={img.image_id || i}
-                                        onClick={() => setLightboxImage(img.image_url)}
                                         className="bg-cream-bg border border-accent/15 rounded-2xl overflow-hidden shadow-sm group hover:border-accent/60 hover:shadow-md transition-all aspect-square relative cursor-pointer"
                                     >
                                         <img
                                             src={img.image_url}
                                             alt={`${shop.shop_name} work sample ${i + 1}`}
+                                            onClick={() => setLightboxImage(img.image_url)}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center">
+                                        <div
+                                            onClick={() => setLightboxImage(img.image_url)}
+                                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center"
+                                        >
                                             <span>🔍 View Dress Photo</span>
                                             <span className="text-[10px] text-white/80 font-mono">Sample #{i + 1}</span>
                                         </div>
+                                        {isOwner && img.image_id && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteImage(img.image_id!);
+                                                }}
+                                                title="Delete photo"
+                                                className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs cursor-pointer"
+                                            >
+                                                🗑️
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
 

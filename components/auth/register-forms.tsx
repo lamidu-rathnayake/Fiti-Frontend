@@ -482,6 +482,9 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
     const [shopName, setShopName] = useState("");
     const [shopBio, setShopBio] = useState("");
     const [shopAddress, setShopAddress] = useState("");
+    const [shopCity, setShopCity] = useState("");
+    const [shopLatitude, setShopLatitude] = useState<number | null>(null);
+    const [shopLongitude, setShopLongitude] = useState<number | null>(null);
     const [shopContact, setShopContact] = useState("");
     const [registrationNumber, setRegistrationNumber] = useState("");
 
@@ -538,13 +541,13 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                 specialty: null,
                 shop_bio: shopBio.trim() || null,
                 shop_address: shopAddress.trim() || address.trim() || null,
-                city: city.trim() || null,
+                city: shopCity.trim() || city.trim() || null,
                 contact_number: shopContact.trim()
                     ? `+94${shopContact.replace(/\D/g, "")}`
                     : null,
                 registration_number: registrationNumber.trim() || null,
-                latitude: latitude || null,
-                longitude: longitude || null,
+                latitude: shopLatitude ?? latitude,
+                longitude: shopLongitude ?? longitude,
             });
 
             setRole("tailor");
@@ -928,6 +931,50 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     </svg>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* SHOP LOCATION */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-earth-text uppercase mb-2">
+                                PIN SHOP LOCATION (OPTIONAL)
+                            </label>
+                            <LocationPicker
+                                defaultLocation={
+                                    shopLatitude !== null &&
+                                    shopLongitude !== null
+                                        ? {
+                                              lat: shopLatitude,
+                                              lng: shopLongitude,
+                                          }
+                                        : undefined
+                                }
+                                onChange={async ({ lat, lng }) => {
+                                    setShopLatitude(lat);
+                                    setShopLongitude(lng);
+                                    const location = await reverseGeocode(
+                                        lat,
+                                        lng,
+                                    );
+                                    if (location) {
+                                        setShopAddress(location.address);
+                                        setShopCity(location.city);
+                                    }
+                                }}
+                            />
+                        </div>
+
+                        {/* SHOP CITY */}
+                        <div>
+                            <label className="block text-[10px] font-black tracking-widest text-earth-text uppercase mb-2">
+                                SHOP CITY
+                            </label>
+                            <input
+                                type="text"
+                                value={shopCity}
+                                onChange={(e) => setShopCity(e.target.value)}
+                                placeholder="COLOMBO"
+                                className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
+                            />
                         </div>
 
                         {/* SHOP CONTACT */}

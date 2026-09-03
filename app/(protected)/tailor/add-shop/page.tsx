@@ -3,9 +3,23 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { createShop } from "@/lib/api/endpoints/shops";
+import { reverseGeocode } from "@/lib/geocoding";
 import FullPageLock from "@/components/FullPageLock";
+
+const LocationPicker = dynamic(
+    () => import("@/components/map/LocationPicker"),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="h-64 w-full animate-pulse rounded-xl border border-accent/30 bg-card-bg/20 flex items-center justify-center text-xs font-semibold uppercase tracking-wider text-earth-text/60">
+                Loading map...
+            </div>
+        ),
+    },
+);
 
 export default function AddShopPage() {
     const router = useRouter();
@@ -21,6 +35,8 @@ export default function AddShopPage() {
     const [city, setCity] = useState("");
     const [contactNumber, setContactNumber] = useState("");
     const [registrationNumber, setRegistrationNumber] = useState("");
+    const [latitude, setLatitude] = useState<number | null>(null);
+    const [longitude, setLongitude] = useState<number | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,15 +56,25 @@ export default function AddShopPage() {
                 city: city.trim() || undefined,
                 contact_number: contactNumber.trim() || undefined,
                 registration_number: registrationNumber.trim() || undefined,
+                latitude,
+                longitude,
             });
 
             // Store shop name in localStorage for UI breadcrumbs / quick access
             try {
-                const existingShops: number[] = JSON.parse(localStorage.getItem("tailorShopIds") || "[]");
+                const existingShops: number[] = JSON.parse(
+                    localStorage.getItem("tailorShopIds") || "[]",
+                );
                 if (!existingShops.includes(newShop.shop_id)) {
-                    localStorage.setItem("tailorShopIds", JSON.stringify([...existingShops, newShop.shop_id]));
+                    localStorage.setItem(
+                        "tailorShopIds",
+                        JSON.stringify([...existingShops, newShop.shop_id]),
+                    );
                 }
-                localStorage.setItem("tailorSelectedShopId", String(newShop.shop_id));
+                localStorage.setItem(
+                    "tailorSelectedShopId",
+                    String(newShop.shop_id),
+                );
                 localStorage.setItem("tailorSelectedShop", newShop.shop_name);
             } catch {
                 // localStorage not critical
@@ -56,7 +82,10 @@ export default function AddShopPage() {
 
             router.push("/tailor/home");
         } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : "Failed to create shop. Please check your details and try again.";
+            const msg =
+                err instanceof Error
+                    ? err.message
+                    : "Failed to create shop. Please check your details and try again.";
             setError(msg);
         } finally {
             setIsLoading(false);
@@ -76,16 +105,21 @@ export default function AddShopPage() {
                     <span className="text-[10px] font-mono tracking-[0.25em] text-earth-text/60 uppercase block font-bold">
                         ATELIER REGISTRATION
                     </span>
-                    <h1 className="text-3xl font-extrabold text-earth-text tracking-tight font-heading">Add Your Shop</h1>
-                    <p className="text-xs text-earth-text/70 max-w-[300px] mx-auto leading-relaxed">
-                        Create your digital atelier presence and connect with clients.
+                    <h1 className="text-3xl font-extrabold text-earth-text tracking-tight font-heading">
+                        Add Your Shop
+                    </h1>
+                    <p className="text-xs text-earth-text/70 max-w-75 mx-auto leading-relaxed">
+                        Create your digital atelier presence and connect with
+                        clients.
                     </p>
                 </div>
 
                 {/* Form Container */}
                 <div className="w-full bg-cream-bg border border-accent/20 rounded-3xl overflow-hidden shadow-md">
-                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-5">
-
+                    <form
+                        onSubmit={handleSubmit}
+                        className="p-6 md:p-8 space-y-5"
+                    >
                         {/* Error Banner */}
                         {error && (
                             <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-800 text-xs font-bold">
@@ -110,7 +144,9 @@ export default function AddShopPage() {
 
                         {/* Specialty */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Specialty</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                Specialty
+                            </label>
                             <input
                                 type="text"
                                 value={specialty}
@@ -122,7 +158,9 @@ export default function AddShopPage() {
 
                         {/* Shop Bio */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Shop Bio</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                Shop Bio
+                            </label>
                             <textarea
                                 value={shopBio}
                                 onChange={(e) => setShopBio(e.target.value)}
@@ -134,7 +172,9 @@ export default function AddShopPage() {
 
                         {/* Street Address */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Street Address</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                Street Address
+                            </label>
                             <input
                                 type="text"
                                 value={shopAddress}
@@ -146,7 +186,9 @@ export default function AddShopPage() {
 
                         {/* City */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">City</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                City
+                            </label>
                             <input
                                 type="text"
                                 value={city}
@@ -156,13 +198,38 @@ export default function AddShopPage() {
                             />
                         </div>
 
+                        {/* Shop Location */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                Pin Shop Location (Optional)
+                            </label>
+                            <LocationPicker
+                                onChange={async ({ lat, lng }) => {
+                                    setLatitude(lat);
+                                    setLongitude(lng);
+                                    const location = await reverseGeocode(
+                                        lat,
+                                        lng,
+                                    );
+                                    if (location) {
+                                        setShopAddress(location.address);
+                                        setCity(location.city);
+                                    }
+                                }}
+                            />
+                        </div>
+
                         {/* Phone Number */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Phone Number</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                Phone Number
+                            </label>
                             <input
                                 type="tel"
                                 value={contactNumber}
-                                onChange={(e) => setContactNumber(e.target.value)}
+                                onChange={(e) =>
+                                    setContactNumber(e.target.value)
+                                }
                                 placeholder="+94 77 123 4567"
                                 className="w-full bg-warm-beige border border-accent/20 focus:border-accent/60 rounded-xl px-4 py-3 text-xs text-earth-text placeholder-earth-text/40 outline-none transition-all shadow-sm"
                             />
@@ -170,11 +237,15 @@ export default function AddShopPage() {
 
                         {/* Registration Number */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">Registration Number</label>
+                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                Registration Number
+                            </label>
                             <input
                                 type="text"
                                 value={registrationNumber}
-                                onChange={(e) => setRegistrationNumber(e.target.value)}
+                                onChange={(e) =>
+                                    setRegistrationNumber(e.target.value)
+                                }
                                 placeholder="e.g. BR-0092-LK"
                                 className="w-full bg-warm-beige border border-accent/20 focus:border-accent/60 rounded-xl px-4 py-3 text-xs text-earth-text placeholder-earth-text/40 outline-none transition-all shadow-sm"
                             />
@@ -189,17 +260,42 @@ export default function AddShopPage() {
                             >
                                 {isLoading ? (
                                     <>
-                                        <svg className="w-4 h-4 animate-spin text-cream-bg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                        <svg
+                                            className="w-4 h-4 animate-spin text-cream-bg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            />
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8v8H4z"
+                                            />
                                         </svg>
                                         Creating Shop...
                                     </>
                                 ) : (
                                     <>
                                         Submit And Continue
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                        <svg
+                                            className="w-4 h-4"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2.5}
+                                                d="M14 5l7 7m0 0l-7 7m7-7H3"
+                                            />
                                         </svg>
                                     </>
                                 )}
@@ -218,7 +314,10 @@ export default function AddShopPage() {
                 </div>
 
                 <div className="mt-6">
-                    <Link href="/tailor/home" className="text-xs font-bold text-earth-text/60 hover:text-earth-text transition-colors">
+                    <Link
+                        href="/tailor/home"
+                        className="text-xs font-bold text-earth-text/60 hover:text-earth-text transition-colors"
+                    >
                         ← Cancel and return to dashboard
                     </Link>
                 </div>

@@ -13,6 +13,7 @@ import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/pr
 import { addShopImage, createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
 import { reverseGeocode } from "@/lib/geocoding";
+import { validatePhoneNumber } from "@/lib/phone";
 import Logo from "@/components/Logo";
 
 const LocationPicker = dynamic(() => import("@/components/map/LocationPicker"), {
@@ -114,6 +115,27 @@ export default function OnboardingPage() {
         }
 
         setError("");
+
+        // Validate personal phone number
+        const phoneValidation = validatePhoneNumber(form.phone);
+        if (!phoneValidation.isValid) {
+            setError(phoneValidation.error || "Please enter a valid phone number.");
+            return;
+        }
+
+        // Validate shop phone number if role is tailor and not using personal address
+        let shopPhoneValidation: { isValid: boolean; normalized: string | null; error?: string } = { isValid: true, normalized: null };
+        if (role === "tailor" && !usePersonalAddress && form.shopPhone.trim()) {
+            shopPhoneValidation = validatePhoneNumber(form.shopPhone);
+            if (!shopPhoneValidation.isValid) {
+                setError(`Shop ${shopPhoneValidation.error || "invalid phone number format."}`);
+                return;
+            }
+        }
+
+        const finalUserPhone = phoneValidation.normalized;
+        const finalShopPhone = usePersonalAddress ? finalUserPhone : (shopPhoneValidation.normalized ?? finalUserPhone);
+
         setSubmitting(true);
 
         try {
@@ -153,7 +175,7 @@ export default function OnboardingPage() {
             try {
                 if (role === "tailor") {
                     await createTailorProfile({
-                        phone: form.phone.trim() || null,
+                        phone: finalUserPhone,
                         city: form.city.trim() || null,
                         address: form.address.trim() || null,
                         nic_front: finalNicFrontUrl.trim() || null,
@@ -163,7 +185,7 @@ export default function OnboardingPage() {
                     });
                 } else {
                     await createClientProfile({
-                        phone: form.phone.trim() || null,
+                        phone: finalUserPhone,
                         city: form.city.trim() || null,
                         address: form.address.trim() || null,
                         latitude: form.latitude || null,
@@ -181,7 +203,7 @@ export default function OnboardingPage() {
                     shop_bio: form.shopBio.trim() || null,
                     shop_address: usePersonalAddress ? (form.address.trim() || null) : (form.shopAddress.trim() || null),
                     city: usePersonalAddress ? (form.city.trim() || null) : (form.shopCity.trim() || null),
-                    contact_number: usePersonalAddress ? (form.phone.trim() || null) : (form.shopPhone.trim() || null),
+                    contact_number: finalShopPhone,
                     registration_number: form.registrationNumber.trim() || null,
                     latitude: usePersonalAddress ? form.latitude : form.shopLatitude,
                     longitude: usePersonalAddress ? form.longitude : form.shopLongitude,

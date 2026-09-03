@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { createShop } from "@/lib/api/endpoints/shops";
 import { reverseGeocode } from "@/lib/geocoding";
+import { validatePhoneNumber } from "@/lib/phone";
 import FullPageLock from "@/components/FullPageLock";
 
 const LocationPicker = dynamic(
@@ -44,6 +45,13 @@ export default function AddShopPage() {
             setError("Shop name is required.");
             return;
         }
+
+        const phoneVal = validatePhoneNumber(contactNumber);
+        if (!phoneVal.isValid) {
+            setError(phoneVal.error || "Please enter a valid phone number.");
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
 
@@ -54,7 +62,7 @@ export default function AddShopPage() {
                 shop_bio: shopBio.trim() || undefined,
                 shop_address: shopAddress.trim() || undefined,
                 city: city.trim() || undefined,
-                contact_number: contactNumber.trim() || undefined,
+                contact_number: phoneVal.normalized || undefined,
                 registration_number: registrationNumber.trim() || undefined,
                 latitude,
                 longitude,

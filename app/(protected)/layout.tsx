@@ -22,7 +22,7 @@ export default function ProtectedLayout({
     // Protected Route Logic
     const requiredRole = pathname.startsWith("/tailor") && !pathname.startsWith("/tailors")
         ? "tailor"
-        : pathname.startsWith("/client")
+        : pathname.startsWith("/client") && !pathname.startsWith("/client/shop")
             ? "client"
             : null;
 

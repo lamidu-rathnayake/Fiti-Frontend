@@ -92,7 +92,8 @@ function LocateControl({ setPosition, onChangeRef }: any) {
 function LocationSync({
     defaultLocation,
     setPosition,
-}: LocationPickerProps & {
+}: {
+    defaultLocation?: { lat: number; lng: number };
     setPosition: (position: { lat: number; lng: number } | null) => void;
 }) {
     const map = useMap();

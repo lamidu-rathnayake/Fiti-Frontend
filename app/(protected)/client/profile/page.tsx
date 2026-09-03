@@ -12,6 +12,7 @@ import type { ClientProfile, MeasurementsPayload } from "@/lib/api/types/profile
 import { updatePassword, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { uploadToCloudinary, extractPublicIdFromUrl } from "@/lib/cloudinary";
+import { validatePhoneNumber } from "@/lib/phone";
 import Link from "next/link";
 import FullPageLock from "@/components/FullPageLock";
 
@@ -103,6 +104,13 @@ export default function ClientProfilePage() {
     const handleSaveBaseInfo = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return;
+        
+        const phoneVal = validatePhoneNumber(phone);
+        if (!phoneVal.isValid) {
+            setMessage({ type: "error", text: phoneVal.error || "Please enter a valid phone number." });
+            return;
+        }
+
         const firebaseUser = auth.currentUser;
         setSavingBase(true);
         setMessage(null);
@@ -134,7 +142,7 @@ export default function ClientProfilePage() {
             }
 
             await updateClientProfile(user.uid, {
-                phone: phone || null,
+                phone: phoneVal.normalized,
                 city: city || null,
                 address: address || null,
                 photo_url: newPhotoUrl || null

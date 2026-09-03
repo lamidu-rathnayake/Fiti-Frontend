@@ -265,6 +265,29 @@ export default function TailorHomePage() {
         }
     };
 
+    const handleSaveSettings = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+        setIsSavingSettings(true);
+        setSettingsSaved(false);
+        try {
+            const updated = await updateTailorProfile(user.uid, {
+                phone: settingsPhone,
+                city: settingsCity,
+                address: settingsAddress,
+            });
+            setTailorProfile(updated);
+            setSettingsSaved(true);
+            showToast("Settings updated successfully!");
+            setTimeout(() => setSettingsSaved(false), 3000);
+        } catch (err: any) {
+            console.error("Failed to update settings:", err);
+            showToast(err.message || "Failed to update settings", false);
+        } finally {
+            setIsSavingSettings(false);
+        }
+    };
+
     // ── Render Helpers ──
 
     const SkeletonCard = () => (
@@ -505,7 +528,15 @@ export default function TailorHomePage() {
                     </nav>
                 </div>
 
-                <div className="relative">
+                <div className="relative flex items-center gap-2">
+                    {selectedShop && (
+                        <Link
+                            href={`/client/shop/${selectedShop.shop_id}?edit=true`}
+                            className="flex items-center gap-1.5 bg-accent/10 border border-accent/30 hover:border-accent hover:bg-accent hover:text-white px-3.5 py-2 rounded-full text-xs font-bold text-accent transition-all shadow-sm shrink-0"
+                        >
+                            <span>✏️</span> Edit Shop Profile
+                        </Link>
+                    )}
                     <button
                         onClick={() =>
                             setIsShopDropdownOpen(!isShopDropdownOpen)
@@ -530,7 +561,7 @@ export default function TailorHomePage() {
                         </svg>
                     </button>
                     {isShopDropdownOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-52 bg-cream-bg border border-accent/20 rounded-2xl shadow-xl overflow-hidden z-20 py-1.5">
+                        <div className="absolute top-full right-0 mt-2 w-56 bg-cream-bg border border-accent/20 rounded-2xl shadow-xl overflow-hidden z-20 py-1.5">
                             {tailorShops.map((shop) => (
                                 <button
                                     key={shop.shop_id}
@@ -541,6 +572,15 @@ export default function TailorHomePage() {
                                 </button>
                             ))}
                             <div className="h-px bg-accent/15 my-1.5" />
+                            {selectedShop && (
+                                <Link
+                                    href={`/client/shop/${selectedShop.shop_id}?edit=true`}
+                                    onClick={() => setIsShopDropdownOpen(false)}
+                                    className="w-full text-left px-4 py-2 text-xs font-bold text-earth-text/80 hover:text-accent hover:bg-warm-beige transition-colors flex items-center gap-2"
+                                >
+                                    ✏️ View & Edit Shop Profile
+                                </Link>
+                            )}
                             <Link
                                 href="/tailor/add-shop"
                                 className="w-full text-left px-4 py-2 text-xs font-bold text-accent hover:bg-warm-beige transition-colors flex items-center gap-2"
@@ -722,11 +762,21 @@ export default function TailorHomePage() {
                                     Tailor Settings
                                 </h1>
                                 <p className="text-earth-text/70 text-xs mt-1 font-medium">
-                                    Manage your professional profile and status.
+                                    Manage your professional profile and shop settings.
                                 </p>
                             </div>
 
-                            <form className="bg-cream-bg border border-accent/20 rounded-2xl p-6 sm:p-8 space-y-5 shadow-sm">
+                            <form onSubmit={handleSaveSettings} className="bg-cream-bg border border-accent/20 rounded-2xl p-6 sm:p-8 space-y-5 shadow-sm">
+                                <h2 className="text-base font-bold text-earth-text border-b border-accent/15 pb-3">
+                                    Personal Profile
+                                </h2>
+
+                                {settingsSaved && (
+                                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-700 font-medium">
+                                        ✓ Profile settings updated successfully!
+                                    </div>
+                                )}
+
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
                                         Firebase Email
@@ -735,6 +785,7 @@ export default function TailorHomePage() {
                                         {user?.email}
                                     </div>
                                 </div>
+
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
                                         Verification Status
@@ -746,7 +797,89 @@ export default function TailorHomePage() {
                                             : "Pending Verification"}
                                     </div>
                                 </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                        Phone Number
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        value={settingsPhone}
+                                        onChange={(e) => setSettingsPhone(e.target.value)}
+                                        placeholder="e.g. +94771234567 or 0771234567"
+                                        className="w-full bg-warm-beige/50 border border-accent/30 rounded-xl px-4 py-3 text-xs text-earth-text focus:outline-none focus:border-accent font-medium"
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                        City / Area
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={settingsCity}
+                                        onChange={(e) => setSettingsCity(e.target.value)}
+                                        placeholder="e.g. Colombo, Kandy"
+                                        className="w-full bg-warm-beige/50 border border-accent/30 rounded-xl px-4 py-3 text-xs text-earth-text focus:outline-none focus:border-accent font-medium"
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/70">
+                                        Address
+                                    </label>
+                                    <textarea
+                                        rows={2}
+                                        value={settingsAddress}
+                                        onChange={(e) => setSettingsAddress(e.target.value)}
+                                        placeholder="Your full address"
+                                        className="w-full bg-warm-beige/50 border border-accent/30 rounded-xl px-4 py-3 text-xs text-earth-text focus:outline-none focus:border-accent font-medium resize-none"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isSavingSettings}
+                                    className="w-full py-3 bg-accent text-white font-bold text-xs rounded-xl hover:bg-accent-dark transition-colors shadow-md disabled:opacity-50"
+                                >
+                                    {isSavingSettings ? "Saving Settings..." : "Save Profile Settings"}
+                                </button>
                             </form>
+
+                            {/* Shop Profile Management Card */}
+                            <div className="bg-cream-bg border border-accent/20 rounded-2xl p-6 sm:p-8 space-y-4 shadow-sm">
+                                <h2 className="text-base font-bold text-earth-text border-b border-accent/15 pb-3">
+                                    Shop Profile Management
+                                </h2>
+                                {selectedShop ? (
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-warm-beige/60 p-4 rounded-xl border border-accent/15">
+                                        <div>
+                                            <h3 className="text-sm font-bold text-earth-text">
+                                                {selectedShop.shop_name}
+                                            </h3>
+                                            <p className="text-xs text-earth-text/70 mt-0.5">
+                                                Specialty: {selectedShop.specialty || "General Tailoring"} • {selectedShop.city || "No location set"}
+                                            </p>
+                                        </div>
+                                        <Link
+                                            href={`/client/shop/${selectedShop.shop_id}?edit=true`}
+                                            className="inline-flex items-center justify-center gap-2 bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-accent-dark transition-all shadow-sm shrink-0"
+                                        >
+                                            ✏️ Edit Shop Profile
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <p className="text-xs text-earth-text/60 mb-3">No shop selected or created yet.</p>
+                                        <Link
+                                            href="/tailor/add-shop"
+                                            className="inline-flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-xl text-xs font-bold"
+                                        >
+                                            + Add New Shop
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

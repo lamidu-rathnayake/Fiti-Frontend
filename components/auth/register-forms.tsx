@@ -17,6 +17,7 @@ import {
 } from "@/lib/api/endpoints/profiles";
 import { createShop } from "@/lib/api/endpoints/shops";
 import { reverseGeocode } from "@/lib/geocoding";
+import { validatePhoneNumber } from "@/lib/phone";
 import { FitiApiError } from "../../lib/api/client";
 
 const LocationPicker = dynamic(
@@ -81,6 +82,13 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
         const userPass = password;
 
         setError("");
+
+        const phoneVal = validatePhoneNumber(whatsapp);
+        if (!phoneVal.isValid) {
+            setError(phoneVal.error || "Please enter a valid phone number.");
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -93,9 +101,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
             await userCredential.user.getIdToken(true);
 
             await createClientProfile({
-                phone: whatsapp.trim()
-                    ? `+94${whatsapp.replace(/\D/g, "")}`
-                    : null,
+                phone: phoneVal.normalized,
                 city: city.trim() || null,
                 address: address.trim() || null,
                 latitude: latitude || null,
@@ -515,6 +521,24 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
         const userPass = password;
 
         setError("");
+
+        const phoneVal = validatePhoneNumber(whatsapp);
+        if (!phoneVal.isValid) {
+            setError(phoneVal.error || "Please enter a valid personal phone number.");
+            return;
+        }
+
+        let shopPhoneVal: { isValid: boolean; normalized: string | null; error?: string } = { isValid: true, normalized: null };
+        if (shopContact.trim()) {
+            shopPhoneVal = validatePhoneNumber(shopContact);
+            if (!shopPhoneVal.isValid) {
+                setError(`Shop ${shopPhoneVal.error || "invalid phone number format."}`);
+                return;
+            }
+        }
+
+        const finalShopContact = shopPhoneVal.normalized || phoneVal.normalized;
+
         setLoading(true);
 
         try {
@@ -527,9 +551,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
             await userCredential.user.getIdToken(true);
 
             await createTailorProfile({
-                phone: whatsapp.trim()
-                    ? `+94${whatsapp.replace(/\D/g, "")}`
-                    : null,
+                phone: phoneVal.normalized,
                 city: city.trim() || null,
                 address: address.trim() || null,
                 latitude: latitude || null,
@@ -542,9 +564,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                 shop_bio: shopBio.trim() || null,
                 shop_address: shopAddress.trim() || address.trim() || null,
                 city: shopCity.trim() || city.trim() || null,
-                contact_number: shopContact.trim()
-                    ? `+94${shopContact.replace(/\D/g, "")}`
-                    : null,
+                contact_number: finalShopContact,
                 registration_number: registrationNumber.trim() || null,
                 latitude: shopLatitude ?? latitude,
                 longitude: shopLongitude ?? longitude,

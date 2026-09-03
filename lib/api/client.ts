@@ -70,9 +70,18 @@ export async function apiFetch<T = unknown>(
         try {
             const errorBody = await response.json();
             if (errorBody.detail) {
-                detail = typeof errorBody.detail === "string"
-                    ? errorBody.detail
-                    : JSON.stringify(errorBody.detail);
+                if (typeof errorBody.detail === "string") {
+                    detail = errorBody.detail;
+                } else if (Array.isArray(errorBody.detail)) {
+                    detail = errorBody.detail
+                        .map((err: any) => {
+                            const field = Array.isArray(err.loc) ? err.loc[err.loc.length - 1] : "field";
+                            return `${field}: ${err.msg}`;
+                        })
+                        .join(", ");
+                } else {
+                    detail = JSON.stringify(errorBody.detail);
+                }
             }
         } catch {
             // Keep the status-based message when the response is not JSON.

@@ -701,6 +701,23 @@ export default function ClientOrdersPage() {
                                                 (b.bid_id || 0) -
                                                 (a.bid_id || 0),
                                         ) || [];
+                                const displayedBids =
+                                    bids.length > 0
+                                        ? bids
+                                        : selectedShopRequest?.offered_price
+                                          ? [
+                                                {
+                                                    bid_id: null,
+                                                    shop_request_id:
+                                                        selectedShopRequest.shop_request_id,
+                                                    bid_amount:
+                                                        selectedShopRequest.offered_price,
+                                                    message:
+                                                        "Current quotation",
+                                                    created_at: null,
+                                                },
+                                            ]
+                                          : [];
                                 const requestedBudget = request?.target_budget;
                                 const currentPrice =
                                     selectedCard.kind === "order"
@@ -749,11 +766,14 @@ export default function ClientOrdersPage() {
                                                 {request?.status?.replace(
                                                     /_/g,
                                                     " ",
-                                                ) ||
-                                                    selectedCard.order.order_status.replace(
-                                                        /_/g,
-                                                        " ",
-                                                    )}
+                                                ) ??
+                                                    (selectedCard.kind ===
+                                                    "order"
+                                                        ? selectedCard.order.order_status.replace(
+                                                              /_/g,
+                                                              " ",
+                                                          )
+                                                        : "-")}
                                             </div>
                                             <div>
                                                 <span className="block text-[10px] font-bold uppercase tracking-wider text-earth-text/50">
@@ -783,37 +803,39 @@ export default function ClientOrdersPage() {
                                             <h3 className="mb-3 text-[10px] font-mono font-bold uppercase tracking-widest text-accent">
                                                 Bid Chain
                                             </h3>
-                                            {bids.length > 0 ? (
+                                            {displayedBids.length > 0 ? (
                                                 <div className="space-y-3 border-l-2 border-accent/20 pl-4">
-                                                    {bids.map((bid, index) => (
-                                                        <div
-                                                            key={
-                                                                bid.bid_id ||
-                                                                index
-                                                            }
-                                                            className="rounded-xl border border-accent/20 bg-warm-beige p-3"
-                                                        >
-                                                            <div className="flex items-center justify-between gap-3">
-                                                                <span className="font-mono text-sm font-black text-accent">
-                                                                    LKR{" "}
-                                                                    {Number(
-                                                                        bid.bid_amount,
-                                                                    ).toLocaleString()}
-                                                                </span>
-                                                                <span className="text-[10px] text-earth-text/50">
-                                                                    {bid.created_at
-                                                                        ? new Date(
-                                                                              bid.created_at,
-                                                                          ).toLocaleDateString()
-                                                                        : "Recent"}
-                                                                </span>
+                                                    {displayedBids.map(
+                                                        (bid, index) => (
+                                                            <div
+                                                                key={
+                                                                    bid.bid_id ||
+                                                                    index
+                                                                }
+                                                                className="rounded-xl border border-accent/20 bg-warm-beige p-3"
+                                                            >
+                                                                <div className="flex items-center justify-between gap-3">
+                                                                    <span className="font-mono text-sm font-black text-accent">
+                                                                        LKR{" "}
+                                                                        {Number(
+                                                                            bid.bid_amount,
+                                                                        ).toLocaleString()}
+                                                                    </span>
+                                                                    <span className="text-[10px] text-earth-text/50">
+                                                                        {bid.created_at
+                                                                            ? new Date(
+                                                                                  bid.created_at,
+                                                                              ).toLocaleDateString()
+                                                                            : "Recent"}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="mt-1 text-xs text-earth-text/75">
+                                                                    {bid.message ||
+                                                                        "Quotation submitted."}
+                                                                </p>
                                                             </div>
-                                                            <p className="mt-1 text-xs text-earth-text/75">
-                                                                {bid.message ||
-                                                                    "Quotation submitted."}
-                                                            </p>
-                                                        </div>
-                                                    ))}
+                                                        ),
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <p className="rounded-xl border border-dashed border-accent/30 p-4 text-xs text-earth-text/60">

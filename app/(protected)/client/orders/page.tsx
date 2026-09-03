@@ -723,6 +723,15 @@ export default function ClientOrdersPage() {
                                     selectedCard.kind === "order"
                                         ? selectedCard.order.accepted_price
                                         : selectedShopRequest?.offered_price;
+                                const measurementEntries = request?.measurement
+                                    ? Object.entries(request.measurement).filter(
+                                          ([key, value]) =>
+                                              key !== "notes" &&
+                                              value !== null &&
+                                              value !== undefined &&
+                                              value !== "",
+                                      )
+                                    : [];
 
                                 return (
                                     <>
@@ -796,6 +805,51 @@ export default function ClientOrdersPage() {
                                         {request?.description && (
                                             <div className="rounded-xl border border-accent/20 bg-warm-beige p-4 text-sm leading-relaxed text-earth-text/80">
                                                 {request.description}
+                                            </div>
+                                        )}
+
+                                        {(measurementEntries.length > 0 ||
+                                            request?.measurement?.notes) && (
+                                            <div>
+                                                <h3 className="mb-3 text-[10px] font-mono font-bold uppercase tracking-widest text-accent">
+                                                    Measurements Sent
+                                                </h3>
+                                                {measurementEntries.length >
+                                                    0 && (
+                                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                                        {measurementEntries.map(
+                                                            ([key, value]) => (
+                                                                <div
+                                                                    key={key}
+                                                                    className="rounded-xl border border-accent/20 bg-warm-beige p-3"
+                                                                >
+                                                                    <span className="block text-[10px] font-bold capitalize text-earth-text/50">
+                                                                        {key.replace(
+                                                                            /_/g,
+                                                                            " ",
+                                                                        )}
+                                                                    </span>
+                                                                    <span className="mt-1 block font-mono text-sm font-black text-earth-text">
+                                                                        {String(
+                                                                            value,
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {request?.measurement?.notes && (
+                                                    <p className="mt-3 rounded-xl border border-accent/20 bg-warm-beige p-3 text-xs leading-relaxed text-earth-text/75">
+                                                        <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-earth-text/50">
+                                                            Measurement Notes
+                                                        </span>
+                                                        {
+                                                            request.measurement
+                                                                .notes
+                                                        }
+                                                    </p>
+                                                )}
                                             </div>
                                         )}
 

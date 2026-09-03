@@ -11,7 +11,7 @@ import {
     updateOrderStatus,
 } from "@/lib/api/endpoints/orders";
 import { listTailorShops } from "@/lib/api/endpoints/shops";
-import type { ClothingRequest, Order } from "@/lib/api/types/order";
+import type { ClothingRequest, Order, ShopRequestBid } from "@/lib/api/types/order";
 import FullPageLock from "@/components/FullPageLock";
 
 export interface OrderDetail {
@@ -39,6 +39,7 @@ export interface OrderDetail {
     progress?: number;
     clientPhone?: string;
     clientCity?: string;
+    bids?: ShopRequestBid[];
 }
 
 export default function TailorOrdersPage() {
@@ -101,6 +102,7 @@ export default function TailorOrdersPage() {
             status: "REQUESTED",
             clientPhone: req.client?.phone || "",
             clientCity: req.request_location || req.client?.city || "",
+            bids: req.bids || [],
         };
     };
 
@@ -148,6 +150,7 @@ export default function TailorOrdersPage() {
             progress: orderStatus === "completed" ? 100 : orderStatus === "in_progress" ? 60 : 20,
             clientPhone: req?.client?.phone || "",
             clientCity: req?.request_location || req?.client?.city || "",
+            bids: req?.bids || [],
         };
     };
 
@@ -194,10 +197,10 @@ export default function TailorOrdersPage() {
                 const mySr = shopId ? req.shop_requests?.find(sr => sr.shop_id === shopId) : null;
                 const isBidding = req.request_type === "bidding";
 
-                if (mySr && mySr.status === "quoted") {
+                if (mySr && (mySr.status === "quoted" || mySr.status === "rejected")) {
                     const mapped = mapRequestToOrderDetail(req);
                     mapped.rawId = mySr.shop_request_id;
-                    mapped.status = "QUOTED";
+                    mapped.status = mySr.status === "rejected" ? "REJECTED" : "QUOTED";
                     quoted.push(mapped);
                 } else if ((mySr && mySr.status === "pending") || (!mySr && isBidding)) {
                     const mapped = mapRequestToOrderDetail(req);
@@ -290,13 +293,20 @@ export default function TailorOrdersPage() {
         }
     };
 
-    const renderOrderAtelierDetails = (order: OrderDetail) => (
+    const renderOrderAtelierDetails = (order: OrderDetail) => {
+        const bidsForThisShop = order.bids?.filter(b => b.shop_request_id === order.rawId) || [];
+
+        return (
         <div className="space-y-4 pt-4 border-t border-accent/20 text-left">
-            {order.status === "REQUESTED" && (
+            {(order.status === "REQUESTED" || order.status === "QUOTED" || order.status === "REJECTED") && (
                 <div className="bg-warm-beige rounded-2xl p-4 border border-accent/30 space-y-4 mt-4 relative overflow-hidden">
                     <div>
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-accent block mb-0.5">Issue Quotation</span>
-                        <p className="text-[11px] text-earth-text/70 font-medium">Submit your bid and message to the client directly.</p>
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-accent block mb-0.5">
+                            {order.status === "QUOTED" ? "Counter-Bid Options" : order.status === "REJECTED" ? "Client Rejected - New Bid?" : "Issue Quotation"}
+                        </span>
+                        <p className="text-[11px] text-earth-text/70 font-medium">
+                            {order.status === "REJECTED" ? "The client declined your previous quotation. Submit a better offer to win this commission." : "Submit your bid and message to the client directly."}
+                        </p>
                     </div>
 
                     <div className="space-y-3">
@@ -325,10 +335,29 @@ export default function TailorOrdersPage() {
                             disabled={!quotePrice}
                             className="w-full bg-accent disabled:opacity-50 text-cream-bg font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl hover:bg-accent-hover transition-all shadow-sm flex items-center justify-center gap-1.5"
                         >
-                            Submit Quotation
+                            {order.status === "QUOTED" || order.status === "REJECTED" ? "Submit Counter-Bid" : "Submit Quotation"}
                             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
                         </button>
                     </div>
+
+                    {bidsForThisShop.length > 0 && (
+                        <div className="mt-6 pt-4 border-t border-accent/20">
+                            <h4 className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 mb-2">Bid History</h4>
+                            <div className="space-y-2">
+                                {[...bidsForThisShop].sort((a, b) => (b.bid_id || 0) - (a.bid_id || 0)).map((b, i) => (
+                                    <div key={b.bid_id || i} className="bg-cream-bg border border-accent/10 rounded-lg p-2.5 text-xs flex flex-col gap-1 shadow-sm">
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-bold text-accent">LKR {Number(b.bid_amount).toLocaleString()}</span>
+                                            <span className="text-[9px] text-earth-text/50 font-mono">
+                                                {b.created_at ? new Date(b.created_at).toLocaleDateString() : "Just now"}
+                                            </span>
+                                        </div>
+                                        {b.message && <span className="text-earth-text/70 italic block">"{b.message}"</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -516,7 +545,8 @@ export default function TailorOrdersPage() {
                 </div>
             </div>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="min-h-screen bg-warm-beige text-earth-text flex flex-col justify-between selection:bg-accent selection:text-cream-bg font-sans">
@@ -679,8 +709,12 @@ export default function TailorOrdersPage() {
                                                     <p className="text-xs text-earth-text/70 mt-0.5 font-medium">Client: {ord.client} &bull; {ord.date}</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <span className="text-[9px] font-mono font-bold text-accent uppercase tracking-widest bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-full">{ord.status}</span>
+                                            <div className="text-right flex flex-col items-end gap-1">
+                                                {ord.status === "REJECTED" ? (
+                                                    <span className="text-[9px] font-mono font-bold text-red-700 uppercase tracking-widest bg-red-600/10 border border-red-600/20 px-2.5 py-1 rounded-full">Rejected by Client</span>
+                                                ) : (
+                                                    <span className="text-[9px] font-mono font-bold text-accent uppercase tracking-widest bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-full">{ord.status}</span>
+                                                )}
                                                 <span className="text-[10px] font-bold text-earth-text/50 group-hover:text-accent transition-colors mt-1 block">
                                                     Open Details ↗
                                                 </span>

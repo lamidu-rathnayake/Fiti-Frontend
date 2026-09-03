@@ -133,6 +133,17 @@ export async function acceptBid(payload: AcceptBidPayload): Promise<Order> {
 }
 
 /**
+ * Reject a shop request quote.
+ * PATCH /api/v1/orders/shop-requests/{id}/reject
+ * (Auth: Client Role)
+ */
+export async function rejectQuote(shopRequestId: number): Promise<ShopRequest> {
+    return apiFetch<ShopRequest>(`/orders/shop-requests/${shopRequestId}/reject`, {
+        method: "PATCH",
+    });
+}
+
+/**
  * List all orders for a shop.
  * GET /api/v1/orders/shop/{shop_id}
  * (Auth: Public)

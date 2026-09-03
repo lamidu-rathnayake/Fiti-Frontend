@@ -5,7 +5,8 @@ import { useAuth } from "@/lib/firebase/AuthContext";
 import { 
     listClientOrders, 
     listClientRequests,
-    acceptBid
+    acceptBid,
+    rejectQuote
 } from "@/lib/api/endpoints/orders";
 import type { ClothingRequest, Order, ShopRequest } from "@/lib/api/types/order";
 import FullPageLock from "@/components/FullPageLock";
@@ -22,6 +23,7 @@ export default function ClientOrdersPage() {
     const [clientOrders, setClientOrders] = useState<Order[]>([]);
     
     const [acceptingQuoteId, setAcceptingQuoteId] = useState<number | null>(null);
+    const [decliningQuoteId, setDecliningQuoteId] = useState<number | null>(null);
     const [actionToast, setActionToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
     const showToast = (msg: string, ok = true) => {
@@ -75,6 +77,20 @@ export default function ClientOrdersPage() {
         }
     };
 
+    const handleDeclineQuote = async (shopReq: ShopRequest) => {
+        setDecliningQuoteId(shopReq.shop_request_id);
+        try {
+            await rejectQuote(shopReq.shop_request_id);
+            showToast("Quotation declined.");
+            await fetchData();
+        } catch (err) {
+            console.error("Failed to decline quote:", err);
+            showToast("Failed to decline quotation. Please try again.", false);
+        } finally {
+            setDecliningQuoteId(null);
+        }
+    };
+
     // ── Filter Logic ──
     // Pending requests: Requests that are open and have no shop_requests with "quoted" or "accepted" status.
     const pendingRequests = clientRequests.filter(req => {
@@ -83,13 +99,13 @@ export default function ClientOrdersPage() {
         return !hasQuotes;
     });
 
-    // Quotations: Shop requests that are currently quoted (waiting for client to accept or reject).
+    // Quotations: Shop requests that are currently quoted or rejected.
     // We flatten them out so each card represents a specific quotation from a tailor.
     const quotations: { req: ClothingRequest, shopReq: ShopRequest }[] = [];
     clientRequests.forEach(req => {
         if (req.status !== "open") return;
         req.shop_requests?.forEach(sr => {
-            if (sr.status === "quoted") {
+            if (sr.status === "quoted" || sr.status === "rejected") {
                 quotations.push({ req, shopReq: sr });
             }
         });
@@ -132,13 +148,21 @@ export default function ClientOrdersPage() {
     const renderQuotation = (item: { req: ClothingRequest, shopReq: ShopRequest }) => {
         const { req, shopReq } = item;
         const isAccepting = acceptingQuoteId === shopReq.shop_request_id;
+        const isDeclining = decliningQuoteId === shopReq.shop_request_id;
+        const isRejected = shopReq.status === "rejected";
         
+        const shopBids = req.bids?.filter(b => b.shop_request_id === shopReq.shop_request_id).sort((a, b) => (b.bid_id || 0) - (a.bid_id || 0)) || [];
+
         return (
-            <div key={shopReq.shop_request_id} className="bg-cream-bg border-2 border-accent/30 rounded-2xl p-6 shadow-md flex flex-col sm:flex-row justify-between items-start gap-6 relative overflow-hidden">
+            <div key={shopReq.shop_request_id} className={`bg-cream-bg border-2 border-accent/30 rounded-2xl p-6 shadow-md flex flex-col sm:flex-row justify-between items-start gap-6 relative overflow-hidden transition-all ${isRejected ? "opacity-60 grayscale-[0.3]" : ""}`}>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-bl-full -z-10" />
                 <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                        <span className="text-[10px] font-mono font-bold text-accent uppercase tracking-widest block">QUOTATION RECEIVED</span>
+                        {isRejected ? (
+                            <span className="text-[10px] font-mono font-bold text-red-600/80 uppercase tracking-widest block bg-red-600/10 px-2 py-0.5 rounded">DECLINED BY YOU</span>
+                        ) : (
+                            <span className="text-[10px] font-mono font-bold text-accent uppercase tracking-widest block">QUOTATION RECEIVED</span>
+                        )}
                         <span className="text-xs font-bold text-earth-text/50">&bull; Ref REQ-{req.request_id}</span>
                     </div>
                     <h3 className="text-lg font-extrabold text-earth-text font-heading">{req.clothing_category || "Custom Garment"}</h3>
@@ -146,29 +170,53 @@ export default function ClientOrdersPage() {
                         Tailor Shop ID: #{shopReq.shop_id} &bull; Valid quotation for your request.
                     </p>
                     
-                    <div className="bg-warm-beige border border-accent/20 p-3 rounded-xl inline-block">
+                    <div className="bg-warm-beige border border-accent/20 p-3 rounded-xl inline-block mb-6">
                         <span className="text-[10px] uppercase font-bold text-earth-text/60 block mb-1">Offered Price</span>
                         <span className="text-xl font-black text-accent font-mono">
                             LKR {shopReq.offered_price?.toLocaleString() || "N/A"}
                         </span>
                     </div>
+
+                    {shopBids.length > 1 && (
+                        <div>
+                            <h4 className="text-[9px] font-mono font-bold uppercase text-earth-text/50 mb-2">Bid History</h4>
+                            <div className="space-y-2 pl-2 border-l-2 border-accent/10">
+                                {shopBids.map((b, i) => (
+                                    <div key={b.bid_id || i} className={`text-xs ${i === 0 ? "text-earth-text font-bold" : "text-earth-text/60"}`}>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-accent/40 -ml-[11px]" />
+                                            <span className="font-mono">LKR {Number(b.bid_amount).toLocaleString()}</span>
+                                            <span className="text-[9px] font-mono opacity-70">({b.created_at ? new Date(b.created_at).toLocaleDateString() : "Just now"})</span>
+                                        </div>
+                                        {b.message && <p className="ml-3.5 mt-0.5 italic opacity-80 line-clamp-1">"{b.message}"</p>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
                 
                 <div className="w-full sm:w-48 shrink-0 space-y-2">
                     <button 
                         onClick={() => handleAcceptQuote(shopReq)}
-                        disabled={isAccepting}
-                        className="w-full py-3 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-colors shadow-sm disabled:opacity-70 flex justify-center items-center gap-2"
+                        disabled={isAccepting || isDeclining || isRejected}
+                        className="w-full py-3 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-colors shadow-sm disabled:opacity-50 flex justify-center items-center gap-2"
                     >
                         {isAccepting ? (
                             <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"/> Processing...</>
                         ) : (
-                            "Accept & Order"
+                            isRejected ? "Declined" : "Accept & Order"
                         )}
                     </button>
-                    <button className="w-full py-2.5 bg-transparent border border-earth-text/20 text-earth-text/70 hover:text-earth-text hover:bg-earth-text/5 rounded-xl text-xs font-bold transition-colors">
-                        Decline
-                    </button>
+                    {!isRejected && (
+                        <button 
+                            onClick={() => handleDeclineQuote(shopReq)}
+                            disabled={isDeclining || isAccepting}
+                            className="w-full py-2.5 bg-transparent border border-earth-text/20 text-earth-text/70 hover:text-earth-text hover:bg-earth-text/5 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
+                        >
+                            {isDeclining ? "Declining..." : "Decline"}
+                        </button>
+                    )}
                 </div>
             </div>
         );

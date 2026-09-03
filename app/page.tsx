@@ -76,9 +76,10 @@ const FAQS = [
 
 export default function HomePage() {
     const router = useRouter();
-    const { setRole } = useAuth();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const { setRole } = useAuth();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [openFaq, setOpenFaq] = useState<number | null>(0);
 

@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, browserSessionPersistence, setPersistence } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -16,5 +16,16 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
+
+// Use sessionStorage persistence so Brave/Edge tracking prevention
+// doesn't block Firebase's default IndexedDB-based auth state.
+// Users stay logged in for the browser session (tab/window lifetime).
+// On production with a real domain, IndexedDB works and this can be changed
+// back to browserLocalPersistence for "stay logged in" behavior.
+if (typeof window !== "undefined") {
+  setPersistence(auth, browserSessionPersistence).catch(() => {
+    // Silently fail — auth still works, it just won't persist across sessions
+  });
+}
 
 export { app, auth, storage, googleProvider };

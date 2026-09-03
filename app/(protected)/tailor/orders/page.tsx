@@ -6,7 +6,7 @@ import {
     listShopOrders,
     listShopRequests,
     listOpenRequests,
-    cancelRequest,
+    withdrawRequest,
     submitBid,
     updateOrderStatus,
 } from "@/lib/api/endpoints/orders";
@@ -419,7 +419,9 @@ export default function TailorOrdersPage() {
     const handleDeny = async (req: OrderDetail) => {
         setIsActionSubmitting(true);
         try {
-            await cancelRequest(req.rawId);
+            if (req.shopRequestId) {
+                await withdrawRequest(req.shopRequestId);
+            }
         } catch (err) {
             console.error("Failed to decline request:", err);
         } finally {

@@ -145,6 +145,20 @@ export async function rejectQuote(shopRequestId: number): Promise<ShopRequest> {
 }
 
 /**
+ * Withdraw a pending request assigned to the tailor's shop.
+ * PATCH /api/v1/orders/shop-requests/{id}/withdraw
+ * (Auth: Tailor Role)
+ */
+export async function withdrawRequest(
+    shopRequestId: number,
+): Promise<ShopRequest> {
+    return apiFetch<ShopRequest>(
+        `/orders/shop-requests/${shopRequestId}/withdraw`,
+        { method: "PATCH" },
+    );
+}
+
+/**
  * List all orders for a shop.
  * GET /api/v1/orders/shop/{shop_id}
  * (Auth: Public)

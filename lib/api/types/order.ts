@@ -14,9 +14,18 @@ export type FabricStatus = "client_provided" | "shop_provides";
 export type ServiceType = "online" | "physical_visit";
 export type ClothingRequestType = "direct" | "bidding";
 export type Gender = "male" | "female" | "unisex";
-export type ClothingRequestStatus = "open" | "in_progress" | "completed" | "cancelled";
+export type ClothingRequestStatus =
+    | "open"
+    | "in_progress"
+    | "completed"
+    | "cancelled";
 export type OrderStatus = "in_progress" | "completed" | "cancelled";
-export type ShopRequestStatus = "pending" | "quoted" | "accepted" | "rejected" | "withdrawn";
+export type ShopRequestStatus =
+    | "pending"
+    | "quoted"
+    | "accepted"
+    | "rejected"
+    | "withdrawn";
 
 /**
  * Request body for POST /api/v1/orders/requests
@@ -66,6 +75,7 @@ export interface ClothingRequest {
     description: string | null;
     voice_note_url: string | null;
     request_location: string | null;
+    measurement_profile_id?: number | null;
     design_images?: { image_url: string }[];
     /** Backend field name: status (ClothingRequestStatusEnum) */
     status: ClothingRequestStatus;
@@ -179,7 +189,7 @@ export interface RatingPayload {
     order_id: number;
     client_id: string;
     shop_id: number;
-    rating: number;          // 1–5
+    rating: number; // 1–5
     review?: string | null;
 }
 

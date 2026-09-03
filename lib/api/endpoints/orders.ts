@@ -54,9 +54,7 @@ export async function listOpenRequests(): Promise<ClothingRequest[]> {
 export async function listClientRequests(
     clientId: string,
 ): Promise<ClothingRequest[]> {
-    return apiFetch<ClothingRequest[]>(`/orders/requests/client/${clientId}`, {
-        authenticated: false,
-    });
+    return apiFetch<ClothingRequest[]>(`/orders/requests/client/${clientId}`);
 }
 
 /**

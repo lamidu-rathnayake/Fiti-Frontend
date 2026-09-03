@@ -31,16 +31,19 @@ export interface OrderDetail {
         sleeve: string;
         neck: string;
         shoulder: string;
+        notes?: string;
     };
     designNotes: string;
     images: string[];
     status: string;
     progress?: number;
+    clientPhone?: string;
+    clientCity?: string;
 }
 
 export default function TailorOrdersPage() {
     const { user } = useAuth();
-    
+
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [quotePrice, setQuotePrice] = useState<string>("");
     const [quoteMessage, setQuoteMessage] = useState<string>("");
@@ -91,27 +94,30 @@ export default function TailorOrdersPage() {
                 sleeve: req.measurement?.sleeve ? String(req.measurement.sleeve) : "Not specified",
                 neck: req.measurement?.neck ? String(req.measurement.neck) : "Not specified",
                 shoulder: req.measurement?.shoulder ? String(req.measurement.shoulder) : "Not specified",
+                notes: req.measurement?.notes || "",
             },
             designNotes: req.description || "No design notes provided.",
             images: req.design_images && req.design_images.length > 0 ? req.design_images.map(img => img.image_url) : [defaultImg],
             status: "REQUESTED",
+            clientPhone: req.client?.phone || "",
+            clientCity: req.request_location || req.client?.city || "",
         };
     };
 
     const mapOrderToOrderDetail = (ord: Order): OrderDetail => {
         const orderStatus = ord.order_status;
         const statusLabel = orderStatus === "in_progress" ? "IN FITTING" : (orderStatus || "pending").replace(/_/g, " ").toUpperCase();
-        
+
         const req = ord.clothing_request;
-        const clientName = req?.client?.display_name 
-            ? req.client.display_name 
+        const clientName = req?.client?.display_name
+            ? req.client.display_name
             : req?.client_id ? (req.client_id.length > 15 ? req.client_id.substring(0, 10) + "..." : req.client_id) : `Client #${ord.shop_request_id}`;
 
         const isFemale = req?.gender === "female";
-        const garmentTypeStr = req?.clothing_category 
-            ? req.clothing_category.charAt(0).toUpperCase() + req.clothing_category.slice(1) 
+        const garmentTypeStr = req?.clothing_category
+            ? req.clothing_category.charAt(0).toUpperCase() + req.clothing_category.slice(1)
             : "Suit";
-            
+
         let garmentType: "Suit" | "Shirt" | "Overcoat" | "Trousers" = "Suit";
         if (garmentTypeStr.includes("Shirt") || garmentTypeStr.includes("shirt")) garmentType = "Shirt";
         else if (garmentTypeStr.includes("Coat") || garmentTypeStr.includes("coat")) garmentType = "Overcoat";
@@ -134,11 +140,14 @@ export default function TailorOrdersPage() {
                 sleeve: req?.measurement?.sleeve ? String(req.measurement.sleeve) : "Not specified",
                 neck: req?.measurement?.neck ? String(req.measurement.neck) : "Not specified",
                 shoulder: req?.measurement?.shoulder ? String(req.measurement.shoulder) : "Not specified",
+                notes: req?.measurement?.notes || "",
             },
             designNotes: req?.description || "No additional design notes on file for this order.",
             images: req?.design_images && req.design_images.length > 0 ? req.design_images.map(img => img.image_url) : [],
             status: statusLabel,
             progress: orderStatus === "completed" ? 100 : orderStatus === "in_progress" ? 60 : 20,
+            clientPhone: req?.client?.phone || "",
+            clientCity: req?.request_location || req?.client?.city || "",
         };
     };
 
@@ -184,7 +193,7 @@ export default function TailorOrdersPage() {
             Array.from(allReqsMap.values()).forEach(req => {
                 const mySr = shopId ? req.shop_requests?.find(sr => sr.shop_id === shopId) : null;
                 const isBidding = req.request_type === "bidding";
-                
+
                 if (mySr && mySr.status === "quoted") {
                     const mapped = mapRequestToOrderDetail(req);
                     mapped.rawId = mySr.shop_request_id;
@@ -283,6 +292,46 @@ export default function TailorOrdersPage() {
 
     const renderOrderAtelierDetails = (order: OrderDetail) => (
         <div className="space-y-4 pt-4 border-t border-accent/20 text-left">
+            {order.status === "REQUESTED" && (
+                <div className="bg-warm-beige rounded-2xl p-4 border border-accent/30 space-y-4 mt-4 relative overflow-hidden">
+                    <div>
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-accent block mb-0.5">Issue Quotation</span>
+                        <p className="text-[11px] text-earth-text/70 font-medium">Submit your bid and message to the client directly.</p>
+                    </div>
+
+                    <div className="space-y-3">
+                        <div>
+                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">OFFERED PRICE (LKR)</label>
+                            <input
+                                type="number"
+                                value={quotePrice}
+                                onChange={(e) => setQuotePrice(e.target.value)}
+                                placeholder="e.g. 15000"
+                                className="w-full bg-cream-bg border border-accent/20 focus:border-accent/60 px-3.5 py-2.5 rounded-xl text-xs text-earth-text font-bold font-mono outline-none shadow-sm transition-colors"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">MESSAGE TO CLIENT</label>
+                            <textarea
+                                value={quoteMessage}
+                                onChange={(e) => setQuoteMessage(e.target.value)}
+                                placeholder="e.g. I can tailor this suit in 2 weeks. The fabric is included in the price."
+                                rows={3}
+                                className="w-full bg-cream-bg border border-accent/20 focus:border-accent/60 px-3.5 py-2.5 rounded-xl text-xs text-earth-text font-sans outline-none shadow-sm transition-colors resize-none"
+                            />
+                        </div>
+                        <button
+                            onClick={() => handleIssueQuotation(order)}
+                            disabled={!quotePrice}
+                            className="w-full bg-accent disabled:opacity-50 text-cream-bg font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl hover:bg-accent-hover transition-all shadow-sm flex items-center justify-center gap-1.5"
+                        >
+                            Submit Quotation
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div>
                 <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-earth-text/60 block mb-0.5">Request Details</span>
                 <p className="text-[11px] text-earth-text/70 font-medium">Live specifics for this bespoke commission.</p>
@@ -293,6 +342,13 @@ export default function TailorOrdersPage() {
                     <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">TARGET DATE</label>
                     <div className="w-full bg-cream-bg border-b border-accent/30 px-3.5 py-2.5 rounded-lg text-xs text-earth-text font-mono font-bold">
                         {order.targetDate}
+                    </div>
+                </div>
+                <div>
+                    <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">LOCATION & CONTACT</label>
+                    <div className="w-full bg-cream-bg border-b border-accent/30 px-3.5 py-2.5 rounded-lg text-xs text-earth-text font-medium flex flex-col gap-1">
+                        <span className="flex items-center gap-1.5"><svg className="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> {order.clientCity || "Not specified"}</span>
+                        <span className="flex items-center gap-1.5"><svg className="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg> {order.clientPhone || "Not specified"}</span>
                     </div>
                 </div>
                 <div>
@@ -410,7 +466,13 @@ export default function TailorOrdersPage() {
                         </div>
                     </div>
                 </div>
-                <p className="text-[10px] text-earth-text/50 italic">Measurements not on file yet appear as &quot;Not specified&quot;.</p>
+                {order.measurements.notes && (
+                    <div className="mt-4 p-3 bg-cream-bg border border-accent/20 rounded-xl">
+                        <span className="text-[9px] font-mono text-earth-text/60 font-bold block mb-1">MEASUREMENT NOTES</span>
+                        <p className="text-xs text-earth-text/80 leading-relaxed font-sans">{order.measurements.notes}</p>
+                    </div>
+                )}
+                <p className="text-[10px] text-earth-text/50 italic mt-2">Measurements not on file yet appear as &quot;Not specified&quot;.</p>
 
                 <div>
                     <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-2">REFERENCE PHOTOS</label>
@@ -453,46 +515,6 @@ export default function TailorOrdersPage() {
                     </div>
                 </div>
             </div>
-
-            {order.status === "REQUESTED" && (
-                <div className="bg-warm-beige rounded-2xl p-4 border border-accent/30 space-y-4 mt-4 relative overflow-hidden">
-                    <div>
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-accent block mb-0.5">Issue Quotation</span>
-                        <p className="text-[11px] text-earth-text/70 font-medium">Submit your bid and message to the client directly.</p>
-                    </div>
-
-                    <div className="space-y-3">
-                        <div>
-                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">OFFERED PRICE (LKR)</label>
-                            <input
-                                type="number"
-                                value={quotePrice}
-                                onChange={(e) => setQuotePrice(e.target.value)}
-                                placeholder="e.g. 15000"
-                                className="w-full bg-cream-bg border border-accent/20 focus:border-accent/60 px-3.5 py-2.5 rounded-xl text-xs text-earth-text font-bold font-mono outline-none shadow-sm transition-colors"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-1.5">MESSAGE TO CLIENT</label>
-                            <textarea
-                                value={quoteMessage}
-                                onChange={(e) => setQuoteMessage(e.target.value)}
-                                placeholder="e.g. I can tailor this suit in 2 weeks. The fabric is included in the price."
-                                rows={3}
-                                className="w-full bg-cream-bg border border-accent/20 focus:border-accent/60 px-3.5 py-2.5 rounded-xl text-xs text-earth-text font-sans outline-none shadow-sm transition-colors resize-none"
-                            />
-                        </div>
-                        <button
-                            onClick={() => handleIssueQuotation(order)}
-                            disabled={!quotePrice}
-                            className="w-full bg-accent disabled:opacity-50 text-cream-bg font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl hover:bg-accent-hover transition-all shadow-sm flex items-center justify-center gap-1.5"
-                        >
-                            Submit Quotation
-                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" /></svg>
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 
@@ -596,10 +618,13 @@ export default function TailorOrdersPage() {
                                                 )}
                                                 <div>
                                                     <div className="flex items-center gap-2">
-                                                        <h3 className="text-base font-extrabold text-earth-text font-heading group-hover:text-accent transition-colors">{req.title}</h3>
-                                                        <span className="text-[9px] bg-accent/10 text-accent px-2.5 py-0.5 rounded-full border border-accent/20 font-bold uppercase tracking-wider font-mono">{req.garmentType}</span>
+                                                        <h3 className="text-base font-extrabold text-earth-text font-heading group-hover:text-accent transition-colors">{req.garmentType}</h3>
                                                     </div>
-                                                    <p className="text-xs text-earth-text/70 mt-0.5 font-medium">Client: <span className="text-earth-text font-bold">{req.client}</span> &bull; <span className="text-accent font-mono">{req.date}</span></p>
+                                                    <div className="text-[11px] text-earth-text/70 mt-1 space-y-0.5 font-medium">
+                                                        <p className="flex items-center gap-1.5"><svg className="w-3 h-3 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> {req.clientCity || "Location not specified"}</p>
+                                                        <p className="flex items-center gap-1.5"><svg className="w-3 h-3 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg> {req.clientPhone || "Phone not specified"}</p>
+                                                        <p className="flex items-center gap-1.5"><svg className="w-3 h-3 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> {req.date}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="text-right">
@@ -761,8 +786,8 @@ export default function TailorOrdersPage() {
 
             {/* POPUP MODAL */}
             {selectedOrder && (
-                <div className="fixed inset-0 bg-earth-text/40 backdrop-blur-sm z-[999] flex items-center justify-center p-4 sm:p-6" onClick={() => setSelectedOrder(null)}>
-                    <div 
+                <div className="fixed inset-0 bg-earth-text/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 sm:p-6" onClick={() => setSelectedOrder(null)}>
+                    <div
                         className="bg-cream-bg w-full max-w-2xl max-h-[90vh] rounded-3xl border border-accent/30 shadow-2xl flex flex-col overflow-hidden text-earth-text"
                         onClick={(e) => e.stopPropagation()}
                     >
@@ -771,7 +796,7 @@ export default function TailorOrdersPage() {
                                 <span className="text-accent bg-accent/10 px-2.5 py-1 rounded-lg text-xs font-bold font-mono border border-accent/20">{selectedOrder.id}</span>
                                 <h3 className="text-lg font-extrabold text-earth-text font-heading">{selectedOrder.title}</h3>
                             </div>
-                            <button 
+                            <button
                                 onClick={() => setSelectedOrder(null)}
                                 className="w-8 h-8 flex items-center justify-center rounded-full bg-cream-bg text-earth-text/60 hover:text-earth-text border border-accent/20 hover:border-accent transition-colors"
                             >

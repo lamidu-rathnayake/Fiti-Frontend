@@ -114,7 +114,7 @@ export default function ProtectedLayout({
             </header>
 
             {/* MAIN CONTENT AREA */}
-            <main className="flex-1 flex flex-col relative z-10 w-full h-full">
+            <main className="flex-1 flex flex-col relative w-full h-full">
                 {children}
             </main>
 

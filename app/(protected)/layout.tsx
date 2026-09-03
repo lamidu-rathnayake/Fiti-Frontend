@@ -72,11 +72,6 @@ export default function ProtectedLayout({
 
                     {/* Middle Navigation Links */}
                     <nav className="hidden lg:flex items-center space-x-8 text-xs font-bold tracking-wider text-earth-text/70">
-                        {dbRole !== "tailor" && (
-                            <Link href="/client/storefront" className={pathname === '/client/storefront' ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
-                                Storefront
-                            </Link>
-                        )}
                         <Link href={homeUrl} className={pathname === homeUrl ? 'text-earth-text font-black relative pb-1 border-b-2 border-accent' : 'hover:text-accent transition-colors'}>
                             {dbRole !== "tailor" ? "Home" : "Dashboard"}
                         </Link>

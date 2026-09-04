@@ -7,7 +7,10 @@
         "build": "next build",
         "start": "next start",
         "lint": "eslint",
-        "test:e2e": "playwright test"
+        "test:e2e": "start-server-and-test dev http://localhost:3000 test:e2e:run",
+        "test:e2e:open": "cypress open",
+        "test:e2e:run": "cypress run",
+        "test:e2e:playwright": "playwright test"
     },
     "dependencies": {
         "@types/leaflet": "^1.9.22",
@@ -26,8 +29,10 @@
         "@types/node": "^20",
         "@types/react": "^19",
         "@types/react-dom": "^19",
+        "cypress": "^16.0.0",
         "eslint": "^9",
         "eslint-config-next": "16.3.0",
+        "start-server-and-test": "^3.0.12",
         "tailwindcss": "^4",
         "typescript": "^5"
     }

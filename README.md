@@ -63,4 +63,6 @@ npm run test:e2e
 npm run build
 ```
 
-Playwright starts the Next.js development server automatically for the E2E suite. Tests are in `tests/`.
+Cypress starts the Next.js development server automatically for the E2E suite. Tests are in `cypress/e2e/`. To use the interactive runner, start the app with `npm run dev` and run `npm run test:e2e:open` in another terminal.
+
+The previous Playwright suite remains available through `npm run test:e2e:playwright`.

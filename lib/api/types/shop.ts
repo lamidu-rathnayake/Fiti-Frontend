@@ -21,10 +21,32 @@ export interface ShopPayload {
     longitude?: number | null;
 }
 
+export interface Gig {
+    gig_id: number;
+    shop_id: number;
+    title: string;
+    description: string;
+    price: number;
+    delivery_time: string | null;
+    category: string | null;
+    image_url: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+}
+
+export interface GigPayload {
+    title: string;
+    description: string;
+    price: number;
+    delivery_time?: string | null;
+    category?: string | null;
+    image_url?: string | null;
+}
+
 /** A shop object returned from GET /api/v1/shops/* */
 export interface Shop {
     shop_id: number;
-    tailor_id: string;        // NOTE: was incorrectly `seller_id` in the old lib/api.ts
+    tailor_id: string; // NOTE: was incorrectly `seller_id` in the old lib/api.ts
     shop_name: string;
     specialty: string | null;
     shop_bio: string | null;
@@ -36,6 +58,7 @@ export interface Shop {
     longitude: number | null;
     average_rating: number;
     images: ShopImage[];
+    gigs: Gig[];
     created_at: string | null;
     updated_at: string | null;
 }

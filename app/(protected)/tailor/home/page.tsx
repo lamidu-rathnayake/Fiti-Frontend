@@ -626,7 +626,7 @@ export default function TailorHomePage() {
                 <div className="relative flex items-center gap-2">
                     {selectedShop && (
                         <Link
-                            href={`/client/shop/${selectedShop.shop_id}?edit=true`}
+                            href={`/tailor/shop/${selectedShop.shop_id}`}
                             className="flex items-center gap-1.5 bg-accent/10 border border-accent/30 hover:border-accent hover:bg-accent hover:text-white px-3.5 py-2 rounded-full text-xs font-bold text-accent transition-all shadow-sm shrink-0"
                         >
                             <span>✏️</span> Edit Shop Profile
@@ -669,7 +669,7 @@ export default function TailorHomePage() {
                             <div className="h-px bg-accent/15 my-1.5" />
                             {selectedShop && (
                                 <Link
-                                    href={`/client/shop/${selectedShop.shop_id}?edit=true`}
+                                    href={`/tailor/shop/${selectedShop.shop_id}`}
                                     onClick={() => setIsShopDropdownOpen(false)}
                                     className="w-full text-left px-4 py-2 text-xs font-bold text-earth-text/80 hover:text-accent hover:bg-warm-beige transition-colors flex items-center gap-2"
                                 >
@@ -1167,7 +1167,7 @@ export default function TailorHomePage() {
                                             </p>
                                         </div>
                                         <Link
-                                            href={`/client/shop/${selectedShop.shop_id}?edit=true`}
+                                            href={`/tailor/shop/${selectedShop.shop_id}`}
                                             className="inline-flex items-center justify-center gap-2 bg-accent text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-accent-dark transition-all shadow-sm shrink-0"
                                         >
                                             ✏️ Edit Shop Profile

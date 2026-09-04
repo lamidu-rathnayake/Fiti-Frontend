@@ -12,6 +12,8 @@ import type {
     ShopImage,
     ShopImagePayload,
     NearbyShopsParams,
+    Gig,
+    GigPayload,
 } from "@/lib/api/types/shop";
 
 /**
@@ -28,11 +30,15 @@ export async function listShops(): Promise<Shop[]> {
  * GET /api/v1/shops/nearby?lat=&lng=&radius_km=
  * (Auth: Public)
  */
-export async function listNearbyShops(params: NearbyShopsParams): Promise<Shop[]> {
+export async function listNearbyShops(
+    params: NearbyShopsParams,
+): Promise<Shop[]> {
     const query = new URLSearchParams({
         lat: String(params.lat),
         lng: String(params.lng),
-        ...(params.radius_km !== undefined && { radius_km: String(params.radius_km) }),
+        ...(params.radius_km !== undefined && {
+            radius_km: String(params.radius_km),
+        }),
     });
     return apiFetch<Shop[]>(`/shops/nearby?${query}`, { authenticated: false });
 }
@@ -43,7 +49,9 @@ export async function listNearbyShops(params: NearbyShopsParams): Promise<Shop[]
  * (Auth: Public)
  */
 export async function listTailorShops(tailorId: string): Promise<Shop[]> {
-    return apiFetch<Shop[]>(`/shops/tailor/${tailorId}`, { authenticated: false });
+    return apiFetch<Shop[]>(`/shops/tailor/${tailorId}`, {
+        authenticated: false,
+    });
 }
 
 /**
@@ -118,4 +126,18 @@ export async function deleteShopImage(
     return apiFetch<void>(`/shops/${shopId}/images/${imageId}`, {
         method: "DELETE",
     });
+}
+
+export async function createGig(
+    shopId: number,
+    payload: GigPayload,
+): Promise<Gig> {
+    return apiFetch<Gig>(`/shops/${shopId}/gigs`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+    });
+}
+
+export async function deleteGig(gigId: number): Promise<void> {
+    return apiFetch<void>(`/shops/gigs/${gigId}`, { method: "DELETE" });
 }

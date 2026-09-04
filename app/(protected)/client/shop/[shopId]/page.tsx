@@ -3,7 +3,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getShop, updateShop, addShopImage, deleteShopImage } from "@/lib/api/endpoints/shops";
+import {
+    getShop,
+    updateShop,
+    addShopImage,
+    deleteShopImage,
+} from "@/lib/api/endpoints/shops";
 import type { Shop } from "@/lib/api/types/shop";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { validatePhoneNumber } from "@/lib/phone";
@@ -15,8 +20,8 @@ export default function ShopProfilePage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const shopId = params.shopId as string;
-    const { user, role } = useAuth();
-    const shouldEdit = searchParams.get("edit") === "true";
+    const { user } = useAuth();
+    const shouldEdit = false;
 
     const [shop, setShop] = useState<Shop | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -66,9 +71,7 @@ export default function ShopProfilePage() {
         }
     }, [shopId, fetchShopDetails]);
 
-    const isOwner = Boolean(
-        user && shop && user.uid === shop.tailor_id
-    );
+    const isOwner = false;
 
     useEffect(() => {
         if (shouldEdit && shop && isOwner) {
@@ -106,7 +109,9 @@ export default function ShopProfilePage() {
 
         const trimmedReg = registrationNumber.trim();
         if (trimmedReg && trimmedReg.length < 2) {
-            setEditError("Registration number must be at least 2 characters long.");
+            setEditError(
+                "Registration number must be at least 2 characters long.",
+            );
             return;
         }
 
@@ -114,7 +119,9 @@ export default function ShopProfilePage() {
         if (contactNumber.trim()) {
             const phoneVal = validatePhoneNumber(contactNumber);
             if (!phoneVal.isValid) {
-                setEditError(phoneVal.error || "Please enter a valid phone number.");
+                setEditError(
+                    phoneVal.error || "Please enter a valid phone number.",
+                );
                 return;
             }
             normalizedPhone = phoneVal.normalized || undefined;
@@ -143,13 +150,17 @@ export default function ShopProfilePage() {
             setRegistrationNumber(updated.registration_number || "");
             setIsEditOpen(false);
         } catch (err: any) {
-            setEditError(err.detail || err.message || "Failed to update shop details.");
+            setEditError(
+                err.detail || err.message || "Failed to update shop details.",
+            );
         } finally {
             setIsSaving(false);
         }
     };
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
         const file = e.target.files?.[0];
         if (!file || !shop) return;
 
@@ -172,13 +183,20 @@ export default function ShopProfilePage() {
 
     const handleDeleteImage = async (imageId: number) => {
         if (!shop) return;
-        if (!confirm("Are you sure you want to delete this photo from your portfolio?")) return;
+        if (
+            !confirm(
+                "Are you sure you want to delete this photo from your portfolio?",
+            )
+        )
+            return;
 
         try {
             await deleteShopImage(shop.shop_id, imageId);
             await fetchShopDetails();
         } catch (err: any) {
-            alert("Failed to delete image: " + (err.message || "Unknown error"));
+            alert(
+                "Failed to delete image: " + (err.message || "Unknown error"),
+            );
         }
     };
 
@@ -195,8 +213,12 @@ export default function ShopProfilePage() {
     if (!shop) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center space-y-4 bg-warm-beige">
-                <h2 className="text-xl font-bold text-earth-text font-serif">Shop Not Found</h2>
-                <p className="text-earth-text/60 text-sm font-medium">The atelier you are looking for does not exist.</p>
+                <h2 className="text-xl font-bold text-earth-text font-serif">
+                    Shop Not Found
+                </h2>
+                <p className="text-earth-text/60 text-sm font-medium">
+                    The atelier you are looking for does not exist.
+                </p>
                 <button
                     onClick={() => router.back()}
                     className="px-6 py-2.5 bg-cream-bg border border-accent/20 text-earth-text rounded-xl hover:border-accent hover:bg-accent hover:text-white transition-all cursor-pointer font-bold text-xs uppercase"
@@ -207,13 +229,18 @@ export default function ShopProfilePage() {
         );
     }
 
-    const coverImage = shop.images && shop.images.length > 0 ? shop.images[0].image_url : null;
+    const coverImage =
+        shop.images && shop.images.length > 0 ? shop.images[0].image_url : null;
 
     return (
         <div className="min-h-screen text-earth-text bg-warm-beige selection:bg-accent selection:text-white">
             <FullPageLock
                 isSubmitting={isSaving || isUploadingImage}
-                title={isSaving ? "Saving Shop Changes" : "Uploading Portfolio Image"}
+                title={
+                    isSaving
+                        ? "Saving Shop Changes"
+                        : "Uploading Portfolio Image"
+                }
                 message="Updating atelier details in database..."
             />
 
@@ -241,7 +268,10 @@ export default function ShopProfilePage() {
                             <span>📍 {shop.city || "Location Pending"}</span>
                             <span>&bull;</span>
                             <span className="text-accent">
-                                &#9733; {shop.average_rating && shop.average_rating > 0 ? shop.average_rating.toFixed(1) : "New"}
+                                &#9733;{" "}
+                                {shop.average_rating && shop.average_rating > 0
+                                    ? shop.average_rating.toFixed(1)
+                                    : "New"}
                             </span>
                         </p>
                     </div>
@@ -284,7 +314,8 @@ export default function ShopProfilePage() {
                             )}
                         </div>
                         <p className="text-earth-text/80 text-sm leading-relaxed font-medium">
-                            {shop.shop_bio || "No description provided for this atelier yet."}
+                            {shop.shop_bio ||
+                                "No description provided for this atelier yet."}
                         </p>
                     </section>
 
@@ -295,12 +326,17 @@ export default function ShopProfilePage() {
                         <div className="flex flex-wrap gap-2">
                             {shop.specialty && shop.specialty.trim() ? (
                                 shop.specialty.split(",").map((tag, i) => (
-                                    <span key={i} className="px-3 py-1 bg-cream-bg border border-accent/15 text-earth-text text-[10px] font-mono rounded-lg font-bold">
+                                    <span
+                                        key={i}
+                                        className="px-3 py-1 bg-cream-bg border border-accent/15 text-earth-text text-[10px] font-mono rounded-lg font-bold"
+                                    >
                                         {tag.trim()}
                                     </span>
                                 ))
                             ) : (
-                                <span className="text-xs text-earth-text/50 italic">General Tailoring</span>
+                                <span className="text-xs text-earth-text/50 italic">
+                                    General Tailoring
+                                </span>
                             )}
                         </div>
                     </section>
@@ -322,11 +358,18 @@ export default function ShopProfilePage() {
                         <ul className="space-y-3 text-sm text-earth-text/80 font-medium">
                             <li className="flex items-start gap-2">
                                 <span className="shrink-0 mt-0.5">📍</span>
-                                <span>{shop.shop_address || shop.city || "Address not provided."}</span>
+                                <span>
+                                    {shop.shop_address ||
+                                        shop.city ||
+                                        "Address not provided."}
+                                </span>
                             </li>
                             <li className="flex items-center gap-2">
                                 <span>📞</span>
-                                <span>{shop.contact_number || "Contact not provided."}</span>
+                                <span>
+                                    {shop.contact_number ||
+                                        "Contact not provided."}
+                                </span>
                             </li>
                             {shop.registration_number && (
                                 <li className="flex items-center gap-2">
@@ -347,7 +390,8 @@ export default function ShopProfilePage() {
                                     Atelier Portfolio & Gallery
                                 </h3>
                                 <p className="text-xs text-earth-text/60 font-medium mt-0.5">
-                                    Craftsmanship showcases and recent tailored works
+                                    Craftsmanship showcases and recent tailored
+                                    works
                                 </p>
                             </div>
 
@@ -382,22 +426,30 @@ export default function ShopProfilePage() {
                                         <img
                                             src={img.image_url}
                                             alt={`${shop.shop_name} work sample ${i + 1}`}
-                                            onClick={() => setLightboxImage(img.image_url)}
+                                            onClick={() =>
+                                                setLightboxImage(img.image_url)
+                                            }
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
                                         <div
-                                            onClick={() => setLightboxImage(img.image_url)}
+                                            onClick={() =>
+                                                setLightboxImage(img.image_url)
+                                            }
                                             className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center"
                                         >
                                             <span>🔍 View Dress Photo</span>
-                                            <span className="text-[10px] text-white/80 font-mono">Sample #{i + 1}</span>
+                                            <span className="text-[10px] text-white/80 font-mono">
+                                                Sample #{i + 1}
+                                            </span>
                                         </div>
                                         {isOwner && img.image_id && (
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteImage(img.image_id!);
+                                                    handleDeleteImage(
+                                                        img.image_id!,
+                                                    );
                                                 }}
                                                 title="Delete photo"
                                                 className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs cursor-pointer"
@@ -410,9 +462,15 @@ export default function ShopProfilePage() {
 
                                 {isOwner && (
                                     <label className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center p-6 text-center hover:border-accent transition-colors cursor-pointer bg-cream-bg/40 aspect-square">
-                                        <span className="text-2xl mb-1">📸</span>
-                                        <span className="text-xs font-bold text-accent uppercase">Upload Work Sample</span>
-                                        <span className="text-[10px] text-earth-text/50 mt-1">PNG, JPG up to 10MB</span>
+                                        <span className="text-2xl mb-1">
+                                            📸
+                                        </span>
+                                        <span className="text-xs font-bold text-accent uppercase">
+                                            Upload Work Sample
+                                        </span>
+                                        <span className="text-[10px] text-earth-text/50 mt-1">
+                                            PNG, JPG up to 10MB
+                                        </span>
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -429,7 +487,9 @@ export default function ShopProfilePage() {
                                     📸
                                 </div>
                                 <div>
-                                    <h4 className="text-base font-bold text-earth-text font-serif">No Portfolio Photos Yet</h4>
+                                    <h4 className="text-base font-bold text-earth-text font-serif">
+                                        No Portfolio Photos Yet
+                                    </h4>
                                     <p className="text-xs text-earth-text/60 mt-1 font-medium max-w-sm mx-auto">
                                         {isOwner
                                             ? "Showcase your craftsmanship by uploading photos of custom garments and past work."
@@ -454,6 +514,64 @@ export default function ShopProfilePage() {
                     </section>
                 </div>
             </main>
+
+            <section className="max-w-7xl mx-auto w-full px-6 sm:px-12 pb-12">
+                <div className="border-b border-accent/15 pb-4 mb-6">
+                    <h2 className="text-xl font-bold text-earth-text font-serif">
+                        Services &amp; Gigs
+                    </h2>
+                    <p className="text-xs text-earth-text/60 mt-1">
+                        Choose a service and send an inquiry to this atelier.
+                    </p>
+                </div>
+                {shop.gigs.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {shop.gigs.map((gig) => (
+                            <article
+                                key={gig.gig_id}
+                                className="bg-cream-bg border border-accent/20 rounded-2xl overflow-hidden shadow-sm"
+                            >
+                                {gig.image_url && (
+                                    <img
+                                        src={gig.image_url}
+                                        alt={gig.title}
+                                        className="w-full h-48 object-cover"
+                                    />
+                                )}
+                                <div className="p-5 space-y-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <h3 className="font-bold text-earth-text">
+                                            {gig.title}
+                                        </h3>
+                                        <span className="font-mono text-sm font-bold text-accent whitespace-nowrap">
+                                            LKR {gig.price.toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-earth-text/70">
+                                        {gig.description}
+                                    </p>
+                                    <p className="text-xs text-earth-text/60">
+                                        {gig.category || "Custom tailoring"}
+                                        {gig.delivery_time
+                                            ? ` • ${gig.delivery_time}`
+                                            : ""}
+                                    </p>
+                                    <Link
+                                        href={`/client/directRequest?shop_id=${shop.shop_id}`}
+                                        className="block w-full text-center py-2.5 rounded-xl bg-accent text-white text-xs font-bold uppercase tracking-wider"
+                                    >
+                                        Inquire about this gig
+                                    </Link>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-sm text-earth-text/60">
+                        This atelier has not published any gigs yet.
+                    </p>
+                )}
+            </section>
 
             {/* EDIT SHOP MODAL FOR TAILOR */}
             {isEditOpen && (
@@ -491,7 +609,9 @@ export default function ShopProfilePage() {
                                 <input
                                     type="text"
                                     value={shopName}
-                                    onChange={(e) => setShopName(e.target.value)}
+                                    onChange={(e) =>
+                                        setShopName(e.target.value)
+                                    }
                                     required
                                     className="w-full bg-warm-beige border border-accent/20 focus:border-accent rounded-xl px-4 py-2.5 text-xs text-earth-text focus:outline-none font-medium"
                                 />
@@ -504,7 +624,9 @@ export default function ShopProfilePage() {
                                 <input
                                     type="text"
                                     value={specialty}
-                                    onChange={(e) => setSpecialty(e.target.value)}
+                                    onChange={(e) =>
+                                        setSpecialty(e.target.value)
+                                    }
                                     placeholder="e.g. Bespoke Suits, Shirts, Alterations"
                                     className="w-full bg-warm-beige border border-accent/20 focus:border-accent rounded-xl px-4 py-2.5 text-xs text-earth-text focus:outline-none font-medium"
                                 />
@@ -531,7 +653,9 @@ export default function ShopProfilePage() {
                                     <input
                                         type="text"
                                         value={city}
-                                        onChange={(e) => setCity(e.target.value)}
+                                        onChange={(e) =>
+                                            setCity(e.target.value)
+                                        }
                                         placeholder="e.g. Colombo"
                                         className="w-full bg-warm-beige border border-accent/20 focus:border-accent rounded-xl px-4 py-2.5 text-xs text-earth-text focus:outline-none font-medium"
                                     />
@@ -543,7 +667,9 @@ export default function ShopProfilePage() {
                                     <input
                                         type="text"
                                         value={contactNumber}
-                                        onChange={(e) => setContactNumber(e.target.value)}
+                                        onChange={(e) =>
+                                            setContactNumber(e.target.value)
+                                        }
                                         placeholder="e.g. 0771234567"
                                         className="w-full bg-warm-beige border border-accent/20 focus:border-accent rounded-xl px-4 py-2.5 text-xs text-earth-text focus:outline-none font-medium"
                                     />
@@ -557,7 +683,9 @@ export default function ShopProfilePage() {
                                 <input
                                     type="text"
                                     value={shopAddress}
-                                    onChange={(e) => setShopAddress(e.target.value)}
+                                    onChange={(e) =>
+                                        setShopAddress(e.target.value)
+                                    }
                                     placeholder="Full street address"
                                     className="w-full bg-warm-beige border border-accent/20 focus:border-accent rounded-xl px-4 py-2.5 text-xs text-earth-text focus:outline-none font-medium"
                                 />
@@ -570,7 +698,9 @@ export default function ShopProfilePage() {
                                 <input
                                     type="text"
                                     value={registrationNumber}
-                                    onChange={(e) => setRegistrationNumber(e.target.value)}
+                                    onChange={(e) =>
+                                        setRegistrationNumber(e.target.value)
+                                    }
                                     placeholder="Optional reg number"
                                     className="w-full bg-warm-beige border border-accent/20 focus:border-accent rounded-xl px-4 py-2.5 text-xs text-earth-text focus:outline-none font-medium"
                                 />
@@ -582,7 +712,10 @@ export default function ShopProfilePage() {
                                 </label>
                                 <div className="flex items-center gap-3">
                                     <label className="px-4 py-2.5 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-all cursor-pointer shadow-sm flex items-center gap-2">
-                                        <span>📸</span> {isUploadingImage ? "Uploading..." : "Upload Dress Photo"}
+                                        <span>📸</span>{" "}
+                                        {isUploadingImage
+                                            ? "Uploading..."
+                                            : "Upload Dress Photo"}
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -593,7 +726,8 @@ export default function ShopProfilePage() {
                                     </label>
                                     {shop.images && shop.images.length > 0 && (
                                         <span className="text-xs text-earth-text/60 font-medium">
-                                            ({shop.images.length} photos currently in gallery)
+                                            ({shop.images.length} photos
+                                            currently in gallery)
                                         </span>
                                     )}
                                 </div>

@@ -75,7 +75,8 @@ export default function MapWithOverlay({ onLocationChange }: MapWithOverlayProps
                         fetchAddress(fallbackLoc.lat, fallbackLoc.lng);
                         onLocationChange(fallbackLoc);
                         setLocationInitialized(true);
-                    }
+                    },
+                    { timeout: 2000 }
                 );
             } else {
                 const fallbackLoc = { lat: 6.9271, lng: 79.8612 };

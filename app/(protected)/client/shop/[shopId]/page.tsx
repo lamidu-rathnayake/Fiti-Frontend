@@ -9,6 +9,7 @@ import {
     addShopImage,
     deleteShopImage,
 } from "@/lib/api/endpoints/shops";
+import { parseShopImage } from "@/lib/api/types/shop";
 import type { Shop } from "@/lib/api/types/shop";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { validatePhoneNumber } from "@/lib/phone";
@@ -41,6 +42,10 @@ export default function ShopProfilePage() {
     const [registrationNumber, setRegistrationNumber] = useState("");
 
     // Portfolio Image upload states
+    const [isAddWorkModalOpen, setIsAddWorkModalOpen] = useState(false);
+    const [workFile, setWorkFile] = useState<File | null>(null);
+    const [workDescription, setWorkDescription] = useState("");
+    const [workFilePreview, setWorkFilePreview] = useState<string | null>(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [lightboxImage, setLightboxImage] = useState<string | null>(null);
@@ -71,7 +76,7 @@ export default function ShopProfilePage() {
         }
     }, [shopId, fetchShopDetails]);
 
-    const isOwner = false;
+    const isOwner = Boolean(user && shop && user.uid === shop.tailor_id);
 
     useEffect(() => {
         if (shouldEdit && shop && isOwner) {
@@ -158,27 +163,51 @@ export default function ShopProfilePage() {
         }
     };
 
+    const handlePublishWorkSample = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!shop) return;
+        if (!workFile) {
+            setUploadError("Please select an image file.");
+            return;
+        }
+        if (!workDescription.trim()) {
+            setUploadError("Please enter a text description of the work sample.");
+            return;
+        }
+
+        setIsUploadingImage(true);
+        setUploadError(null);
+
+        try {
+            const imageUrl = await uploadToCloudinary(workFile, "image");
+            if (!imageUrl) {
+                throw new Error("Image upload failed.");
+            }
+            await addShopImage(shop.shop_id, {
+                image_url: imageUrl,
+                description: workDescription.trim(),
+            });
+            setWorkFile(null);
+            setWorkFilePreview(null);
+            setWorkDescription("");
+            setIsAddWorkModalOpen(false);
+            await fetchShopDetails();
+        } catch (err: any) {
+            setUploadError(err.message || "Failed to publish portfolio work sample.");
+        } finally {
+            setIsUploadingImage(false);
+        }
+    };
+
     const handleImageUpload = async (
         e: React.ChangeEvent<HTMLInputElement>,
     ) => {
         const file = e.target.files?.[0];
         if (!file || !shop) return;
 
-        setIsUploadingImage(true);
-        setUploadError(null);
-
-        try {
-            const imageUrl = await uploadToCloudinary(file, "image");
-            if (!imageUrl) {
-                throw new Error("Image upload failed.");
-            }
-            await addShopImage(shop.shop_id, { image_url: imageUrl });
-            await fetchShopDetails();
-        } catch (err: any) {
-            setUploadError(err.message || "Failed to upload portfolio image.");
-        } finally {
-            setIsUploadingImage(false);
-        }
+        setWorkFile(file);
+        setWorkFilePreview(URL.createObjectURL(file));
+        setIsAddWorkModalOpen(true);
     };
 
     const handleDeleteImage = async (imageId: number) => {
@@ -229,9 +258,6 @@ export default function ShopProfilePage() {
         );
     }
 
-    const coverImage =
-        shop.images && shop.images.length > 0 ? shop.images[0].image_url : null;
-
     return (
         <div className="min-h-screen text-earth-text bg-warm-beige selection:bg-accent selection:text-white">
             <FullPageLock
@@ -244,17 +270,11 @@ export default function ShopProfilePage() {
                 message="Updating atelier details in database..."
             />
 
-            {/* HERO / COVER SECTION */}
-            <div className="w-full h-64 sm:h-80 relative overflow-hidden bg-slate-900">
-                {coverImage ? (
-                    <div
-                        className="absolute inset-0 bg-cover bg-center opacity-50"
-                        style={{ backgroundImage: `url('${coverImage}')` }}
-                    />
-                ) : (
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-950 via-earth-text to-stone-900 opacity-90" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-warm-beige via-warm-beige/60 to-transparent" />
+            {/* HERO / ATELIER HEADER SECTION */}
+            <div className="w-full h-64 sm:h-80 relative overflow-hidden bg-stone-950 border-b border-accent/20">
+                <div className="absolute inset-0 bg-gradient-to-r from-stone-950 via-earth-text to-amber-950 opacity-95" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.15),transparent_60%)]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-warm-beige via-warm-beige/50 to-transparent" />
 
                 <div className="absolute bottom-0 left-0 w-full p-6 sm:p-12 max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
                     <div>
@@ -381,31 +401,31 @@ export default function ShopProfilePage() {
                     </section>
                 </div>
 
-                {/* RIGHT COLUMN - PORTFOLIO / GALLERY */}
+                {/* RIGHT COLUMN - PORTFOLIO / GALLERY SHOWCASE */}
                 <div className="lg:col-span-2 space-y-8">
                     <section>
                         <div className="flex items-center justify-between mb-6 border-b border-accent/15 pb-4">
                             <div>
                                 <h3 className="text-xl font-bold text-earth-text font-serif">
-                                    Atelier Portfolio & Gallery
+                                    Atelier Work Showcase & Portfolio Cards
                                 </h3>
                                 <p className="text-xs text-earth-text/60 font-medium mt-0.5">
-                                    Craftsmanship showcases and recent tailored
-                                    works
+                                    Custom work samples, signature garments, and text descriptions
                                 </p>
                             </div>
 
                             {isOwner && (
-                                <label className="px-4 py-2 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-all cursor-pointer shadow-sm">
-                                    + Add Photo
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="hidden"
-                                        disabled={isUploadingImage}
-                                    />
-                                </label>
+                                <button
+                                    onClick={() => {
+                                        setWorkFile(null);
+                                        setWorkFilePreview(null);
+                                        setWorkDescription("");
+                                        setIsAddWorkModalOpen(true);
+                                    }}
+                                    className="px-4 py-2 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+                                >
+                                    <span>📸</span> + Add Showcase Card
+                                </button>
                             )}
                         </div>
 
@@ -415,71 +435,69 @@ export default function ShopProfilePage() {
                             </div>
                         )}
 
-                        {/* GALLERY GRID */}
+                        {/* CARD BY CARD PORTFOLIO GALLERY */}
                         {shop.images && shop.images.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                {shop.images.map((img, i) => (
-                                    <div
-                                        key={img.image_id || i}
-                                        className="bg-cream-bg border border-accent/15 rounded-2xl overflow-hidden shadow-sm group hover:border-accent/60 hover:shadow-md transition-all aspect-square relative cursor-pointer"
-                                    >
-                                        <img
-                                            src={img.image_url}
-                                            alt={`${shop.shop_name} work sample ${i + 1}`}
-                                            onClick={() =>
-                                                setLightboxImage(img.image_url)
-                                            }
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                {shop.images.map((img, i) => {
+                                    const { imageUrl, description } = parseShopImage(img);
+                                    return (
                                         <div
-                                            onClick={() =>
-                                                setLightboxImage(img.image_url)
-                                            }
-                                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center"
+                                            key={img.image_id || i}
+                                            className="bg-cream-bg border border-accent/20 rounded-2xl overflow-hidden shadow-sm flex flex-col hover:border-accent/60 hover:shadow-md transition-all group"
                                         >
-                                            <span>🔍 View Dress Photo</span>
-                                            <span className="text-[10px] text-white/80 font-mono">
-                                                Sample #{i + 1}
-                                            </span>
-                                        </div>
-                                        {isOwner && img.image_id && (
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDeleteImage(
-                                                        img.image_id!,
-                                                    );
-                                                }}
-                                                title="Delete photo"
-                                                className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs cursor-pointer"
+                                            <div
+                                                className="w-full h-52 relative overflow-hidden bg-stone-950 cursor-pointer"
+                                                onClick={() => setLightboxImage(img.image_url)}
                                             >
-                                                🗑️
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={description || `${shop.shop_name} work sample ${i + 1}`}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center">
+                                                    <span>🔍 View Dress Photo</span>
+                                                    <span className="text-[10px] text-white/80 font-mono">
+                                                        Sample #{i + 1}
+                                                    </span>
+                                                </div>
+                                                {isOwner && img.image_id && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteImage(img.image_id!);
+                                                        }}
+                                                        title="Delete work sample card"
+                                                        className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-red-600/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs cursor-pointer"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                )}
+                                            </div>
 
-                                {isOwner && (
-                                    <label className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center p-6 text-center hover:border-accent transition-colors cursor-pointer bg-cream-bg/40 aspect-square">
-                                        <span className="text-2xl mb-1">
-                                            📸
-                                        </span>
-                                        <span className="text-xs font-bold text-accent uppercase">
-                                            Upload Work Sample
-                                        </span>
-                                        <span className="text-[10px] text-earth-text/50 mt-1">
-                                            PNG, JPG up to 10MB
-                                        </span>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                            className="hidden"
-                                            disabled={isUploadingImage}
-                                        />
-                                    </label>
-                                )}
+                                            <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                                                <div>
+                                                    <span className="px-2.5 py-0.5 bg-accent/10 border border-accent/20 text-accent rounded-full text-[10px] font-mono font-bold uppercase tracking-wider inline-block mb-2">
+                                                        WORK SAMPLE #{i + 1}
+                                                    </span>
+                                                    <p className="text-xs font-semibold text-earth-text leading-relaxed">
+                                                        {description || "Custom tailored garment sample crafted at our atelier."}
+                                                    </p>
+                                                </div>
+
+                                                <div className="pt-2 border-t border-accent/10 flex items-center justify-between">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setLightboxImage(img.image_url)}
+                                                        className="text-[11px] font-bold text-accent hover:underline uppercase tracking-wider flex items-center gap-1"
+                                                    >
+                                                        <span>Inspect Details &rarr;</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="bg-cream-bg border border-accent/20 rounded-2xl p-12 text-center space-y-4 shadow-sm">
@@ -488,26 +506,27 @@ export default function ShopProfilePage() {
                                 </div>
                                 <div>
                                     <h4 className="text-base font-bold text-earth-text font-serif">
-                                        No Portfolio Photos Yet
+                                        No Portfolio Showcase Cards Yet
                                     </h4>
                                     <p className="text-xs text-earth-text/60 mt-1 font-medium max-w-sm mx-auto">
                                         {isOwner
-                                            ? "Showcase your craftsmanship by uploading photos of custom garments and past work."
-                                            : "This tailor has not uploaded showcase photos to their gallery yet."}
+                                            ? "Showcase your craftsmanship by publishing work samples with descriptions for clients to see."
+                                            : "This tailor has not published work showcase cards yet."}
                                     </p>
                                 </div>
 
                                 {isOwner && (
-                                    <label className="inline-block px-5 py-2.5 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-all cursor-pointer shadow-md">
-                                        Upload First Photo
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                            className="hidden"
-                                            disabled={isUploadingImage}
-                                        />
-                                    </label>
+                                    <button
+                                        onClick={() => {
+                                            setWorkFile(null);
+                                            setWorkFilePreview(null);
+                                            setWorkDescription("");
+                                            setIsAddWorkModalOpen(true);
+                                        }}
+                                        className="inline-block px-5 py-2.5 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-all cursor-pointer shadow-md"
+                                    >
+                                        + Add First Showcase Card
+                                    </button>
                                 )}
                             </div>
                         )}
@@ -754,27 +773,151 @@ export default function ShopProfilePage() {
                 </div>
             )}
 
-            {/* LIGHTBOX MODAL FOR DRESS / WORK SAMPLE IMAGES */}
+            {/* MODAL FOR ADDING WORK SHOWCASE CARD WITH DESCRIPTION */}
+            {isAddWorkModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    onClick={() => setIsAddWorkModalOpen(false)}
+                >
+                    <div
+                        className="bg-cream-bg border border-accent/30 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between border-b border-accent/20 pb-4">
+                            <div>
+                                <h3 className="text-xl font-bold text-earth-text font-serif">
+                                    Publish Portfolio Work Card
+                                </h3>
+                                <p className="text-xs text-earth-text/70 mt-0.5">
+                                    Add a showcase image and text description for public view
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setIsAddWorkModalOpen(false)}
+                                className="w-8 h-8 rounded-full bg-warm-beige border border-accent/20 text-earth-text font-bold flex items-center justify-center hover:border-accent transition-colors"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        <form onSubmit={handlePublishWorkSample} className="space-y-4">
+                            {uploadError && (
+                                <div className="p-3 bg-red-100 border border-red-300 text-red-700 text-xs rounded-xl font-medium">
+                                    {uploadError}
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/80 block">
+                                    1. Select Work Sample Photo *
+                                </label>
+                                <div className="border-2 border-dashed border-accent/30 rounded-2xl p-4 text-center hover:border-accent transition-colors bg-warm-beige/30">
+                                    {workFilePreview ? (
+                                        <div className="relative w-full h-44 rounded-xl overflow-hidden mb-2 border border-accent/20">
+                                            <img
+                                                src={workFilePreview}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setWorkFile(null);
+                                                    setWorkFilePreview(null);
+                                                }}
+                                                className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-lg uppercase"
+                                            >
+                                                Change
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="cursor-pointer block py-6">
+                                            <span className="text-3xl block mb-2">📸</span>
+                                            <span className="text-xs font-bold text-accent uppercase block">
+                                                Click to Choose Image File
+                                            </span>
+                                            <span className="text-[10px] text-earth-text/50 block mt-1">
+                                                PNG, JPG or WEBP up to 10MB
+                                            </span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/80 block">
+                                    2. Garment / Work Sample Description *
+                                </label>
+                                <textarea
+                                    value={workDescription}
+                                    onChange={(e) => setWorkDescription(e.target.value)}
+                                    placeholder="Describe your work sample (e.g. Bespoke Italian Silk Wedding Suit with Gold Hand Threadwork)..."
+                                    required
+                                    rows={3}
+                                    className="w-full bg-warm-beige border border-accent/20 focus:border-accent rounded-xl p-3 text-xs text-earth-text focus:outline-none font-medium resize-none placeholder:text-earth-text/40"
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4 border-t border-accent/20">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAddWorkModalOpen(false)}
+                                    className="px-5 py-2.5 rounded-xl border border-accent/20 text-xs font-bold uppercase text-earth-text/70 hover:bg-warm-beige cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isUploadingImage || !workFile || !workDescription.trim()}
+                                    className="px-6 py-2.5 rounded-xl bg-accent text-white text-xs font-bold uppercase tracking-wider hover:bg-accent-hover disabled:opacity-50 shadow-md cursor-pointer"
+                                >
+                                    {isUploadingImage ? "Publishing Card..." : "Publish Work Card"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* LIGHTBOX MODAL FOR WORK SAMPLE IMAGES AND DESCRIPTIONS */}
             {lightboxImage && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
                     onClick={() => setLightboxImage(null)}
                 >
                     <div
-                        className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-black flex flex-col items-center justify-center"
+                        className="relative max-w-4xl w-full max-h-[90vh] overflow-hidden rounded-2xl bg-stone-950 border border-stone-800 flex flex-col shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
                             onClick={() => setLightboxImage(null)}
-                            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 text-white font-bold text-xl flex items-center justify-center hover:bg-black/90 transition-colors cursor-pointer"
+                            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/70 text-white font-bold text-xl flex items-center justify-center hover:bg-black transition-colors cursor-pointer border border-white/20"
                         >
                             &times;
                         </button>
-                        <img
-                            src={lightboxImage}
-                            alt="Full-size dress work sample"
-                            className="w-full h-full object-contain max-h-[85vh] rounded-xl"
-                        />
+                        <div className="flex-1 flex items-center justify-center bg-black p-4 min-h-[50vh] max-h-[75vh]">
+                            <img
+                                src={parseShopImage(lightboxImage).imageUrl}
+                                alt="Full-size dress work sample"
+                                className="w-full h-full object-contain max-h-[70vh] rounded-xl"
+                            />
+                        </div>
+                        {parseShopImage(lightboxImage).description && (
+                            <div className="p-5 bg-stone-900 border-t border-stone-800 text-stone-200">
+                                <span className="text-[10px] font-mono uppercase tracking-widest text-accent font-bold block mb-1">
+                                    GARMENT / WORK DESCRIPTION
+                                </span>
+                                <p className="text-xs font-medium leading-relaxed">
+                                    {parseShopImage(lightboxImage).description}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

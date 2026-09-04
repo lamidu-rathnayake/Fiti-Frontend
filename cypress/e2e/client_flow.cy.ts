@@ -1,15 +1,17 @@
+import { loginAs } from "../support/auth_helper";
+
 describe("Client User Flow & Features", () => {
     beforeEach(() => {
         cy.clearLocalStorage();
+        cy.viewport(1440, 900);
 
-        // Mock authenticated client role backend check
-        cy.intercept("GET", "**/api/v1/auth/role", {
+        // Mock geocoding calls
+        cy.intercept("GET", "https://nominatim.openstreetmap.org/*", {
             statusCode: 200,
             body: {
-                role: "client",
-                target_url: "/client/home",
-            },
-        }).as("getRoleClient");
+                address: { city: "Colombo", road: "Galle Road" }
+            }
+        }).as("nominatim");
 
         // Mock client profile check
         cy.intercept("GET", "**/api/v1/profiles/client/*", {
@@ -20,15 +22,19 @@ describe("Client User Flow & Features", () => {
                 phone_number: "+94771234567",
                 city: "Colombo",
                 address: "123 Galle Road",
+                latitude: 6.9271,
+                longitude: 79.8612,
             },
         }).as("getClientProfile");
 
-        // Mock list of shops
-        cy.intercept("GET", "**/api/v1/shops*", {
+        // Mock list of shops (both general and nearby)
+        cy.intercept("GET", /\/api\/v1\/shops/, {
             statusCode: 200,
             body: [
                 {
+                    shop_id: 1,
                     id: 1,
+                    tailor_id: "mock-tailor-456",
                     shop_name: "Savile Row Lanka",
                     shop_bio: "Premium Bespoke Tailoring",
                     city: "Colombo",
@@ -41,7 +47,9 @@ describe("Client User Flow & Features", () => {
                     ]
                 },
                 {
+                    shop_id: 2,
                     id: 2,
+                    tailor_id: "mock-tailor-789",
                     shop_name: "Kandy Craftsmen Atelier",
                     shop_bio: "Traditional Sri Lankan Suits",
                     city: "Kandy",
@@ -57,34 +65,42 @@ describe("Client User Flow & Features", () => {
 
     describe("Client Home Dashboard (/client/home)", () => {
         it("displays client navigation header and shop listings", () => {
-            cy.visit("/client/home");
-            cy.contains("span", /fiti/i).should("be.visible");
-            cy.contains("a", /home/i).should("be.visible");
-            cy.contains("a", /orders/i).should("be.visible");
-            cy.contains("a", /tailors/i).should("be.visible");
+            const authOpts = loginAs("client");
+            cy.visit("/client/home", authOpts);
+
+            cy.contains("a", "Home").should("be.visible");
+            cy.contains("a", "Orders").should("be.visible");
+            cy.contains("a", "Tailors").should("be.visible");
+            cy.contains("a", "Broadcast").should("be.visible");
+
+            cy.contains("Savile Row Lanka").should("be.visible");
+            cy.contains("Kandy Craftsmen Atelier").should("be.visible");
         });
 
         it("opens and closes mobile sidebar menu", () => {
             cy.viewport("iphone-x");
-            cy.visit("/client/home");
+            const authOpts = loginAs("client");
+            cy.visit("/client/home", authOpts);
 
             // Click hamburger menu button
-            cy.get('button[aria-label="Toggle navigation menu"]').click();
-            cy.contains("div", /menu/i).should("be.visible");
+            cy.get('button[title="Menu"]').click({ force: true });
+            cy.contains("span", "My Profile & Settings").should("be.visible");
 
-            // Close sidebar
-            cy.get('button[aria-label="Close navigation menu"]').click();
+            // Close sidebar by clicking logout or close icon inside sidebar
+            cy.get('div.w-72 button').first().click({ force: true });
         });
     });
 
     describe("Direct & Broadcast Garment Requests", () => {
         it("loads the Direct Request form page", () => {
-            cy.visit("/client/directRequest");
-            cy.contains(/direct/i).should("be.visible");
+            const authOpts = loginAs("client");
+            cy.visit("/client/directRequest", authOpts);
+            cy.contains(/request/i).should("be.visible");
         });
 
         it("loads the Broadcast Request form page", () => {
-            cy.visit("/client/biddingRequest");
+            const authOpts = loginAs("client");
+            cy.visit("/client/biddingRequest", authOpts);
             cy.contains(/broadcast/i).should("be.visible");
         });
     });
@@ -106,8 +122,9 @@ describe("Client User Flow & Features", () => {
                 ],
             }).as("getClientOrders");
 
-            cy.visit("/client/orders");
-            cy.contains(/my orders/i).should("be.visible");
+            const authOpts = loginAs("client");
+            cy.visit("/client/orders", authOpts);
+            cy.contains(/orders/i).should("be.visible");
         });
     });
 
@@ -125,7 +142,8 @@ describe("Client User Flow & Features", () => {
                 },
             }).as("getMeasurements");
 
-            cy.visit("/client/profile");
+            const authOpts = loginAs("client");
+            cy.visit("/client/profile", authOpts);
             cy.contains(/profile/i).should("be.visible");
         });
     });

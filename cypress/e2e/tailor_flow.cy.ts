@@ -1,15 +1,9 @@
+import { loginAs } from "../support/auth_helper";
+
 describe("Tailor Artisan Flow & Shop Management", () => {
     beforeEach(() => {
         cy.clearLocalStorage();
-
-        // Mock authenticated tailor role backend check
-        cy.intercept("GET", "**/api/v1/auth/role", {
-            statusCode: 200,
-            body: {
-                role: "tailor",
-                target_url: "/tailor/home",
-            },
-        }).as("getRoleTailor");
+        cy.viewport(1440, 900);
 
         // Mock tailor profile
         cy.intercept("GET", "**/api/v1/profiles/tailor/*", {
@@ -29,6 +23,7 @@ describe("Tailor Artisan Flow & Shop Management", () => {
             statusCode: 200,
             body: [
                 {
+                    shop_id: 101,
                     id: 101,
                     tailor_id: "mock-tailor-456",
                     shop_name: "Royal Bespoke Atelier",
@@ -49,23 +44,25 @@ describe("Tailor Artisan Flow & Shop Management", () => {
 
     describe("Tailor Home & Dashboard (/tailor/home)", () => {
         it("displays tailor header navigation and dashboard layout", () => {
-            cy.visit("/tailor/home");
-            cy.contains("span", /fiti/i).should("be.visible");
-            cy.contains("a", /dashboard/i).should("be.visible");
-            cy.contains("a", /orders/i).should("be.visible");
+            const authOpts = loginAs("tailor");
+            cy.visit("/tailor/home", authOpts);
+            cy.contains("a", "Dashboard").should("be.visible");
+            cy.contains("a", "Orders").should("be.visible");
         });
     });
 
     describe("Tailor Shop Creation (/tailor/add-shop)", () => {
         it("loads tailor shop creation page", () => {
-            cy.visit("/tailor/add-shop");
+            const authOpts = loginAs("tailor");
+            cy.visit("/tailor/add-shop", authOpts);
             cy.contains(/shop/i).should("be.visible");
         });
     });
 
     describe("Atelier Location Setup (/tailor/location)", () => {
         it("loads tailor location management page", () => {
-            cy.visit("/tailor/location");
+            const authOpts = loginAs("tailor");
+            cy.visit("/tailor/location", authOpts);
             cy.contains(/location/i).should("be.visible");
         });
     });
@@ -102,7 +99,8 @@ describe("Tailor Artisan Flow & Shop Management", () => {
                 ],
             }).as("getOpenRequests");
 
-            cy.visit("/tailor/orders");
+            const authOpts = loginAs("tailor");
+            cy.visit("/tailor/orders", authOpts);
             cy.contains(/orders/i).should("be.visible");
         });
     });

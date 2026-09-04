@@ -174,7 +174,6 @@ export default function HomePage() {
 
                     {/* Right Utility Navigation */}
                     <div className="flex items-center gap-3 sm:gap-4">
-                        <ThemeToggle />
                         <Link
                             href="/login"
                             className="bg-accent hover:bg-earth-text text-cream-bg text-xs font-semibold px-5 py-2.5 rounded-full transition-all shadow-xs hover:shadow-md cursor-pointer"

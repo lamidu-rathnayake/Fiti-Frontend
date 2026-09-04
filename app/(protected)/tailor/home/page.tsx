@@ -15,6 +15,7 @@ import {
     addShopImage,
     deleteShopImage,
 } from "@/lib/api/endpoints/shops";
+import { parseShopImage } from "@/lib/api/types/shop";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import {
     getTailorProfile,
@@ -83,6 +84,10 @@ export default function TailorHomePage() {
     const [settingsSaved, setSettingsSaved] = useState(false);
 
     // Work image upload states
+    const [isAddWorkModalOpen, setIsAddWorkModalOpen] = useState(false);
+    const [workFile, setWorkFile] = useState<File | null>(null);
+    const [workFilePreview, setWorkFilePreview] = useState<string | null>(null);
+    const [workDescription, setWorkDescription] = useState("");
     const [isUploadingWork, setIsUploadingWork] = useState(false);
     const [lightboxWorkImage, setLightboxWorkImage] = useState<string | null>(
         null,
@@ -318,18 +323,34 @@ export default function TailorHomePage() {
         }
     };
 
-    const handleWorkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !selectedShop || !user) return;
+    const handlePublishWorkSample = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedShop || !user) return;
+        if (!workFile) {
+            showToast("Please select an image file.", false);
+            return;
+        }
+        if (!workDescription.trim()) {
+            showToast("Please enter a text description of the work sample.", false);
+            return;
+        }
 
         setIsUploadingWork(true);
         try {
-            const imageUrl = await uploadToCloudinary(file, "image");
+            const imageUrl = await uploadToCloudinary(workFile, "image");
             if (!imageUrl) {
                 throw new Error("Image upload failed. Please try again.");
             }
-            await addShopImage(selectedShop.shop_id, { image_url: imageUrl });
-            showToast("Work photo uploaded successfully!");
+            await addShopImage(selectedShop.shop_id, {
+                image_url: imageUrl,
+                description: workDescription.trim(),
+            });
+            showToast("Work card published successfully!");
+            setWorkFile(null);
+            setWorkFilePreview(null);
+            setWorkDescription("");
+            setIsAddWorkModalOpen(false);
+
             const shops = await listTailorShops(user.uid);
             setTailorShops(shops);
             const updated = shops.find(
@@ -340,10 +361,19 @@ export default function TailorHomePage() {
             }
         } catch (err: any) {
             console.error("Failed to upload work image:", err);
-            showToast(err.message || "Failed to upload work photo.", false);
+            showToast(err.message || "Failed to publish work card.", false);
         } finally {
             setIsUploadingWork(false);
         }
+    };
+
+    const handleWorkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !selectedShop || !user) return;
+
+        setWorkFile(file);
+        setWorkFilePreview(URL.createObjectURL(file));
+        setIsAddWorkModalOpen(true);
     };
 
     const handleDeleteWork = async (imageId: number) => {
@@ -868,105 +898,106 @@ export default function TailorHomePage() {
                                     </p>
                                 </div>
 
-                                <label className="px-6 py-3.5 bg-accent text-white font-bold text-xs uppercase tracking-widest rounded-2xl hover:bg-accent-hover transition-all cursor-pointer shadow-lg shrink-0 flex items-center gap-2 border border-white/20">
-                                    <span>✨</span>{" "}
-                                    {isUploadingWork
-                                        ? "Uploading to Cloud..."
-                                        : "Upload Dress Sample"}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleWorkUpload}
-                                        className="hidden"
-                                        disabled={isUploadingWork}
-                                    />
-                                </label>
+                                <button
+                                    onClick={() => {
+                                        setWorkFile(null);
+                                        setWorkFilePreview(null);
+                                        setWorkDescription("");
+                                        setIsAddWorkModalOpen(true);
+                                    }}
+                                    className="px-6 py-3.5 bg-accent text-white font-bold text-xs uppercase tracking-widest rounded-2xl hover:bg-accent-hover transition-all cursor-pointer shadow-lg shrink-0 flex items-center gap-2 border border-white/20"
+                                >
+                                    <span>✨</span> + Add Work Card
+                                </button>
                             </div>
 
-                            {/* GALLERY GRID */}
+                            {/* CARD BY CARD GALLERY */}
                             {selectedShop?.images &&
                             selectedShop.images.length > 0 ? (
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-earth-text/60">
-                                            Uploaded Works (
+                                            Published Work Cards (
                                             {selectedShop.images.length})
                                         </h3>
                                         <span className="text-[10px] text-earth-text/50 font-mono">
-                                            Click any image to view in full
-                                            resolution
+                                            Public showcase items with descriptions
                                         </span>
                                     </div>
 
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                                         {selectedShop.images.map(
-                                            (img, index) => (
-                                                <div
-                                                    key={img.image_id || index}
-                                                    className="bg-cream-bg border border-accent/20 rounded-2xl overflow-hidden shadow-sm group hover:border-accent hover:shadow-md transition-all aspect-square relative cursor-pointer"
-                                                >
-                                                    <img
-                                                        src={img.image_url}
-                                                        alt={`Work sample ${index + 1}`}
-                                                        onClick={() =>
-                                                            setLightboxWorkImage(
-                                                                img.image_url,
-                                                            )
-                                                        }
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                    />
+                                            (img, index) => {
+                                                const { imageUrl, description } = parseShopImage(img);
+                                                return (
                                                     <div
-                                                        onClick={() =>
-                                                            setLightboxWorkImage(
-                                                                img.image_url,
-                                                            )
-                                                        }
-                                                        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center"
+                                                        key={img.image_id || index}
+                                                        className="bg-cream-bg border border-accent/20 rounded-2xl overflow-hidden shadow-sm flex flex-col hover:border-accent hover:shadow-md transition-all group"
                                                     >
-                                                        <span>
-                                                            🔍 View Full Photo
-                                                        </span>
-                                                        <span className="text-[10px] text-white/80 font-mono">
-                                                            Sample #{index + 1}
-                                                        </span>
-                                                    </div>
-                                                    {img.image_id && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDeleteWork(
-                                                                    img.image_id!,
-                                                                );
-                                                            }}
-                                                            title="Delete photo"
-                                                            className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs"
+                                                        <div
+                                                            className="w-full h-48 relative overflow-hidden bg-stone-950 cursor-pointer"
+                                                            onClick={() => setLightboxWorkImage(img.image_url)}
                                                         >
-                                                            🗑️
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ),
+                                                            <img
+                                                                src={imageUrl}
+                                                                alt={description || `Work sample ${index + 1}`}
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center">
+                                                                <span>🔍 Inspect Photo</span>
+                                                                <span className="text-[10px] text-white/80 font-mono">
+                                                                    Card #{index + 1}
+                                                                </span>
+                                                            </div>
+                                                            {img.image_id && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteWork(img.image_id!);
+                                                                    }}
+                                                                    title="Delete work card"
+                                                                    className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-red-600/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs cursor-pointer"
+                                                                >
+                                                                    🗑️
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+                                                            <div>
+                                                                <span className="px-2 py-0.5 bg-accent/10 border border-accent/20 text-accent rounded-full text-[10px] font-mono font-bold uppercase tracking-wider inline-block mb-1">
+                                                                    CARD #{index + 1}
+                                                                </span>
+                                                                <p className="text-xs font-semibold text-earth-text leading-relaxed">
+                                                                    {description || "Custom garment showcase work sample."}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            },
                                         )}
 
-                                        <label className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center p-6 text-center hover:border-accent transition-colors cursor-pointer bg-cream-bg/40 aspect-square">
+                                        <button
+                                            onClick={() => {
+                                                setWorkFile(null);
+                                                setWorkFilePreview(null);
+                                                setWorkDescription("");
+                                                setIsAddWorkModalOpen(true);
+                                            }}
+                                            className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center p-6 text-center hover:border-accent transition-colors cursor-pointer bg-cream-bg/40 aspect-square min-h-[220px]"
+                                        >
                                             <span className="text-3xl mb-1">
                                                 📸
                                             </span>
                                             <span className="text-xs font-bold text-accent uppercase">
-                                                + Add Photo
+                                                + Add Work Card
                                             </span>
                                             <span className="text-[10px] text-earth-text/50 mt-1">
                                                 PNG, JPG up to 10MB
                                             </span>
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleWorkUpload}
-                                                className="hidden"
-                                                disabled={isUploadingWork}
-                                            />
-                                        </label>
+                                        </button>
                                     </div>
                                 </div>
                             ) : (
@@ -1739,27 +1770,145 @@ export default function TailorHomePage() {
                     </div>
                 )}
 
+                {/* MODAL FOR ADDING WORK SHOWCASE CARD WITH DESCRIPTION */}
+                {isAddWorkModalOpen && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                        onClick={() => setIsAddWorkModalOpen(false)}
+                    >
+                        <div
+                            className="bg-cream-bg border border-accent/30 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between border-b border-accent/20 pb-4">
+                                <div>
+                                    <h3 className="text-xl font-bold text-earth-text font-serif">
+                                        Publish Portfolio Work Card
+                                    </h3>
+                                    <p className="text-xs text-earth-text/70 mt-0.5">
+                                        Add a showcase image and text description for public view
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setIsAddWorkModalOpen(false)}
+                                    className="w-8 h-8 rounded-full bg-warm-beige border border-accent/20 text-earth-text font-bold flex items-center justify-center hover:border-accent transition-colors"
+                                >
+                                    &times;
+                                </button>
+                            </div>
+
+                            <form onSubmit={handlePublishWorkSample} className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/80 block">
+                                        1. Select Work Sample Photo *
+                                    </label>
+                                    <div className="border-2 border-dashed border-accent/30 rounded-2xl p-4 text-center hover:border-accent transition-colors bg-warm-beige/30">
+                                        {workFilePreview ? (
+                                            <div className="relative w-full h-44 rounded-xl overflow-hidden mb-2 border border-accent/20">
+                                                <img
+                                                    src={workFilePreview}
+                                                    alt="Preview"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setWorkFile(null);
+                                                        setWorkFilePreview(null);
+                                                    }}
+                                                    className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-lg uppercase"
+                                                >
+                                                    Change
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <label className="cursor-pointer block py-6">
+                                                <span className="text-3xl block mb-2">📸</span>
+                                                <span className="text-xs font-bold text-accent uppercase block">
+                                                    Click to Choose Image File
+                                                </span>
+                                                <span className="text-[10px] text-earth-text/50 block mt-1">
+                                                    PNG, JPG or WEBP up to 10MB
+                                                </span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleWorkUpload}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/80 block">
+                                        2. Garment / Work Sample Description *
+                                    </label>
+                                    <textarea
+                                        value={workDescription}
+                                        onChange={(e) => setWorkDescription(e.target.value)}
+                                        placeholder="Describe your work sample (e.g. Handmade Velvet Evening Gown with Custom Beadwork)..."
+                                        required
+                                        rows={3}
+                                        className="w-full bg-warm-beige border border-accent/20 focus:border-accent rounded-xl p-3 text-xs text-earth-text focus:outline-none font-medium resize-none placeholder:text-earth-text/40"
+                                    />
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-4 border-t border-accent/20">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddWorkModalOpen(false)}
+                                        className="px-5 py-2.5 rounded-xl border border-accent/20 text-xs font-bold uppercase text-earth-text/70 hover:bg-warm-beige cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isUploadingWork || !workFile || !workDescription.trim()}
+                                        className="px-6 py-2.5 rounded-xl bg-accent text-white text-xs font-bold uppercase tracking-wider hover:bg-accent-hover disabled:opacity-50 shadow-md cursor-pointer"
+                                    >
+                                        {isUploadingWork ? "Publishing Card..." : "Publish Work Card"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
                 {/* LIGHTBOX MODAL FOR DRESS / WORK SAMPLE IMAGES */}
                 {lightboxWorkImage && (
                     <div
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
                         onClick={() => setLightboxWorkImage(null)}
                     >
                         <div
-                            className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl bg-black flex flex-col items-center justify-center"
+                            className="relative max-w-4xl w-full max-h-[90vh] overflow-hidden rounded-2xl bg-stone-950 border border-stone-800 flex flex-col shadow-2xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <button
                                 onClick={() => setLightboxWorkImage(null)}
-                                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 text-white font-bold text-xl flex items-center justify-center hover:bg-black/90 transition-colors cursor-pointer"
+                                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/70 text-white font-bold text-xl flex items-center justify-center hover:bg-black transition-colors cursor-pointer border border-white/20"
                             >
                                 &times;
                             </button>
-                            <img
-                                src={lightboxWorkImage}
-                                alt="Full-size dress work sample"
-                                className="w-full h-full object-contain max-h-[85vh] rounded-xl"
-                            />
+                            <div className="flex-1 flex items-center justify-center bg-black p-4 min-h-[50vh] max-h-[75vh]">
+                                <img
+                                    src={parseShopImage(lightboxWorkImage).imageUrl}
+                                    alt="Full-size dress work sample"
+                                    className="w-full h-full object-contain max-h-[70vh] rounded-xl"
+                                />
+                            </div>
+                            {parseShopImage(lightboxWorkImage).description && (
+                                <div className="p-5 bg-stone-900 border-t border-stone-800 text-stone-200">
+                                    <span className="text-[10px] font-mono uppercase tracking-widest text-accent font-bold block mb-1">
+                                        GARMENT / WORK DESCRIPTION
+                                    </span>
+                                    <p className="text-xs font-medium leading-relaxed">
+                                        {parseShopImage(lightboxWorkImage).description}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

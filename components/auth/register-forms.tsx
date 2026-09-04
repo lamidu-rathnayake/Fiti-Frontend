@@ -367,6 +367,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="you@example.com"
+                                    aria-label="Account email"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
@@ -383,6 +384,7 @@ export function ClientRegisterForm({ onBack }: { onBack?: () => void }) {
                                         setPassword(e.target.value)
                                     }
                                     placeholder="••••••••••••"
+                                    aria-label="Password"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
@@ -1045,6 +1047,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="tailor@example.com"
+                                    aria-label="Account email"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />
@@ -1060,6 +1063,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
                                         setPassword(e.target.value)
                                     }
                                     placeholder="••••••••••••"
+                                    aria-label="Password"
                                     required
                                     className="w-full rounded-xl border border-accent/40 bg-card-bg/30 px-4 py-3 text-sm font-semibold text-earth-text placeholder-earth-text/50 outline-none transition focus:border-accent focus:bg-cream-bg"
                                 />

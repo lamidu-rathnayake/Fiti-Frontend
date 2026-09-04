@@ -66,6 +66,7 @@ export interface Shop {
 /** Request body for POST /api/v1/shops/{shop_id}/images */
 export interface ShopImagePayload {
     image_url: string;
+    description?: string;
 }
 
 /** A shop image object */
@@ -73,6 +74,61 @@ export interface ShopImage {
     image_id: number | null;
     shop_id: number;
     image_url: string;
+    description?: string;
+}
+
+/**
+ * Utility to parse raw shop image URL string into clean image URL and description.
+ * Supports #desc= encoded text fragments in image_url string.
+ */
+export function parseShopImage(image: ShopImage | string): {
+    imageUrl: string;
+    description: string;
+} {
+    const rawString = typeof image === "string" ? image : image.image_url;
+    if (!rawString) return { imageUrl: "", description: "" };
+
+    const hashIndex = rawString.indexOf("#desc=");
+    if (hashIndex !== -1) {
+        const rawUrl = rawString.substring(0, hashIndex);
+        const encodedDesc = rawString.substring(hashIndex + 6);
+        try {
+            return {
+                imageUrl: rawUrl,
+                description: decodeURIComponent(encodedDesc),
+            };
+        } catch {
+            return { imageUrl: rawUrl, description: encodedDesc };
+        }
+    }
+
+    const queryIndex = rawString.indexOf("?desc=");
+    if (queryIndex !== -1) {
+        const rawUrl = rawString.substring(0, queryIndex);
+        const encodedDesc = rawString.substring(queryIndex + 6);
+        try {
+            return {
+                imageUrl: rawUrl,
+                description: decodeURIComponent(encodedDesc),
+            };
+        } catch {
+            return { imageUrl: rawUrl, description: encodedDesc };
+        }
+    }
+
+    const directDesc = typeof image === "object" ? image.description : "";
+    return { imageUrl: rawString, description: directDesc || "" };
+}
+
+/**
+ * Utility to format image URL with embedded description tag for shop portfolio.
+ */
+export function formatShopImageUrl(
+    rawUrl: string,
+    description?: string,
+): string {
+    if (!description || !description.trim()) return rawUrl;
+    return `${rawUrl}#desc=${encodeURIComponent(description.trim())}`;
 }
 
 /** Query params for GET /api/v1/shops/nearby */

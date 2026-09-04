@@ -6,6 +6,7 @@ export default defineConfig({
         specPattern: "cypress/e2e/**/*.cy.{js,jsx,ts,tsx}",
         supportFile: false,
     },
+    screenshotOnRunFailure: false,
     retries: {
         runMode: 2,
         openMode: 0,

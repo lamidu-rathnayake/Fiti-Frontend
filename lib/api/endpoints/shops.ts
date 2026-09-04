@@ -99,8 +99,10 @@ export async function deleteShop(shopId: number): Promise<void> {
     return apiFetch<void>(`/shops/${shopId}`, { method: "DELETE" });
 }
 
+import { formatShopImageUrl } from "@/lib/api/types/shop";
+
 /**
- * Add a portfolio/shop image URL.
+ * Add a portfolio/shop image URL with optional description.
  * POST /api/v1/shops/{shop_id}/images
  * (Auth: Tailor Role)
  */
@@ -108,9 +110,10 @@ export async function addShopImage(
     shopId: number,
     payload: ShopImagePayload,
 ): Promise<ShopImage> {
+    const finalUrl = formatShopImageUrl(payload.image_url, payload.description);
     return apiFetch<ShopImage>(`/shops/${shopId}/images`, {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ image_url: finalUrl }),
     });
 }
 

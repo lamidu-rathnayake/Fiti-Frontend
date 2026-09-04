@@ -18,7 +18,9 @@ export default function ClientHomePage() {
     const [searchQuery, setSearchQuery] = useState("");
 
     const loadNearbyShops = async (lat: number, lng: number) => {
-        setLoadingShops(true);
+        if (nearbyShops.length === 0) {
+            setLoadingShops(true);
+        }
         try {
             const shops = await listNearbyShops({ lat, lng, radius_km: 25 });
             setNearbyShops(shops);
@@ -28,6 +30,10 @@ export default function ClientHomePage() {
             setLoadingShops(false);
         }
     };
+
+    useEffect(() => {
+        loadNearbyShops(6.9271, 79.8612);
+    }, []);
 
     return (
         <>

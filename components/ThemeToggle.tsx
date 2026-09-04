@@ -8,7 +8,11 @@ interface ThemeToggleProps {
 }
 
 export default function ThemeToggle({ className = "", showLabel = true }: ThemeToggleProps) {
-    const { theme, toggleTheme } = useTheme();
+    const { theme, toggleTheme, isThemeSupported } = useTheme();
+
+    if (!isThemeSupported) {
+        return null;
+    }
 
     return (
         <button

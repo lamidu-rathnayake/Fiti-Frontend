@@ -12,11 +12,9 @@ describe("Public Pages & Authentication Flow", () => {
             cy.contains("a", /how it works/i).should("be.visible");
         });
 
-        it("toggles light and dark themes using the theme switcher", () => {
+        it("enforces light theme on public landing page and hides theme switcher", () => {
             cy.visit("/");
-            cy.get('button[aria-label="Toggle theme"]').first().click();
-            cy.get("html").should("have.class", "dark");
-            cy.get('button[aria-label="Toggle theme"]').first().click();
+            cy.get('button[aria-label="Toggle Light and Dark Theme"]').should("not.exist");
             cy.get("html").should("not.have.class", "dark");
         });
 
@@ -36,13 +34,12 @@ describe("Public Pages & Authentication Flow", () => {
             cy.visit("/contact");
             cy.contains("h1", /contact us/i).should("be.visible");
 
-            cy.get('input[placeholder="John Doe"]').type("Test User");
-            cy.get('input[placeholder="john@example.com"]').type("test@example.com");
-            cy.get('input[placeholder="How can we help?"]').type("General Inquiry");
-            cy.get('textarea[placeholder="Tell us more..."]').type("I would like to inquire about custom suit orders.");
+            cy.get('input[placeholder="Full Name"]').type("Test User");
+            cy.get('input[placeholder="you@example.com"]').type("test@example.com");
+            cy.get('textarea[placeholder="How can we assist your bespoke tailoring experience?"]').type("I would like to inquire about custom suit orders.");
 
             cy.contains("button", /send message/i).click();
-            cy.contains("message dispatched", { matchCase: false }).should("be.visible");
+            cy.contains("Message Dispatched", { matchCase: false }).should("be.visible");
         });
     });
 
@@ -54,7 +51,7 @@ describe("Public Pages & Authentication Flow", () => {
 
         it("displays authentication form with email/password inputs and submit button", () => {
             cy.visit("/login");
-            cy.contains("h1", /welcome back/i).should("be.visible");
+            cy.contains("h1", /sign in/i).should("be.visible");
             cy.get('[aria-label="Email"]').should("be.visible");
             cy.get('[aria-label="Password"]').should("be.visible");
             cy.contains("button", /sign in/i).should("be.visible");
@@ -92,7 +89,7 @@ describe("Public Pages & Authentication Flow", () => {
 
         it("navigates to registration role selection from login page", () => {
             cy.visit("/login");
-            cy.contains("a", /create an account/i).click();
+            cy.contains("a", /register here/i).click();
             cy.location("pathname").should("eq", "/register");
         });
     });

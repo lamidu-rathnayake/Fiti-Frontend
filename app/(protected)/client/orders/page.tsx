@@ -8,6 +8,7 @@ import {
     acceptBid,
     rejectQuote,
 } from "@/lib/api/endpoints/orders";
+import { listShops } from "@/lib/api/endpoints/shops";
 import type {
     ClothingRequest,
     Order,
@@ -30,6 +31,7 @@ export default function ClientOrdersPage() {
 
     const [clientRequests, setClientRequests] = useState<ClothingRequest[]>([]);
     const [clientOrders, setClientOrders] = useState<Order[]>([]);
+    const [shopNames, setShopNames] = useState<Record<number, string>>({});
     const [selectedCard, setSelectedCard] = useState<SelectedCard | null>(null);
 
     const [acceptingQuoteId, setAcceptingQuoteId] = useState<number | null>(
@@ -52,10 +54,13 @@ export default function ClientOrdersPage() {
         if (!user) return;
         setIsLoading(true);
         try {
-            const [ordersRes, requestsRes] = await Promise.allSettled([
-                listClientOrders(user.uid),
-                listClientRequests(user.uid),
-            ]);
+            const [ordersRes, requestsRes, shopsRes] = await Promise.allSettled(
+                [
+                    listClientOrders(user.uid),
+                    listClientRequests(user.uid),
+                    listShops(),
+                ],
+            );
 
             if (ordersRes.status === "fulfilled") {
                 setClientOrders(ordersRes.value || []);
@@ -74,6 +79,18 @@ export default function ClientOrdersPage() {
                     requestsRes.reason,
                 );
                 showToast("Failed to load requests", false);
+            }
+            if (shopsRes.status === "fulfilled") {
+                setShopNames(
+                    Object.fromEntries(
+                        shopsRes.value.map((shop) => [
+                            shop.shop_id,
+                            shop.shop_name,
+                        ]),
+                    ),
+                );
+            } else {
+                console.error("Failed to load shop names:", shopsRes.reason);
             }
         } catch (err) {
             console.error("Failed to load client data:", err);
@@ -273,8 +290,10 @@ export default function ClientOrdersPage() {
                         {req.clothing_category || "Custom Garment"}
                     </h3>
                     <p className="text-xs text-earth-text/70 mt-1 mb-4">
-                        Tailor Shop ID: #{shopReq.shop_id} &bull; Valid
-                        quotation for your request.
+                        From:{" "}
+                        {shopNames[shopReq.shop_id] ||
+                            `Tailor Shop #${shopReq.shop_id}`}{" "}
+                        &bull; Valid quotation for your request.
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
@@ -724,7 +743,9 @@ export default function ClientOrdersPage() {
                                         ? selectedCard.order.accepted_price
                                         : selectedShopRequest?.offered_price;
                                 const measurementEntries = request?.measurement
-                                    ? Object.entries(request.measurement).filter(
+                                    ? Object.entries(
+                                          request.measurement,
+                                      ).filter(
                                           ([key, value]) =>
                                               key !== "notes" &&
                                               value !== null &&
@@ -839,7 +860,8 @@ export default function ClientOrdersPage() {
                                                         )}
                                                     </div>
                                                 )}
-                                                {request?.measurement?.notes && (
+                                                {request?.measurement
+                                                    ?.notes && (
                                                     <p className="mt-3 rounded-xl border border-accent/20 bg-warm-beige p-3 text-xs leading-relaxed text-earth-text/75">
                                                         <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-earth-text/50">
                                                             Measurement Notes

@@ -8,8 +8,13 @@ import {
     listShopOrders,
     submitBid,
     updateOrderStatus,
+    withdrawRequest,
 } from "@/lib/api/endpoints/orders";
-import { listTailorShops, addShopImage, deleteShopImage } from "@/lib/api/endpoints/shops";
+import {
+    listTailorShops,
+    addShopImage,
+    deleteShopImage,
+} from "@/lib/api/endpoints/shops";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import {
     getTailorProfile,
@@ -79,7 +84,9 @@ export default function TailorHomePage() {
 
     // Work image upload states
     const [isUploadingWork, setIsUploadingWork] = useState(false);
-    const [lightboxWorkImage, setLightboxWorkImage] = useState<string | null>(null);
+    const [lightboxWorkImage, setLightboxWorkImage] = useState<string | null>(
+        null,
+    );
 
     const showToast = (msg: string, ok = true) => {
         setActionToast({ msg, ok });
@@ -256,6 +263,24 @@ export default function TailorHomePage() {
         }
     };
 
+    const handleDeclineInquiry = async (view: RequestView) => {
+        const shopRequestId = view.myShopRequest?.shop_request_id;
+        if (!shopRequestId) return;
+
+        setSubmittingBidFor(shopRequestId);
+        try {
+            await withdrawRequest(shopRequestId);
+            showToast("Inquiry declined.");
+            setSelectedRequestView(null);
+            await fetchData();
+        } catch (err) {
+            console.error("Failed to decline inquiry:", err);
+            showToast("Failed to decline inquiry. Try again.", false);
+        } finally {
+            setSubmittingBidFor(null);
+        }
+    };
+
     const handleMarkComplete = async (orderId: number) => {
         setCompletingOrderId(orderId);
         try {
@@ -307,7 +332,9 @@ export default function TailorHomePage() {
             showToast("Work photo uploaded successfully!");
             const shops = await listTailorShops(user.uid);
             setTailorShops(shops);
-            const updated = shops.find((s) => s.shop_id === selectedShop.shop_id);
+            const updated = shops.find(
+                (s) => s.shop_id === selectedShop.shop_id,
+            );
             if (updated) {
                 setSelectedShop(updated);
             }
@@ -321,14 +348,17 @@ export default function TailorHomePage() {
 
     const handleDeleteWork = async (imageId: number) => {
         if (!selectedShop || !user || !imageId) return;
-        if (!confirm("Are you sure you want to delete this work sample photo?")) return;
+        if (!confirm("Are you sure you want to delete this work sample photo?"))
+            return;
 
         try {
             await deleteShopImage(selectedShop.shop_id, imageId);
             showToast("Work photo deleted successfully!");
             const shops = await listTailorShops(user.uid);
             setTailorShops(shops);
-            const updated = shops.find((s) => s.shop_id === selectedShop.shop_id);
+            const updated = shops.find(
+                (s) => s.shop_id === selectedShop.shop_id,
+            );
             if (updated) {
                 setSelectedShop(updated);
             }
@@ -445,6 +475,20 @@ export default function TailorHomePage() {
                         >
                             {isSubmitting ? "Submitting..." : "Send Quote"}
                         </button>
+                        {myShopRequest && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    void handleDeclineInquiry(view);
+                                }}
+                                disabled={isSubmitting}
+                                className="w-full border border-red-700/30 text-red-700 hover:bg-red-700/10 disabled:opacity-50 font-bold text-xs uppercase tracking-wider py-2.5 rounded-xl transition-all"
+                            >
+                                {isSubmitting
+                                    ? "Declining..."
+                                    : "Decline Inquiry"}
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div
@@ -776,14 +820,18 @@ export default function TailorHomePage() {
                                         My Dress & Garment Works
                                     </h1>
                                     <p className="text-earth-text/70 text-xs mt-1 font-medium">
-                                        Manage work sample photos for {shopDisplayName}
+                                        Manage work sample photos for{" "}
+                                        {shopDisplayName}
                                     </p>
                                 </div>
 
                                 {selectedShop && (
                                     <div className="flex items-center gap-3">
                                         <label className="px-5 py-2.5 bg-accent text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-accent-hover transition-all cursor-pointer shadow-md flex items-center gap-2">
-                                            <span>📸</span> {isUploadingWork ? "Uploading Photo..." : "+ Add New Work Photo"}
+                                            <span>📸</span>{" "}
+                                            {isUploadingWork
+                                                ? "Uploading Photo..."
+                                                : "+ Add New Work Photo"}
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -812,12 +860,19 @@ export default function TailorHomePage() {
                                         Showcase Your Bespoke Creations
                                     </h2>
                                     <p className="text-xs text-white/80 max-w-lg leading-relaxed font-medium">
-                                        Upload high-quality images of custom dresses, suits, wedding wear, traditional garments, and alterations. Potential clients browse your portfolio before sending direct garment requests!
+                                        Upload high-quality images of custom
+                                        dresses, suits, wedding wear,
+                                        traditional garments, and alterations.
+                                        Potential clients browse your portfolio
+                                        before sending direct garment requests!
                                     </p>
                                 </div>
 
                                 <label className="px-6 py-3.5 bg-accent text-white font-bold text-xs uppercase tracking-widest rounded-2xl hover:bg-accent-hover transition-all cursor-pointer shadow-lg shrink-0 flex items-center gap-2 border border-white/20">
-                                    <span>✨</span> {isUploadingWork ? "Uploading to Cloud..." : "Upload Dress Sample"}
+                                    <span>✨</span>{" "}
+                                    {isUploadingWork
+                                        ? "Uploading to Cloud..."
+                                        : "Upload Dress Sample"}
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -829,56 +884,81 @@ export default function TailorHomePage() {
                             </div>
 
                             {/* GALLERY GRID */}
-                            {selectedShop?.images && selectedShop.images.length > 0 ? (
+                            {selectedShop?.images &&
+                            selectedShop.images.length > 0 ? (
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-earth-text/60">
-                                            Uploaded Works ({selectedShop.images.length})
+                                            Uploaded Works (
+                                            {selectedShop.images.length})
                                         </h3>
                                         <span className="text-[10px] text-earth-text/50 font-mono">
-                                            Click any image to view in full resolution
+                                            Click any image to view in full
+                                            resolution
                                         </span>
                                     </div>
 
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                        {selectedShop.images.map((img, index) => (
-                                            <div
-                                                key={img.image_id || index}
-                                                className="bg-cream-bg border border-accent/20 rounded-2xl overflow-hidden shadow-sm group hover:border-accent hover:shadow-md transition-all aspect-square relative cursor-pointer"
-                                            >
-                                                <img
-                                                    src={img.image_url}
-                                                    alt={`Work sample ${index + 1}`}
-                                                    onClick={() => setLightboxWorkImage(img.image_url)}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                />
+                                        {selectedShop.images.map(
+                                            (img, index) => (
                                                 <div
-                                                    onClick={() => setLightboxWorkImage(img.image_url)}
-                                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center"
+                                                    key={img.image_id || index}
+                                                    className="bg-cream-bg border border-accent/20 rounded-2xl overflow-hidden shadow-sm group hover:border-accent hover:shadow-md transition-all aspect-square relative cursor-pointer"
                                                 >
-                                                    <span>🔍 View Full Photo</span>
-                                                    <span className="text-[10px] text-white/80 font-mono">Sample #{index + 1}</span>
-                                                </div>
-                                                {img.image_id && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteWork(img.image_id!);
-                                                        }}
-                                                        title="Delete photo"
-                                                        className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs"
+                                                    <img
+                                                        src={img.image_url}
+                                                        alt={`Work sample ${index + 1}`}
+                                                        onClick={() =>
+                                                            setLightboxWorkImage(
+                                                                img.image_url,
+                                                            )
+                                                        }
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    />
+                                                    <div
+                                                        onClick={() =>
+                                                            setLightboxWorkImage(
+                                                                img.image_url,
+                                                            )
+                                                        }
+                                                        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center"
                                                     >
-                                                        🗑️
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
+                                                        <span>
+                                                            🔍 View Full Photo
+                                                        </span>
+                                                        <span className="text-[10px] text-white/80 font-mono">
+                                                            Sample #{index + 1}
+                                                        </span>
+                                                    </div>
+                                                    {img.image_id && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteWork(
+                                                                    img.image_id!,
+                                                                );
+                                                            }}
+                                                            title="Delete photo"
+                                                            className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ),
+                                        )}
 
                                         <label className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center p-6 text-center hover:border-accent transition-colors cursor-pointer bg-cream-bg/40 aspect-square">
-                                            <span className="text-3xl mb-1">📸</span>
-                                            <span className="text-xs font-bold text-accent uppercase">+ Add Photo</span>
-                                            <span className="text-[10px] text-earth-text/50 mt-1">PNG, JPG up to 10MB</span>
+                                            <span className="text-3xl mb-1">
+                                                📸
+                                            </span>
+                                            <span className="text-xs font-bold text-accent uppercase">
+                                                + Add Photo
+                                            </span>
+                                            <span className="text-[10px] text-earth-text/50 mt-1">
+                                                PNG, JPG up to 10MB
+                                            </span>
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -899,7 +979,9 @@ export default function TailorHomePage() {
                                             No Dress Works Uploaded Yet
                                         </h3>
                                         <p className="text-xs text-earth-text/60 max-w-sm mx-auto font-medium">
-                                            Add photos of your completed tailoring projects to display them in your shop portfolio.
+                                            Add photos of your completed
+                                            tailoring projects to display them
+                                            in your shop portfolio.
                                         </p>
                                     </div>
                                     <label className="inline-block px-6 py-3 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-all cursor-pointer shadow-md">
@@ -968,11 +1050,15 @@ export default function TailorHomePage() {
                                     Tailor Settings
                                 </h1>
                                 <p className="text-earth-text/70 text-xs mt-1 font-medium">
-                                    Manage your professional profile and shop settings.
+                                    Manage your professional profile and shop
+                                    settings.
                                 </p>
                             </div>
 
-                            <form onSubmit={handleSaveSettings} className="bg-cream-bg border border-accent/20 rounded-2xl p-6 sm:p-8 space-y-5 shadow-sm">
+                            <form
+                                onSubmit={handleSaveSettings}
+                                className="bg-cream-bg border border-accent/20 rounded-2xl p-6 sm:p-8 space-y-5 shadow-sm"
+                            >
                                 <h2 className="text-base font-bold text-earth-text border-b border-accent/15 pb-3">
                                     Personal Profile
                                 </h2>
@@ -1011,7 +1097,9 @@ export default function TailorHomePage() {
                                     <input
                                         type="tel"
                                         value={settingsPhone}
-                                        onChange={(e) => setSettingsPhone(e.target.value)}
+                                        onChange={(e) =>
+                                            setSettingsPhone(e.target.value)
+                                        }
                                         placeholder="e.g. +94771234567 or 0771234567"
                                         className="w-full bg-warm-beige/50 border border-accent/30 rounded-xl px-4 py-3 text-xs text-earth-text focus:outline-none focus:border-accent font-medium"
                                     />
@@ -1024,7 +1112,9 @@ export default function TailorHomePage() {
                                     <input
                                         type="text"
                                         value={settingsCity}
-                                        onChange={(e) => setSettingsCity(e.target.value)}
+                                        onChange={(e) =>
+                                            setSettingsCity(e.target.value)
+                                        }
                                         placeholder="e.g. Colombo, Kandy"
                                         className="w-full bg-warm-beige/50 border border-accent/30 rounded-xl px-4 py-3 text-xs text-earth-text focus:outline-none focus:border-accent font-medium"
                                     />
@@ -1037,7 +1127,9 @@ export default function TailorHomePage() {
                                     <textarea
                                         rows={2}
                                         value={settingsAddress}
-                                        onChange={(e) => setSettingsAddress(e.target.value)}
+                                        onChange={(e) =>
+                                            setSettingsAddress(e.target.value)
+                                        }
                                         placeholder="Your full address"
                                         className="w-full bg-warm-beige/50 border border-accent/30 rounded-xl px-4 py-3 text-xs text-earth-text focus:outline-none focus:border-accent font-medium resize-none"
                                     />
@@ -1048,7 +1140,9 @@ export default function TailorHomePage() {
                                     disabled={isSavingSettings}
                                     className="w-full py-3 bg-accent text-white font-bold text-xs rounded-xl hover:bg-accent-dark transition-colors shadow-md disabled:opacity-50"
                                 >
-                                    {isSavingSettings ? "Saving Settings..." : "Save Profile Settings"}
+                                    {isSavingSettings
+                                        ? "Saving Settings..."
+                                        : "Save Profile Settings"}
                                 </button>
                             </form>
 
@@ -1064,7 +1158,12 @@ export default function TailorHomePage() {
                                                 {selectedShop.shop_name}
                                             </h3>
                                             <p className="text-xs text-earth-text/70 mt-0.5">
-                                                Specialty: {selectedShop.specialty || "General Tailoring"} • {selectedShop.city || "No location set"}
+                                                Specialty:{" "}
+                                                {selectedShop.specialty ||
+                                                    "General Tailoring"}{" "}
+                                                •{" "}
+                                                {selectedShop.city ||
+                                                    "No location set"}
                                             </p>
                                         </div>
                                         <Link
@@ -1076,7 +1175,9 @@ export default function TailorHomePage() {
                                     </div>
                                 ) : (
                                     <div className="text-center py-4">
-                                        <p className="text-xs text-earth-text/60 mb-3">No shop selected or created yet.</p>
+                                        <p className="text-xs text-earth-text/60 mb-3">
+                                            No shop selected or created yet.
+                                        </p>
                                         <Link
                                             href="/tailor/add-shop"
                                             className="inline-flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-xl text-xs font-bold"
@@ -1477,6 +1578,29 @@ export default function TailorHomePage() {
                                                         ? "Submitting..."
                                                         : "Send Quote"}
                                                 </button>
+                                                {selectedRequestView.myShopRequest && (
+                                                    <button
+                                                        onClick={() =>
+                                                            void handleDeclineInquiry(
+                                                                selectedRequestView,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            submittingBidFor ===
+                                                            selectedRequestView
+                                                                .myShopRequest
+                                                                .shop_request_id
+                                                        }
+                                                        className="w-full border border-red-700/30 text-red-700 hover:bg-red-700/10 disabled:opacity-50 font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition-all"
+                                                    >
+                                                        {submittingBidFor ===
+                                                        selectedRequestView
+                                                            .myShopRequest
+                                                            .shop_request_id
+                                                            ? "Declining..."
+                                                            : "Decline Inquiry"}
+                                                    </button>
+                                                )}
                                             </div>
                                         )}
                                     </div>

@@ -117,8 +117,8 @@ export default function HomePage() {
         setError("");
 
         try {
-            await signInWithPopup(auth, googleProvider);
-            await handlePostAuthRedirect();
+            router.replace("/login");
+            return;
         } catch (err: unknown) {
             if (
                 err instanceof FirebaseError &&
@@ -231,21 +231,6 @@ export default function HomePage() {
 
                             {/* Action Buttons */}
                             <div className="flex flex-wrap items-center gap-4">
-                                <Link
-                                    href={slide.primaryLink}
-                                    className="bg-accent hover:bg-earth-text text-cream-bg text-xs font-bold px-7 py-3.5 rounded-full transition-all flex items-center gap-2 group shadow-md"
-                                >
-                                    <span>{slide.primaryCta}</span>
-                                    <span className="group-hover:translate-x-1 transition-transform">→</span>
-                                </Link>
-
-                                <Link
-                                    href={slide.secondaryLink}
-                                    className="bg-card-bg hover:bg-accent hover:text-cream-bg text-earth-text border border-accent/50 text-xs font-bold px-7 py-3.5 rounded-full transition-all shadow-xs"
-                                >
-                                    {slide.secondaryCta}
-                                </Link>
-                                
                                 <button
                                     type="button"
                                     onClick={handleGoogleLogin}

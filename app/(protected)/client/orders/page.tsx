@@ -829,6 +829,66 @@ export default function ClientOrdersPage() {
                                             </div>
                                         )}
 
+                                        {selectedCard.kind === "request" &&
+                                            ((request?.design_images?.length ??
+                                                0) > 0 ||
+                                                request?.voice_note_url) && (
+                                                <div>
+                                                    <h3 className="mb-3 text-[10px] font-mono font-bold uppercase tracking-widest text-accent">
+                                                        Attachments
+                                                    </h3>
+                                                    {(request?.design_images
+                                                        ?.length ?? 0) > 0 && (
+                                                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                                                            {request?.design_images?.map(
+                                                                (
+                                                                    image,
+                                                                    index,
+                                                                ) => (
+                                                                    <a
+                                                                        key={`${image.image_url}-${index}`}
+                                                                        href={
+                                                                            image.image_url
+                                                                        }
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="group aspect-square overflow-hidden rounded-xl border border-accent/20 bg-warm-beige"
+                                                                    >
+                                                                        <img
+                                                                            src={
+                                                                                image.image_url
+                                                                            }
+                                                                            alt={`Request inspiration ${index + 1}`}
+                                                                            loading="lazy"
+                                                                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                                        />
+                                                                    </a>
+                                                                ),
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {request?.voice_note_url && (
+                                                        <div className="mt-3 rounded-xl border border-accent/20 bg-warm-beige p-4">
+                                                            <span className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-earth-text/60">
+                                                                Voice Note
+                                                            </span>
+                                                            <audio
+                                                                controls
+                                                                preload="metadata"
+                                                                src={
+                                                                    request.voice_note_url
+                                                                }
+                                                                className="h-10 w-full"
+                                                            >
+                                                                Your browser
+                                                                does not support
+                                                                audio playback.
+                                                            </audio>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
                                         {(measurementEntries.length > 0 ||
                                             request?.measurement?.notes) && (
                                             <div>

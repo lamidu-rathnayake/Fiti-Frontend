@@ -93,7 +93,7 @@ export default function NewTailoringRequestPage() {
     const [designImages, setDesignImages] = useState<File[]>([]);
 
     // Voice Note (Cloudinary)
-    const [voiceBlob, setVoiceBlob] = useState<Blob | null>(null);
+    const [voiceFile, setVoiceFile] = useState<File | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<BlobPart[]>([]);
@@ -102,6 +102,10 @@ export default function NewTailoringRequestPage() {
         if (e.target.files) {
             setDesignImages(Array.from(e.target.files));
         }
+    };
+
+    const handleVoiceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setVoiceFile(e.target.files?.[0] ?? null);
     };
 
     const startRecording = async () => {
@@ -118,7 +122,11 @@ export default function NewTailoringRequestPage() {
                 const blob = new Blob(chunksRef.current, {
                     type: "audio/webm",
                 });
-                setVoiceBlob(blob);
+                setVoiceFile(
+                    new File([blob], `voice-note-${Date.now()}.webm`, {
+                        type: blob.type,
+                    }),
+                );
             };
 
             mediaRecorderRef.current.start();
@@ -148,12 +156,7 @@ export default function NewTailoringRequestPage() {
 
             // 2. Upload Voice Note
             let voiceUrl = null;
-            if (voiceBlob) {
-                const voiceFile = new File(
-                    [voiceBlob],
-                    `voice-note-${Date.now()}.webm`,
-                    { type: voiceBlob.type || "audio/webm" },
-                );
+            if (voiceFile) {
                 voiceUrl = await uploadToCloudinary(voiceFile, "video");
                 if (!voiceUrl) {
                     throw new Error("Voice note upload failed. Please try again.");
@@ -593,7 +596,7 @@ export default function NewTailoringRequestPage() {
                             <label className="block text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text mb-2">
                                 VOICE NOTE INSTRUCTIONS
                             </label>
-                            <div className="flex items-center gap-4">
+                            <div className="flex flex-wrap items-center gap-4">
                                 {isRecording ? (
                                     <button
                                         type="button"
@@ -611,10 +614,20 @@ export default function NewTailoringRequestPage() {
                                         Record Audio
                                     </button>
                                 )}
-                                {voiceBlob && (
-                                    <span className="text-xs text-accent font-bold flex items-center gap-1">
+                                <span className="text-[10px] font-bold uppercase text-earth-text/50">
+                                    or
+                                </span>
+                                <input
+                                    type="file"
+                                    accept="audio/*"
+                                    disabled={isRecording}
+                                    onChange={handleVoiceFileChange}
+                                    className="min-w-0 flex-1 text-xs text-earth-text/70 file:mr-3 file:rounded-xl file:border-0 file:bg-cream-bg file:px-4 file:py-2 file:text-xs file:font-bold file:text-earth-text hover:file:bg-accent hover:file:text-cream-bg disabled:opacity-50"
+                                />
+                                {voiceFile && (
+                                    <span className="w-full text-xs text-accent font-bold flex items-center gap-1">
                                         <span className="w-2 h-2 rounded-full bg-accent inline-block"></span>{" "}
-                                        Audio attached
+                                        {voiceFile.name} attached
                                     </span>
                                 )}
                             </div>

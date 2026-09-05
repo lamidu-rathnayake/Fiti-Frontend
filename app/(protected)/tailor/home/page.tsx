@@ -12,10 +12,9 @@ import {
 } from "@/lib/api/endpoints/orders";
 import {
     listTailorShops,
-    addShopImage,
-    deleteShopImage,
+    addShopWork,
+    deleteShopWork,
 } from "@/lib/api/endpoints/shops";
-import { parseShopImage } from "@/lib/api/types/shop";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import {
     getTailorProfile,
@@ -349,7 +348,7 @@ export default function TailorHomePage() {
             if (!imageUrl) {
                 throw new Error("Image upload failed. Please try again.");
             }
-            await addShopImage(selectedShop.shop_id, {
+            await addShopWork(selectedShop.shop_id, {
                 image_url: imageUrl,
                 description: workDescription.trim(),
             });
@@ -390,7 +389,7 @@ export default function TailorHomePage() {
             return;
 
         try {
-            await deleteShopImage(selectedShop.shop_id, imageId);
+            await deleteShopWork(selectedShop.shop_id, imageId);
             showToast("Work photo deleted successfully!");
             const shops = await listTailorShops(user.uid);
             setTailorShops(shops);
@@ -1644,21 +1643,11 @@ export default function TailorHomePage() {
                             </button>
                             <div className="flex-1 flex items-center justify-center bg-black p-4 min-h-[50vh] max-h-[75vh]">
                                 <img
-                                    src={parseShopImage(lightboxWorkImage).imageUrl}
+                                    src={lightboxWorkImage}
                                     alt="Full-size dress work sample"
                                     className="w-full h-full object-contain max-h-[70vh] rounded-xl"
                                 />
                             </div>
-                            {parseShopImage(lightboxWorkImage).description && (
-                                <div className="p-5 bg-stone-900 border-t border-stone-800 text-stone-200">
-                                    <span className="text-[10px] font-mono uppercase tracking-widest text-accent font-bold block mb-1">
-                                        GARMENT / WORK DESCRIPTION
-                                    </span>
-                                    <p className="text-xs font-medium leading-relaxed">
-                                        {parseShopImage(lightboxWorkImage).description}
-                                    </p>
-                                </div>
-                            )}
                         </div>
                     </div>
                 )}

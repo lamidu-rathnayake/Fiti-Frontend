@@ -486,7 +486,7 @@ export default function ShopProfilePage() {
                                                 <div className="pt-2 border-t border-accent/10 flex items-center justify-between">
                                                     <button
                                                         type="button"
-                                                        onClick={() => setLightboxImage(img.image_url)}
+                                                        onClick={() => setLightboxImage(work.image_url)}
                                                         className="text-[11px] font-bold text-accent hover:underline uppercase tracking-wider flex items-center gap-1"
                                                     >
                                                         <span>Inspect Details &rarr;</span>
@@ -741,9 +741,9 @@ export default function ShopProfilePage() {
                                             disabled={isUploadingImage}
                                         />
                                     </label>
-                                    {shop.images && shop.images.length > 0 && (
+                                    {shop.works.length > 0 && (
                                         <span className="text-xs text-earth-text/60 font-medium">
-                                            ({shop.images.length} photos
+                                            ({shop.works.length} photos
                                             currently in gallery)
                                         </span>
                                     )}
@@ -901,21 +901,11 @@ export default function ShopProfilePage() {
                         </button>
                         <div className="flex-1 flex items-center justify-center bg-black p-4 min-h-[50vh] max-h-[75vh]">
                             <img
-                                src={parseShopImage(lightboxImage).imageUrl}
+                                src={lightboxImage}
                                 alt="Full-size dress work sample"
                                 className="w-full h-full object-contain max-h-[70vh] rounded-xl"
                             />
                         </div>
-                        {parseShopImage(lightboxImage).description && (
-                            <div className="p-5 bg-stone-900 border-t border-stone-800 text-stone-200">
-                                <span className="text-[10px] font-mono uppercase tracking-widest text-accent font-bold block mb-1">
-                                    GARMENT / WORK DESCRIPTION
-                                </span>
-                                <p className="text-xs font-medium leading-relaxed">
-                                    {parseShopImage(lightboxImage).description}
-                                </p>
-                            </div>
-                        )}
                     </div>
                 </div>
             )}

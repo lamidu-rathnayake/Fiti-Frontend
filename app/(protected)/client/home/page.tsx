@@ -102,7 +102,7 @@ export default function ClientHomePage() {
                                         {/* Top Image Banner */}
                                         <div className="h-32 w-full bg-warm-beige relative overflow-hidden shrink-0">
                                             <img
-                                                src={shop.images && shop.images.length > 0 ? shop.images[0].image_url : "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=600&q=80"}
+                                                src={shop.profile_image_url || "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=600&q=80"}
                                                 alt={shop.shop_name}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                             />

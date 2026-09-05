@@ -10,7 +10,7 @@ import dynamic from "next/dynamic";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { auth } from "@/lib/firebase/config";
 import { createClientProfile, createTailorProfile } from "@/lib/api/endpoints/profiles";
-import { addShopImage, createShop } from "@/lib/api/endpoints/shops";
+import { createShop } from "@/lib/api/endpoints/shops";
 import { FitiApiError } from "@/lib/api/client";
 import { reverseGeocode } from "@/lib/geocoding";
 import { validatePhoneNumber } from "@/lib/phone";
@@ -197,7 +197,7 @@ export default function OnboardingPage() {
             }
 
             if (role === "tailor") {
-                const shop = await createShop({
+                await createShop({
                     shop_name: form.shopName.trim(),
                     specialty: form.specialty.trim() || null,
                     shop_bio: form.shopBio.trim() || null,
@@ -207,12 +207,8 @@ export default function OnboardingPage() {
                     registration_number: form.registrationNumber.trim() || null,
                     latitude: usePersonalAddress ? form.latitude : form.shopLatitude,
                     longitude: usePersonalAddress ? form.longitude : form.shopLongitude,
+                    profile_image_url: finalShopImageUrl.trim() || photoURL,
                 });
-
-                const shopImageUrl = finalShopImageUrl.trim() || photoURL;
-                if (shopImageUrl) {
-                    await addShopImage(shop.shop_id, { image_url: shopImageUrl });
-                }
             }
 
             setRole(role);

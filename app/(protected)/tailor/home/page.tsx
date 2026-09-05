@@ -37,7 +37,7 @@ interface RequestView {
     isDirect: boolean;
 }
 
-type Tab = "overview" | "works" | "earnings" | "settings";
+type Tab = "overview" | "earnings" | "settings";
 
 export default function TailorHomePage() {
     const { user } = useAuth();
@@ -54,7 +54,6 @@ export default function TailorHomePage() {
 
     // UI state
     const [isLoading, setIsLoading] = useState(true);
-    const [isShopDropdownOpen, setIsShopDropdownOpen] = useState(false);
 
     // Action state
     const [submittingBidFor, setSubmittingBidFor] = useState<number | null>(
@@ -157,7 +156,6 @@ export default function TailorHomePage() {
 
     const handleSelectShop = useCallback(async (shop: Shop) => {
         setSelectedShop(shop);
-        setIsShopDropdownOpen(false);
         localStorage.setItem("tailorSelectedShopId", String(shop.shop_id));
         if (shop.shop_id) {
             setIsLoading(true);
@@ -170,6 +168,16 @@ export default function TailorHomePage() {
             setIsLoading(false);
         }
     }, []);
+
+    // Sync shop selection from the main navbar TailorNavControls component
+    useEffect(() => {
+        const handleShopChanged = (e: Event) => {
+            const shop = (e as CustomEvent).detail as Shop;
+            void handleSelectShop(shop);
+        };
+        window.addEventListener("tailorShopChanged", handleShopChanged);
+        return () => window.removeEventListener("tailorShopChanged", handleShopChanged);
+    }, [handleSelectShop]);
 
     // ── Pipeline Data Preparation ──
 
@@ -638,7 +646,6 @@ export default function TailorHomePage() {
                     <nav className="hidden sm:flex items-center gap-1">
                         {[
                             { key: "overview", label: "Overview" },
-                            { key: "works", label: "My Works" },
                             { key: "earnings", label: "Earnings" },
                             { key: "settings", label: "Settings" },
                         ].map((t) => (
@@ -651,69 +658,6 @@ export default function TailorHomePage() {
                             </button>
                         ))}
                     </nav>
-                </div>
-
-                <div className="relative flex items-center gap-2">
-                    {selectedShop && (
-                        <Link
-                            href={`/tailor/shop/${selectedShop.shop_id}`}
-                            className="flex items-center gap-1.5 bg-accent/10 border border-accent/30 hover:border-accent hover:bg-accent hover:text-white px-3.5 py-2 rounded-full text-xs font-bold text-accent transition-all shadow-sm shrink-0"
-                        >
-                            <span>✏️</span> Edit Shop Profile
-                        </Link>
-                    )}
-                    <button
-                        onClick={() =>
-                            setIsShopDropdownOpen(!isShopDropdownOpen)
-                        }
-                        className="flex items-center gap-2 bg-warm-beige border border-accent/30 hover:border-accent px-4 py-2 rounded-full text-xs font-bold text-earth-text transition-all shadow-sm"
-                    >
-                        <span className="truncate max-w-[140px]">
-                            {shopDisplayName}
-                        </span>
-                        <svg
-                            className={`w-3.5 h-3.5 text-accent transition-transform ${isShopDropdownOpen ? "rotate-180" : ""}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 9l-7 7-7-7"
-                            />
-                        </svg>
-                    </button>
-                    {isShopDropdownOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-56 bg-cream-bg border border-accent/20 rounded-2xl shadow-xl overflow-hidden z-20 py-1.5">
-                            {tailorShops.map((shop) => (
-                                <button
-                                    key={shop.shop_id}
-                                    onClick={() => handleSelectShop(shop)}
-                                    className="w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-warm-beige transition-colors text-earth-text/80 hover:text-earth-text"
-                                >
-                                    {shop.shop_name}
-                                </button>
-                            ))}
-                            <div className="h-px bg-accent/15 my-1.5" />
-                            {selectedShop && (
-                                <Link
-                                    href={`/tailor/shop/${selectedShop.shop_id}`}
-                                    onClick={() => setIsShopDropdownOpen(false)}
-                                    className="w-full text-left px-4 py-2 text-xs font-bold text-earth-text/80 hover:text-accent hover:bg-warm-beige transition-colors flex items-center gap-2"
-                                >
-                                    ✏️ View & Edit Shop Profile
-                                </Link>
-                            )}
-                            <Link
-                                href="/tailor/add-shop"
-                                className="w-full text-left px-4 py-2 text-xs font-bold text-accent hover:bg-warm-beige transition-colors flex items-center gap-2"
-                            >
-                                + Add New Shop
-                            </Link>
-                        </div>
-                    )}
                 </div>
             </header>
 
@@ -833,200 +777,6 @@ export default function TailorHomePage() {
                                     )}
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* MY WORKS / PORTFOLIO TAB */}
-                {activeTab === "works" && (
-                    <div className="p-6 lg:p-12 overflow-y-auto custom-scrollbar h-full">
-                        <div className="max-w-5xl mx-auto space-y-8">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-accent/15 pb-6">
-                                <div>
-                                    <span className="text-[10px] font-mono tracking-[0.25em] text-earth-text/60 uppercase block mb-1 font-bold">
-                                        CRAFTSMANSHIP & PORTFOLIO
-                                    </span>
-                                    <h1 className="text-3xl font-extrabold text-earth-text font-heading">
-                                        My Dress & Garment Works
-                                    </h1>
-                                    <p className="text-earth-text/70 text-xs mt-1 font-medium">
-                                        Manage work sample photos for{" "}
-                                        {shopDisplayName}
-                                    </p>
-                                </div>
-
-                                {selectedShop && (
-                                    <div className="flex items-center gap-3">
-                                        <label className="px-5 py-2.5 bg-accent text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-accent-hover transition-all cursor-pointer shadow-md flex items-center gap-2">
-                                            <span>📸</span>{" "}
-                                            {isUploadingWork
-                                                ? "Uploading Photo..."
-                                                : "+ Add New Work Photo"}
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleWorkUpload}
-                                                className="hidden"
-                                                disabled={isUploadingWork}
-                                            />
-                                        </label>
-                                        <Link
-                                            href={`/client/shop/${selectedShop.shop_id}`}
-                                            className="px-4 py-2.5 bg-cream-bg border border-accent/20 text-earth-text font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-warm-beige transition-all shadow-sm"
-                                        >
-                                            👁️ View Public Shop
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* UPLOAD HERO CARD */}
-                            <div className="bg-gradient-to-r from-amber-950 via-earth-text to-stone-900 p-8 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-                                <div className="space-y-2">
-                                    <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-accent font-bold">
-                                        PORTFOLIO SHOWCASE
-                                    </span>
-                                    <h2 className="text-2xl font-bold font-serif">
-                                        Showcase Your Bespoke Creations
-                                    </h2>
-                                    <p className="text-xs text-white/80 max-w-lg leading-relaxed font-medium">
-                                        Upload high-quality images of custom
-                                        dresses, suits, wedding wear,
-                                        traditional garments, and alterations.
-                                        Potential clients browse your portfolio
-                                        before sending direct garment requests!
-                                    </p>
-                                </div>
-
-                                <button
-                                    onClick={() => {
-                                        setWorkFile(null);
-                                        setWorkFilePreview(null);
-                                        setWorkDescription("");
-                                        setIsAddWorkModalOpen(true);
-                                    }}
-                                    className="px-6 py-3.5 bg-accent text-white font-bold text-xs uppercase tracking-widest rounded-2xl hover:bg-accent-hover transition-all cursor-pointer shadow-lg shrink-0 flex items-center gap-2 border border-white/20"
-                                >
-                                    <span>✨</span> + Add Work Card
-                                </button>
-                            </div>
-
-                            {/* CARD BY CARD GALLERY */}
-                            {selectedShop?.images &&
-                            selectedShop.images.length > 0 ? (
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-xs font-mono font-bold uppercase tracking-widest text-earth-text/60">
-                                            Published Work Cards (
-                                            {selectedShop.images.length})
-                                        </h3>
-                                        <span className="text-[10px] text-earth-text/50 font-mono">
-                                            Public showcase items with descriptions
-                                        </span>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                                        {selectedShop.images.map(
-                                            (img, index) => {
-                                                const { imageUrl, description } = parseShopImage(img);
-                                                return (
-                                                    <div
-                                                        key={img.image_id || index}
-                                                        className="bg-cream-bg border border-accent/20 rounded-2xl overflow-hidden shadow-sm flex flex-col hover:border-accent hover:shadow-md transition-all group"
-                                                    >
-                                                        <div
-                                                            className="w-full h-48 relative overflow-hidden bg-stone-950 cursor-pointer"
-                                                            onClick={() => setLightboxWorkImage(img.image_url)}
-                                                        >
-                                                            <img
-                                                                src={imageUrl}
-                                                                alt={description || `Work sample ${index + 1}`}
-                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center">
-                                                                <span>🔍 Inspect Photo</span>
-                                                                <span className="text-[10px] text-white/80 font-mono">
-                                                                    Card #{index + 1}
-                                                                </span>
-                                                            </div>
-                                                            {img.image_id && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleDeleteWork(img.image_id!);
-                                                                    }}
-                                                                    title="Delete work card"
-                                                                    className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-red-600/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs cursor-pointer"
-                                                                >
-                                                                    🗑️
-                                                                </button>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
-                                                            <div>
-                                                                <span className="px-2 py-0.5 bg-accent/10 border border-accent/20 text-accent rounded-full text-[10px] font-mono font-bold uppercase tracking-wider inline-block mb-1">
-                                                                    CARD #{index + 1}
-                                                                </span>
-                                                                <p className="text-xs font-semibold text-earth-text leading-relaxed">
-                                                                    {description || "Custom garment showcase work sample."}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            },
-                                        )}
-
-                                        <button
-                                            onClick={() => {
-                                                setWorkFile(null);
-                                                setWorkFilePreview(null);
-                                                setWorkDescription("");
-                                                setIsAddWorkModalOpen(true);
-                                            }}
-                                            className="border-2 border-dashed border-accent/30 rounded-2xl flex flex-col items-center justify-center p-6 text-center hover:border-accent transition-colors cursor-pointer bg-cream-bg/40 aspect-square min-h-[220px]"
-                                        >
-                                            <span className="text-3xl mb-1">
-                                                📸
-                                            </span>
-                                            <span className="text-xs font-bold text-accent uppercase">
-                                                + Add Work Card
-                                            </span>
-                                            <span className="text-[10px] text-earth-text/50 mt-1">
-                                                PNG, JPG up to 10MB
-                                            </span>
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="bg-cream-bg border border-accent/20 rounded-3xl p-12 text-center space-y-4 shadow-sm">
-                                    <div className="w-16 h-16 rounded-full bg-warm-beige border border-accent/20 flex items-center justify-center text-accent mx-auto text-3xl">
-                                        👗
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h3 className="text-lg font-bold text-earth-text font-serif">
-                                            No Dress Works Uploaded Yet
-                                        </h3>
-                                        <p className="text-xs text-earth-text/60 max-w-sm mx-auto font-medium">
-                                            Add photos of your completed
-                                            tailoring projects to display them
-                                            in your shop portfolio.
-                                        </p>
-                                    </div>
-                                    <label className="inline-block px-6 py-3 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-all cursor-pointer shadow-md">
-                                        Upload Your First Work Photo
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleWorkUpload}
-                                            className="hidden"
-                                            disabled={isUploadingWork}
-                                        />
-                                    </label>
-                                </div>
-                            )}
                         </div>
                     </div>
                 )}

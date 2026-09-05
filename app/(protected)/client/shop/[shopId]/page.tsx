@@ -6,10 +6,9 @@ import Link from "next/link";
 import {
     getShop,
     updateShop,
-    addShopImage,
-    deleteShopImage,
+    addShopWork,
+    deleteShopWork,
 } from "@/lib/api/endpoints/shops";
-import { parseShopImage } from "@/lib/api/types/shop";
 import type { Shop } from "@/lib/api/types/shop";
 import { useAuth } from "@/lib/firebase/AuthContext";
 import { validatePhoneNumber } from "@/lib/phone";
@@ -183,7 +182,7 @@ export default function ShopProfilePage() {
             if (!imageUrl) {
                 throw new Error("Image upload failed.");
             }
-            await addShopImage(shop.shop_id, {
+            await addShopWork(shop.shop_id, {
                 image_url: imageUrl,
                 description: workDescription.trim(),
             });
@@ -210,7 +209,7 @@ export default function ShopProfilePage() {
         setIsAddWorkModalOpen(true);
     };
 
-    const handleDeleteImage = async (imageId: number) => {
+    const handleDeleteImage = async (workId: number) => {
         if (!shop) return;
         if (
             !confirm(
@@ -220,7 +219,7 @@ export default function ShopProfilePage() {
             return;
 
         try {
-            await deleteShopImage(shop.shop_id, imageId);
+            await deleteShopWork(shop.shop_id, workId);
             await fetchShopDetails();
         } catch (err: any) {
             alert(
@@ -436,22 +435,21 @@ export default function ShopProfilePage() {
                         )}
 
                         {/* CARD BY CARD PORTFOLIO GALLERY */}
-                        {shop.images && shop.images.length > 0 ? (
+                        {shop.works && shop.works.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                {shop.images.map((img, i) => {
-                                    const { imageUrl, description } = parseShopImage(img);
+                                {shop.works.map((work, i) => {
                                     return (
                                         <div
-                                            key={img.image_id || i}
+                                            key={work.work_id || i}
                                             className="bg-cream-bg border border-accent/20 rounded-2xl overflow-hidden shadow-sm flex flex-col hover:border-accent/60 hover:shadow-md transition-all group"
                                         >
                                             <div
                                                 className="w-full h-52 relative overflow-hidden bg-stone-950 cursor-pointer"
-                                                onClick={() => setLightboxImage(img.image_url)}
+                                                onClick={() => setLightboxImage(work.image_url)}
                                             >
                                                 <img
-                                                    src={imageUrl}
-                                                    alt={description || `${shop.shop_name} work sample ${i + 1}`}
+                                                    src={work.image_url}
+                                                    alt={work.description || `${shop.shop_name} work sample ${i + 1}`}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                 />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-xs font-bold gap-1 p-2 text-center">
@@ -460,12 +458,12 @@ export default function ShopProfilePage() {
                                                         Sample #{i + 1}
                                                     </span>
                                                 </div>
-                                                {isOwner && img.image_id && (
+                                                {isOwner && work.work_id && (
                                                     <button
                                                         type="button"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            handleDeleteImage(img.image_id!);
+                                                            handleDeleteImage(work.work_id!);
                                                         }}
                                                         title="Delete work sample card"
                                                         className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-red-600/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-700 transition-all shadow-md text-xs cursor-pointer"
@@ -480,9 +478,9 @@ export default function ShopProfilePage() {
                                                     <span className="px-2.5 py-0.5 bg-accent/10 border border-accent/20 text-accent rounded-full text-[10px] font-mono font-bold uppercase tracking-wider inline-block mb-2">
                                                         WORK SAMPLE #{i + 1}
                                                     </span>
-                                                    <p className="text-xs font-semibold text-earth-text leading-relaxed">
-                                                        {description || "Custom tailored garment sample crafted at our atelier."}
-                                                    </p>
+                                                    <h4 className="text-sm font-bold text-earth-text leading-snug">
+                                                        {work.description || "Bespoke piece"}
+                                                    </h4>
                                                 </div>
 
                                                 <div className="pt-2 border-t border-accent/10 flex items-center justify-between">

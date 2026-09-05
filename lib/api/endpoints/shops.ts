@@ -9,8 +9,8 @@ import { apiFetch } from "@/lib/api/client";
 import type {
     Shop,
     ShopPayload,
-    ShopImage,
-    ShopImagePayload,
+    ShopWork,
+    ShopWorkPayload,
     NearbyShopsParams,
     Gig,
     GigPayload,
@@ -99,34 +99,31 @@ export async function deleteShop(shopId: number): Promise<void> {
     return apiFetch<void>(`/shops/${shopId}`, { method: "DELETE" });
 }
 
-import { formatShopImageUrl } from "@/lib/api/types/shop";
-
 /**
- * Add a portfolio/shop image URL with optional description.
- * POST /api/v1/shops/{shop_id}/images
+ * Add a portfolio/shop work URL with optional description.
+ * POST /api/v1/shops/{shop_id}/works
  * (Auth: Tailor Role)
  */
-export async function addShopImage(
+export async function addShopWork(
     shopId: number,
-    payload: ShopImagePayload,
-): Promise<ShopImage> {
-    const finalUrl = formatShopImageUrl(payload.image_url, payload.description);
-    return apiFetch<ShopImage>(`/shops/${shopId}/images`, {
+    payload: ShopWorkPayload,
+): Promise<ShopWork> {
+    return apiFetch<ShopWork>(`/shops/${shopId}/works`, {
         method: "POST",
-        body: JSON.stringify({ image_url: finalUrl }),
+        body: JSON.stringify(payload),
     });
 }
 
 /**
- * Delete a portfolio/shop image.
- * DELETE /api/v1/shops/{shop_id}/images/{image_id}
+ * Delete a portfolio/shop work piece.
+ * DELETE /api/v1/shops/{shop_id}/works/{work_id}
  * (Auth: Tailor Role)
  */
-export async function deleteShopImage(
+export async function deleteShopWork(
     shopId: number,
-    imageId: number,
+    workId: number,
 ): Promise<void> {
-    return apiFetch<void>(`/shops/${shopId}/images/${imageId}`, {
+    return apiFetch<void>(`/shops/${shopId}/works/${workId}`, {
         method: "DELETE",
     });
 }

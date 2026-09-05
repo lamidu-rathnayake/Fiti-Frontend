@@ -42,7 +42,7 @@ export default function TailorsPage() {
                             city: s.city || "Colombo",
                             specialty: s.shop_bio || s.specialty || "Bespoke Custom Tailoring",
                             rating: s.average_rating ? `${s.average_rating.toFixed(1)} ★` : "4.9 ★ (Verified)",
-                            image: s.images && s.images.length > 0 ? s.images[0].image_url : "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=500&q=80",
+                            image: s.profile_image_url || "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=500&q=80",
                             tag: "VERIFIED ATELIER",
                         }))
                     );

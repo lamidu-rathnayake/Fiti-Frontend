@@ -8,6 +8,7 @@ import NavSidebar from "@/components/navigation/NavSidebar";
 import FullPageLock from "@/components/FullPageLock";
 import ThemeToggle from "@/components/ThemeToggle";
 import Logo from "@/components/Logo";
+import TailorNavControls from "@/components/navigation/TailorNavControls";
 
 export default function ProtectedLayout({
     children,
@@ -92,8 +93,9 @@ export default function ProtectedLayout({
                         )}
                     </nav>
 
-                    {/* Right: Theme Toggle & Hamburger Menu */}
-                    <div className="flex items-center space-x-3">
+                    {/* Right: Tailor Nav Controls (only for tailors) + Theme Toggle & Hamburger */}
+                    <div className="flex items-center gap-3">
+                        {dbRole === "tailor" && <TailorNavControls />}
                         <ThemeToggle />
                         <button
                             onClick={() => setIsSidebarOpen(true)}

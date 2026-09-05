@@ -52,6 +52,32 @@ Protected client routes are under `/client`; tailor routes are under `/tailor`. 
 - [Project Progress](./docs/PROJECT_PROGRESS.md) - Current implementation status and remaining work.
 - [Frontend Features Handoff](./docs/frontend_features_handoff.md) - Feature ownership and integration notes.
 
+## Project Structure
+
+```text
+app/
+├── (auth)/          # Authentication pages (login, onboarding, register)
+├── (protected)/     # Role-based protected routes
+│   ├── client/      # Client views (home, orders, tailor discovery, shops)
+│   └── tailor/      # Tailor views (dashboard, orders, shop management)
+├── globals.css      # Global styles
+└── layout.tsx       # Root layout
+
+components/
+├── auth/            # Authentication form components
+├── map/             # Leaflet maps and location pickers
+├── navigation/      # Sidebars, nav controls, and layout headers
+└── (UI)/            # Reusable UI elements (ThemeToggle, Logo, FullPageLock)
+
+lib/
+├── api/             # API client and backend endpoint definitions
+│   └── types/       # Frontend type definitions for API payloads
+├── firebase/        # Firebase initialization and AuthContext
+├── cloudinary.ts    # Image upload utility
+├── geocoding.ts     # Map coordinates utilities
+└── phone.ts         # Phone validation utilities
+```
+
 ## Validation
 
 Run the checks used by the project:

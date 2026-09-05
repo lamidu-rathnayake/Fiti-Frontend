@@ -9,8 +9,6 @@ import { createClothingRequest } from "@/lib/api/endpoints/orders";
 import { getMeasurements } from "@/lib/api/endpoints/profiles";
 import type { Measurements } from "@/lib/api/types/profile";
 import { uploadToCloudinary } from "@/lib/cloudinary";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase/config";
 import MapWithOverlay from "@/components/map/MapWithOverlay";
 import { reverseGeocode } from "@/lib/geocoding";
 import FullPageLock from "@/components/FullPageLock";
@@ -48,7 +46,7 @@ export default function BiddingRequestPage() {
     // Inspiration Gallery (Cloudinary)
     const [designImages, setDesignImages] = useState<File[]>([]);
 
-    // Voice Note (Firebase Storage)
+    // Voice Note (Cloudinary)
     const [voiceBlob, setVoiceBlob] = useState<Blob | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -99,10 +97,16 @@ export default function BiddingRequestPage() {
 
             // 2. Upload Voice Note
             let voiceUrl = null;
-            if (voiceBlob && user) {
-                const audioRef = ref(storage, `voice_notes/${user.uid}_${Date.now()}.webm`);
-                await uploadBytes(audioRef, voiceBlob);
-                voiceUrl = await getDownloadURL(audioRef);
+            if (voiceBlob) {
+                const voiceFile = new File(
+                    [voiceBlob],
+                    `voice-note-${Date.now()}.webm`,
+                    { type: voiceBlob.type || "audio/webm" }
+                );
+                voiceUrl = await uploadToCloudinary(voiceFile, "video");
+                if (!voiceUrl) {
+                    throw new Error("Voice note upload failed. Please try again.");
+                }
             }
 
             await createClothingRequest({

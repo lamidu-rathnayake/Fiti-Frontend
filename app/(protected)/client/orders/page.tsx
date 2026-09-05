@@ -529,7 +529,7 @@ export default function ClientOrdersPage() {
                     ORDER MANAGEMENT
                 </span>
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-earth-text tracking-tight font-heading">
-                    My Commissions
+                    My Orders
                 </h1>
             </div>
 

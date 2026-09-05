@@ -7,6 +7,7 @@ import {
     listClientRequests,
     acceptBid,
     rejectQuote,
+    cancelRequest,
 } from "@/lib/api/endpoints/orders";
 import { listShops } from "@/lib/api/endpoints/shops";
 import type {
@@ -40,6 +41,9 @@ export default function ClientOrdersPage() {
     const [decliningQuoteId, setDecliningQuoteId] = useState<number | null>(
         null,
     );
+    const [cancellingRequestId, setCancellingRequestId] = useState<
+        number | null
+    >(null);
     const [actionToast, setActionToast] = useState<{
         msg: string;
         ok: boolean;
@@ -137,6 +141,29 @@ export default function ClientOrdersPage() {
         }
     };
 
+    const handleCancelRequest = async (request: ClothingRequest) => {
+        if (
+            !window.confirm(
+                "Cancel this request? Any quotations for it will no longer be available.",
+            )
+        ) {
+            return;
+        }
+
+        setCancellingRequestId(request.request_id);
+        try {
+            await cancelRequest(request.request_id);
+            setSelectedCard(null);
+            showToast("Request cancelled.");
+            await fetchData();
+        } catch (err) {
+            console.error("Failed to cancel request:", err);
+            showToast("Failed to cancel request. Please try again.", false);
+        } finally {
+            setCancellingRequestId(null);
+        }
+    };
+
     // ── Filter Logic ──
     // Pending requests: Requests that are open and have no shop_requests with "quoted" or "accepted" status.
     const pendingRequests = clientRequests.filter((req) => {
@@ -219,15 +246,30 @@ export default function ClientOrdersPage() {
                     </p>
                 )}
             </div>
-            <div className="shrink-0 flex items-center justify-center bg-warm-beige border border-accent/20 px-4 py-3 rounded-xl">
-                <span className="text-xs font-bold text-earth-text/70 text-right">
-                    <span className="block">
-                        {req.target_budget
-                            ? `Requested: LKR ${Number(req.target_budget).toLocaleString()}`
-                            : "Open Budget"}
+            <div className="w-full shrink-0 space-y-2 sm:w-auto">
+                <div className="flex items-center justify-center bg-warm-beige border border-accent/20 px-4 py-3 rounded-xl">
+                    <span className="text-xs font-bold text-earth-text/70 text-right">
+                        <span className="block">
+                            {req.target_budget
+                                ? `Requested: LKR ${Number(req.target_budget).toLocaleString()}`
+                                : "Open Budget"}
+                        </span>
+                        <span className="block mt-1">Awaiting Quotations...</span>
                     </span>
-                    <span className="block mt-1">Awaiting Quotations...</span>
-                </span>
+                </div>
+                <button
+                    type="button"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        void handleCancelRequest(req);
+                    }}
+                    disabled={cancellingRequestId === req.request_id}
+                    className="w-full rounded-xl border border-red-600/30 px-4 py-2.5 text-xs font-bold text-red-700 transition-colors hover:bg-red-600/10 disabled:opacity-50"
+                >
+                    {cancellingRequestId === req.request_id
+                        ? "Cancelling..."
+                        : "Cancel Request"}
+                </button>
             </div>
         </div>
     );
@@ -239,6 +281,7 @@ export default function ClientOrdersPage() {
         const { req, shopReq } = item;
         const isAccepting = acceptingQuoteId === shopReq.shop_request_id;
         const isDeclining = decliningQuoteId === shopReq.shop_request_id;
+        const isCancelling = cancellingRequestId === req.request_id;
         const isRejected = shopReq.status === "rejected";
 
         const shopBids =
@@ -366,7 +409,9 @@ export default function ClientOrdersPage() {
                             event.stopPropagation();
                             void handleAcceptQuote(shopReq);
                         }}
-                        disabled={isAccepting || isDeclining || isRejected}
+                        disabled={
+                            isAccepting || isDeclining || isCancelling || isRejected
+                        }
                         className="w-full py-3 bg-accent text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-accent-hover transition-colors shadow-sm disabled:opacity-50 flex justify-center items-center gap-2"
                     >
                         {isAccepting ? (
@@ -386,12 +431,23 @@ export default function ClientOrdersPage() {
                                 event.stopPropagation();
                                 void handleDeclineQuote(shopReq);
                             }}
-                            disabled={isDeclining || isAccepting}
+                            disabled={isDeclining || isAccepting || isCancelling}
                             className="w-full py-2.5 bg-transparent border border-earth-text/20 text-earth-text/70 hover:text-earth-text hover:bg-earth-text/5 rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
                         >
                             {isDeclining ? "Declining..." : "Decline"}
                         </button>
                     )}
+                    <button
+                        type="button"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            void handleCancelRequest(req);
+                        }}
+                        disabled={isAccepting || isDeclining || isCancelling}
+                        className="w-full rounded-xl border border-red-600/30 py-2.5 text-xs font-bold text-red-700 transition-colors hover:bg-red-600/10 disabled:opacity-50"
+                    >
+                        {isCancelling ? "Cancelling..." : "Cancel Request"}
+                    </button>
                 </div>
             </div>
         );
@@ -980,6 +1036,27 @@ export default function ClientOrdersPage() {
                                                 </p>
                                             )}
                                         </div>
+                                        {selectedCard.kind !== "order" && (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    void handleCancelRequest(
+                                                        selectedCard.request,
+                                                    )
+                                                }
+                                                disabled={
+                                                    cancellingRequestId ===
+                                                    selectedCard.request
+                                                        .request_id
+                                                }
+                                                className="w-full rounded-xl border border-red-600/30 px-4 py-3 text-xs font-bold text-red-700 transition-colors hover:bg-red-600/10 disabled:opacity-50"
+                                            >
+                                                {cancellingRequestId ===
+                                                selectedCard.request.request_id
+                                                    ? "Cancelling..."
+                                                    : "Cancel Request"}
+                                            </button>
+                                        )}
                                     </>
                                 );
                             })()}

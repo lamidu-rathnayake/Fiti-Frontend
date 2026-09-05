@@ -41,6 +41,7 @@ export interface OrderDetail {
     };
     designNotes: string;
     images: string[];
+    voiceNoteUrl?: string;
     status: string;
     progress?: number;
     clientPhone?: string;
@@ -159,6 +160,7 @@ export default function TailorOrdersPage() {
                 req.design_images && req.design_images.length > 0
                     ? req.design_images.map((img) => img.image_url)
                     : [defaultImg],
+            voiceNoteUrl: req.voice_note_url || undefined,
             status: "REQUESTED",
             clientPhone: req.client?.phone || "",
             clientCity: req.request_location || req.client?.city || "",
@@ -271,6 +273,7 @@ export default function TailorOrdersPage() {
                 req?.design_images && req.design_images.length > 0
                     ? req.design_images.map((img) => img.image_url)
                     : [],
+            voiceNoteUrl: req?.voice_note_url || undefined,
             status: statusLabel,
             progress:
                 orderStatus === "completed"
@@ -895,6 +898,25 @@ export default function TailorOrdersPage() {
                             {order.designNotes}
                         </div>
                     </div>
+
+                    {order.voiceNoteUrl && (
+                        <div>
+                            <label className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-earth-text/60 block mb-2">
+                                CLIENT VOICE NOTE
+                            </label>
+                            <div className="rounded-xl border border-accent/20 bg-cream-bg p-3.5">
+                                <audio
+                                    controls
+                                    preload="metadata"
+                                    src={order.voiceNoteUrl}
+                                    className="h-10 w-full"
+                                >
+                                    Your browser does not support audio
+                                    playback.
+                                </audio>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         );

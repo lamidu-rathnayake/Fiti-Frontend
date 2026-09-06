@@ -525,21 +525,19 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
         setError("");
 
         const phoneVal = validatePhoneNumber(whatsapp);
-        if (!phoneVal.isValid) {
-            setError(phoneVal.error || "Please enter a valid personal phone number.");
-            return;
-        }
+        const finalPhone = phoneVal.isValid ? phoneVal.normalized : whatsapp.trim();
 
-        let shopPhoneVal: { isValid: boolean; normalized: string | null; error?: string } = { isValid: true, normalized: null };
-        if (shopContact.trim()) {
-            shopPhoneVal = validatePhoneNumber(shopContact);
-            if (!shopPhoneVal.isValid) {
-                setError(`Shop ${shopPhoneVal.error || "invalid phone number format."}`);
-                return;
+        let finalShopContact = shopContact.trim();
+        if (finalShopContact) {
+            const shopPhoneVal = validatePhoneNumber(shopContact);
+            if (shopPhoneVal.isValid && shopPhoneVal.normalized) {
+                finalShopContact = shopPhoneVal.normalized;
             }
         }
-
-        const finalShopContact = shopPhoneVal.normalized || phoneVal.normalized;
+        
+        if (!finalShopContact) {
+            finalShopContact = finalPhone || "";
+        }
 
         setLoading(true);
 
@@ -553,7 +551,7 @@ export function TailorRegisterForm({ onBack }: { onBack?: () => void }) {
             await userCredential.user.getIdToken(true);
 
             await createTailorProfile({
-                phone: phoneVal.normalized,
+                phone: finalPhone || null,
                 city: city.trim() || null,
                 address: address.trim() || null,
                 latitude: latitude || null,

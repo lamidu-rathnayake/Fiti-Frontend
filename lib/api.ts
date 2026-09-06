@@ -58,6 +58,21 @@ export interface Bid {
     status: string;
 }
 
+export interface AuthRoleResponse {
+    uid: string;
+    email: string | null;
+    role: string;
+    redirect_to: string;
+}
+
+export async function getCurrentUserRole(idToken: string) {
+    return request<AuthRoleResponse>("/auth/me/role", {
+        headers: {
+            Authorization: `Bearer ${idToken}`,
+        },
+    });
+}
+
 // ── Admin Functions ───────────────────────────────────────────────────
 export function getURL() {
     return API_BASE;

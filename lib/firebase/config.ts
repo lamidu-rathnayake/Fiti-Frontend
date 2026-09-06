@@ -1,20 +1,31 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, browserSessionPersistence, setPersistence } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBGbesTxWPOqshyBogCuUjS8pccJWitTdQ",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "fiti-b0cb2.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "fiti-b0cb2",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "fiti-b0cb2.firebasestorage.app",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "1041965038766",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:1041965038766:web:7b6099b26931c41990c13f",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase only if it hasn't been initialized already
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const db = getFirestore(app);
+const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
-export { app, auth, db, googleProvider };
+// Use sessionStorage persistence so Brave/Edge tracking prevention
+// doesn't block Firebase's default IndexedDB-based auth state.
+// Users stay logged in for the browser session (tab/window lifetime).
+// On production with a real domain, IndexedDB works and this can be changed
+// back to browserLocalPersistence for "stay logged in" behavior.
+if (typeof window !== "undefined") {
+  setPersistence(auth, browserSessionPersistence).catch(() => {
+    // Silently fail — auth still works, it just won't persist across sessions
+  });
+}
+
+export { app, auth, storage, googleProvider };

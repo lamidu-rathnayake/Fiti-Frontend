@@ -1,41 +1,46 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-
+import { use } from "react";
+import { useRouter } from "next/navigation";
 import {
     ClientRegisterForm,
     TailorRegisterForm,
 } from "@/components/auth/register-forms";
 
-export default function RoleRegistrationPage() {
-    const params = useParams();
+export default function RoleRegistrationPage({
+    params,
+}: {
+    params: Promise<{ role: string }>;
+}) {
     const router = useRouter();
+    const resolvedParams = use(params);
+    
+    const role = Array.isArray(resolvedParams?.role) ? resolvedParams.role[0] : resolvedParams?.role;
+    const normalizedRole = role?.toLowerCase();
 
-    const role = Array.isArray(params?.role) ? params.role[0] : params?.role;
-
-    if (role === "tailor") {
+    if (normalizedRole === "tailor" || normalizedRole === "seller") {
         return <TailorRegisterForm onBack={() => router.push("/register")} />;
     }
 
-    if (role === "client") {
+    if (normalizedRole === "client") {
         return <ClientRegisterForm onBack={() => router.push("/register")} />;
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                    Invalid role
+        <main className="min-h-screen bg-warm-beige text-earth-text flex items-center justify-center p-4 selection:bg-accent selection:text-cream-bg font-sans">
+            <div className="w-full max-w-md bg-cream-bg border border-accent/40 rounded-3xl p-8 text-center shadow-2xl">
+                <h1 className="text-2xl font-bold tracking-tight text-earth-text uppercase">
+                    Invalid Role Selected
                 </h1>
-                <p className="mt-2 text-sm text-slate-500">
-                    Please choose a valid registration role.
+                <p className="mt-2 text-xs text-earth-text/70">
+                    Please choose a valid registration role to proceed.
                 </p>
                 <button
                     type="button"
                     onClick={() => router.push("/register")}
-                    className="mt-5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
+                    className="mt-6 rounded-full bg-accent px-6 py-3 text-xs font-bold uppercase tracking-wider text-cream-bg transition hover:bg-earth-text"
                 >
-                    Back to role selection
+                    Back to Role Selection
                 </button>
             </div>
         </main>

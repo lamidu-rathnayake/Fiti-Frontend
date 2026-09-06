@@ -1,13 +1,487 @@
 @import "tailwindcss";
 
 :root {
-    --font-marketplace-heading: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    --font-marketplace-body: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-heading: var(--font-heading, "Manrope", sans-serif);
+    --font-serif: var(--font-heading, "Manrope", sans-serif);
+    --font-sans: var(--font-sans, "Inter", sans-serif);
+    
+    /* -------------------------------------------------------------
+     * STRICT ATELIER COLOR PALETTE TOKENS (LIGHT THEME DEFAULT)
+     * 1. Text: #4e220f (Earth Brown), #363634 (Slate Muted), #394027 (Olive Muted)
+     * 2. Background: #f7f1de (Cream), #E4E1D7 (Warm Beige Canvas)
+     * 3. Cards & Components: #B0BA99 (Sage Green / Card Background)
+     * 4. Accents/Buttons/Borders: #9d6638 (Gold-Brown Accent)
+     * ------------------------------------------------------------- */
+    --earth-text: #4e220f;
+    --muted-dark: #363634;
+    --olive-dark: #394027;
+    --cream-bg: #f7f1de;
+    --warm-beige: #E4E1D7;
+    --card-bg: #B0BA99;
+    --sage: #B0BA99;
+    --accent: #9d6638;
+    --accent-hover: #4e220f;
+    
+    --text-primary: var(--earth-text);
+    --text-muted-dark: var(--muted-dark);
+    --text-olive-dark: var(--olive-dark);
+    --bg-primary: var(--cream-bg);
+    --bg-warm-beige: var(--warm-beige);
+    --card-bg-token: var(--card-bg);
+    --accent-primary: var(--accent);
+    --accent-hover-token: var(--accent-hover);
+}
+
+.dark, [data-theme="dark"] {
+    /* -------------------------------------------------------------
+     * LUXURY ATELIER COLOR PALETTE TOKENS (DARK THEME)
+     * 1. Text: #f5efe0 (Warm Vanilla Cream Text)
+     * 2. Background: #1c1917 (Deep Cocoa Charcoal), #12100e (Obsidian Dark)
+     * 3. Cards & Components: #292524 (Dark Walnut Slate Card)
+     * 4. Accents/Buttons/Borders: #d97706 (Warm Amber Gold)
+     * ------------------------------------------------------------- */
+    --earth-text: #f5efe0;
+    --muted-dark: #cbd5e1;
+    --olive-dark: #a3e635;
+    --cream-bg: #1c1917;
+    --warm-beige: #12100e;
+    --card-bg: #292524;
+    --sage: #383430;
+    --accent: #d97706;
+    --accent-hover: #f59e0b;
+
+    --text-primary: var(--earth-text);
+    --text-muted-dark: var(--muted-dark);
+    --text-olive-dark: var(--olive-dark);
+    --bg-primary: var(--cream-bg);
+    --bg-warm-beige: var(--warm-beige);
+    --card-bg-token: var(--card-bg);
+    --accent-primary: var(--accent);
+    --accent-hover-token: var(--accent-hover);
 }
 
 @theme {
-    /* 🛍️ Use with: font-heading */
-    --font-heading: var(--font-marketplace-heading);
-    /* 🏷️ Use with: font-body */
-    --font-body: var(--font-marketplace-body);
+    --font-serif: var(--font-serif);
+    --font-heading: var(--font-heading);
+    --font-sans: var(--font-sans);
+    
+    /* Tailwind CSS v4 Dynamic Theme Colors */
+    --color-earth-text: var(--earth-text);
+    --color-muted-dark: var(--muted-dark);
+    --color-olive-dark: var(--olive-dark);
+    --color-cream-bg: var(--cream-bg);
+    --color-warm-beige: var(--warm-beige);
+    --color-card-bg: var(--card-bg);
+    --color-sage: var(--sage);
+    --color-accent: var(--accent);
+    --color-accent-hover: var(--accent-hover);
+}
+
+/* Global body styling with dynamic palette */
+body {
+    background-color: var(--warm-beige);
+    color: var(--earth-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Scrollbar using dynamic palette */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--warm-beige);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--earth-text);
+}
+
+/* Selection Highlight */
+::selection {
+    background-color: var(--accent);
+    color: var(--cream-bg);
+}
+
+/* -------------------------------------------------------------
+ * ATELIER BRANDING & UI UTILITY CLASSES (Auth & Landing)
+ * ------------------------------------------------------------- */
+
+/* Page Background Containers */
+.bg-cream-canvas {
+    background-color: var(--cream-bg);
+}
+
+.bg-warm-canvas {
+    background-color: var(--warm-beige);
+}
+
+.bg-sage-card {
+    background-color: var(--card-bg);
+}
+
+/* Atelier Cards & Containers */
+.atelier-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--accent);
+    color: var(--earth-text);
+}
+
+.atelier-card-cream {
+    background-color: var(--cream-bg);
+    border: 1px solid var(--accent);
+    color: var(--earth-text);
+}
+
+/* Atelier Buttons */
+.atelier-btn-primary {
+    background-color: var(--accent);
+    color: var(--cream-bg);
+    font-weight: 700;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.atelier-btn-primary:hover {
+    background-color: var(--accent-hover);
+    color: var(--cream-bg);
+}
+
+.atelier-btn-secondary {
+    background-color: var(--card-bg);
+    color: var(--earth-text);
+    border: 1px solid var(--accent);
+    font-weight: 700;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.atelier-btn-secondary:hover {
+    background-color: var(--accent);
+    color: var(--cream-bg);
+}
+
+/* Atelier Input Styling */
+.atelier-input {
+    background-color: var(--warm-beige);
+    border: 1px solid var(--accent);
+    color: var(--earth-text);
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+.atelier-input:focus {
+    border-color: var(--earth-text);
+    outline: none;
+    background-color: var(--cream-bg);
+}
+
+/* Auth Page Overlay & Card Utilities */
+.auth-page-wrapper {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow: hidden;
+    font-family: var(--font-sans);
+    background-color: var(--warm-beige);
+}
+
+.auth-bg-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.auth-bg-overlay-dark {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(3px);
+}
+
+.auth-card-floating {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 64rem;
+    background-color: transparent;
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    min-height: 580px;
+}
+
+.auth-torn-paper-side {
+    background-color: var(--cream-bg);
+    color: var(--earth-text);
+    position: relative;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 20;
+}
+
+/* -------------------------------------------------------------
+ * LUXURY ANIMATIONS & KEYFRAMES
+ * ------------------------------------------------------------- */
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(0.5deg);
+    }
+}
+
+@keyframes floatSlow {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-14px);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        opacity: 0.35;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.65;
+        transform: scale(1.08);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(200%);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-float {
+    animation: float 5s ease-in-out infinite;
+}
+
+.animate-float-slow {
+    animation: floatSlow 8s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+    animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* -------------------------------------------------------------
+ * SCROLL-REVEAL SYSTEM
+ * ------------------------------------------------------------- */
+
+.reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition:
+        opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger delay helpers */
+.delay-100 { transition-delay: 100ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+/* -------------------------------------------------------------
+ * DESIGN UTILITY CLASSES
+ * ------------------------------------------------------------- */
+
+/* Custom Text Gradient */
+.gold-gradient-text {
+    color: var(--earth-text);
+}
+
+/* Card Component Background */
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--accent);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+    border-color: var(--earth-text);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Accent Button Effect */
+.btn-gold-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: var(--accent);
+    color: var(--cream-bg);
+    font-weight: 800;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.btn-gold-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transform: translateX(-100%);
+}
+
+.btn-gold-shimmer:hover::after {
+    animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.btn-gold-shimmer:hover {
+    background: var(--accent-hover);
+    color: var(--cream-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.btn-gold-shimmer:active {
+    transform: translateY(0);
+}
+
+/* Stitch Dashed Border */
+.stitch-border {
+    position: relative;
+}
+
+.stitch-border::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px dashed var(--accent);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Stitch Rule Divider */
+.stitch-rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.stitch-rule::before,
+.stitch-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(
+        90deg,
+        var(--accent) 0,
+        var(--accent) 6px,
+        transparent 6px,
+        transparent 14px
+    );
+    opacity: 0.6;
+}
+
+/* FAQ Accordion */
+.faq-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.faq-body.open {
+    grid-template-rows: 1fr;
+}
+.faq-body > div {
+    overflow: hidden;
+}
+
+/* Hover Lift Card */
+.lift-card {
+    transition:
+        transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lift-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.2);
+}
+
+/* Focus Ring */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* -------------------------------------------------------------
+ * FITI PUBLIC LANDING
+ * ------------------------------------------------------------- */
+
+.fiti-landing {
+    font-family: var(--font-sans);
+    background-color: var(--warm-beige);
+    color: var(--earth-text);
+}
+
+.landing-ruler span {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    padding-right: 0.35rem;
+    background: var(--card-bg);
+    color: var(--earth-text);
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.landing-ruler span::before {
+    content: "";
+    width: 0.65rem;
+    height: 1px;
+    background: var(--earth-text);
 }

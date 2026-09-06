@@ -1,179 +1,94 @@
 # Fiti Frontend
 
-This is the Next.js frontend for the Fiti marketplace platform. It handles authentication, role-based registration, protected admin access, and API calls to the backend services used by clients, tailors, and administrators.
+Fiti is a role-based bespoke tailoring marketplace. The Next.js App Router frontend combines Firebase Authentication with a backend API backed by Supabase/PostgreSQL. Clients can discover tailors, submit custom clothing requests, compare bids, and track orders. Tailors can manage shops, review marketplace requests, submit bids, and manage orders.
 
-## Project purpose
+## Features
 
-The frontend is split into three main user journeys:
+- Email/password and Google sign-in through Firebase Authentication.
+- Frontend-driven role routing for `client` and `tailor` users.
+- New-user onboarding with profile, location, image, NIC, and shop details.
+- Client storefront, tailor discovery, shop profiles, direct requests, broadcast requests, profile, and orders.
+- Tailor dashboard, shop creation, location, marketplace requests, and order views.
+- Clothing requests with measurements, service type (`online` or `physical_visit`), voice notes, and inspiration images.
+- Responsive UI with Leaflet location picking, Cloudinary media uploads, and theme switching.
 
-- Client-facing experience
-- Tailor-facing experience
-- Admin experience
+## Setup
 
-The application uses Firebase Authentication for user identity and Next.js App Router for route-based UI organization.
-
-## Tech stack
-
-- Next.js 16 App Router
-- React 19
-- TypeScript
-- Tailwind CSS
-- Firebase Authentication
-- REST API integration for backend services
-
-## Architecture overview
-
-### 1. App Router structure
-
-The project is organized around the App Router under the `app/` directory:
-
-- `app/(auth)/login/page.tsx` — login page
-- `app/(auth)/register/page.tsx` — choose between client or tailor registration
-- `app/(auth)/register/[role]/page.tsx` — role-specific registration form
-- `app/(auth)/verify-email/page.tsx` — verification screen (available if needed in future flows)
-- `app/(protected)/layout.tsx` — protected route wrapper for authenticated pages
-- `app/(protected)/admin/page.tsx` — admin dashboard placeholder
-- `providers/AuthProvider.tsx` — Firebase auth session provider
-- `lib/firebase/client.ts` — Firebase initialization
-- `lib/api.ts` — generic backend request wrapper and API helpers
-
-### 2. Authentication model
-
-Firebase is used as the authentication provider for user identity.
-
-- `AuthProvider` listens to `onAuthStateChanged(auth, ...)`
-- the current user is shared through React context
-- protected pages check `user` and `loading` before rendering
-
-This prevents unauthenticated users from reaching protected pages such as the admin area.
-
-### 3. Role-based registration flow
-
-The registration flow is intentionally split by user type:
-
-- `Client` registration form collects client-specific fields
-- `Tailor` registration form collects tailor-specific fields
-- users choose a role first, then continue into the matching form
-
-This helps keep the data model separate for each user type instead of forcing all users into one combined schema.
-
-## Backend integration
-
-The frontend connects to multiple backend services via environment variables.
-
-### Client / Tailor backend
-
-The main application backend is configured with:
-
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-```
-
-This is used by helpers in `lib/api.ts` for the client/tailor APIs such as:
-
-- profile creation
-- shop creation
-- order request creation
-- bid submissions
-
-The generic request wrapper builds URLs as:
-
-```ts
-fetch(`${API_BASE}${endpoint}`, { ...options });
-```
-
-So the frontend calls endpoints relative to the client/tailor backend base URL.
-
-### Admin backend
-
-The admin service is configured with:
-
-```bash
-NEXT_PUBLIC_ADMIN_API_URL=http://localhost:9000/api/v1
-```
-
-This is reserved for admin-related services and analytics or internal admin operations.
-
-In the current implementation, the frontend keeps the admin URL available for future admin-specific endpoints and dashboard logic.
-
-## Firebase configuration
-
-Firebase is initialized in `lib/firebase/client.ts`:
-
-```ts
-const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-```
-
-The Firebase project should match the same project used for the app authentication flow.
-
-## Environment setup
-
-Create a `.env` file in the project root and add the variables below:
-
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
-
-# Client / Tailor backend
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-
-# Admin backend
-NEXT_PUBLIC_ADMIN_API_URL=http://localhost:9000/api/v1
-```
-
-A sample file is also included as `.env.example`.
-
-## Local development workflow
-
-1. Start the backend services for:
-    - client/tailor API
-    - admin API
-2. Configure `.env` with correct values
-3. Install dependencies:
+Install dependencies and start the development server:
 
 ```bash
 npm install
-```
-
-4. Start the frontend:
-
-```bash
 npm run dev
 ```
 
-5. Open the app in the browser:
+Configure the Firebase public settings, backend URL, and Cloudinary upload settings in `.env.local`:
 
 ```text
-http://localhost:3000
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=
 ```
 
-## Notes on flow
+The backend must be running at `NEXT_PUBLIC_API_URL`. Firebase Email/Password and Google providers must be enabled in the Firebase project.
 
-- Login uses Firebase authentication
-- Registration is role-based
-- Protected pages are guarded by `AuthProvider`
-- API base URLs are environment-driven so the same frontend can target different backend environments
-- The design keeps authentication separate from business profile data so client/tailor onboarding remains modular
+## Routes
 
-## Important caution
+Public routes include `/`, `/login`, `/register`, `/register/client`, `/register/tailor`, `/onboarding`, `/contact`, `/privacy`, and `/terms`.
 
-The frontend should always use the same Firebase project that the auth users were created in. If the app points to a different Firebase project, login and auth behavior may appear inconsistent even if the password and email are correct.
+Protected client routes are under `/client`; tailor routes are under `/tailor`. The protected layout verifies Firebase authentication, fetches the database role from `/api/v1/auth/me/role`, redirects incomplete users to `/onboarding`, and prevents cross-role access.
 
-## Example backend mapping
+## Documentation
 
-- Client requests → `NEXT_PUBLIC_API_URL`
-- Tailor requests → `NEXT_PUBLIC_API_URL`
-- Admin dashboard calls → `NEXT_PUBLIC_ADMIN_API_URL`
+- [Entity Dictionary](./docs/ENTITY_DICTIONARY.md) - Core entities and relationships.
+- [Frontend Architecture](./docs/FRONTEND_ARCHITECTURE.md) - Stack, routing, authentication, and data flow.
+- [API Reference](./docs/API_REFERENCE.md) - Backend endpoints used by the frontend.
+- [Backend Handoff](./docs/BACKEND_HANDOFF.md) - Exact backend contract and alignment checklist for the backend agent.
+- [Project Progress](./docs/PROJECT_PROGRESS.md) - Current implementation status and remaining work.
+- [Frontend Features Handoff](./docs/frontend_features_handoff.md) - Feature ownership and integration notes.
 
-This keeps frontend API usage clean while allowing different services to be separated by purpose.
+## Project Structure
+
+```text
+app/
+├── (auth)/          # Authentication pages (login, onboarding, register)
+├── (protected)/     # Role-based protected routes
+│   ├── client/      # Client views (home, orders, tailor discovery, shops)
+│   └── tailor/      # Tailor views (dashboard, orders, shop management)
+├── globals.css      # Global styles
+└── layout.tsx       # Root layout
+
+components/
+├── auth/            # Authentication form components
+├── map/             # Leaflet maps and location pickers
+├── navigation/      # Sidebars, nav controls, and layout headers
+└── (UI)/            # Reusable UI elements (ThemeToggle, Logo, FullPageLock)
+
+lib/
+├── api/             # API client and backend endpoint definitions
+│   └── types/       # Frontend type definitions for API payloads
+├── firebase/        # Firebase initialization and AuthContext
+├── cloudinary.ts    # Image upload utility
+├── geocoding.ts     # Map coordinates utilities
+└── phone.ts         # Phone validation utilities
+```
+
+## Validation
+
+Run the checks used by the project:
+
+```bash
+npm run lint
+npx tsc --noEmit
+npm run test:e2e
+npm run build
+```
+
+Cypress starts the Next.js development server automatically for the E2E suite. Tests are in `cypress/e2e/`. To use the interactive runner, start the app with `npm run dev` and run `npm run test:e2e:open` in another terminal.
+
+The previous Playwright suite remains available through `npm run test:e2e:playwright`.

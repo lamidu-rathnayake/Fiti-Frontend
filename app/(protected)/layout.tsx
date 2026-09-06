@@ -9,6 +9,12 @@ import FullPageLock from "@/components/FullPageLock";
 import ThemeToggle from "@/components/ThemeToggle";
 import Logo from "@/components/Logo";
 import TailorNavControls from "@/components/navigation/TailorNavControls";
+import { getTailorVerification } from "@/lib/api/endpoints/profiles";
+
+const SUPPORT_EMAIL =
+    process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@fiti.lk";
+
+type VerificationStatus = "loading" | "verified" | "unverified" | "error";
 
 export default function ProtectedLayout({
     children,
@@ -19,6 +25,8 @@ export default function ProtectedLayout({
     const router = useRouter();
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [verificationStatus, setVerificationStatus] =
+        useState<VerificationStatus>("loading");
 
     // Protected Route Logic
     const requiredRole = pathname.startsWith("/tailor") && !pathname.startsWith("/tailors")
@@ -39,6 +47,33 @@ export default function ProtectedLayout({
         }
     }, [loading, router, user, dbRole, requiredRole]);
 
+    useEffect(() => {
+        if (loading || !user || dbRole !== "tailor") {
+            return;
+        }
+
+        let isActive = true;
+        const checkVerification = async () => {
+            try {
+                const verification = await getTailorVerification(user.uid);
+                if (isActive) {
+                    setVerificationStatus(
+                        verification.is_verified ? "verified" : "unverified",
+                    );
+                }
+            } catch {
+                if (isActive) setVerificationStatus("error");
+            }
+        };
+
+        checkVerification();
+        window.addEventListener("focus", checkVerification);
+        return () => {
+            isActive = false;
+            window.removeEventListener("focus", checkVerification);
+        };
+    }, [dbRole, loading, user]);
+
     const authorized = user && dbRole && (!requiredRole || dbRole === requiredRole);
 
     if (loading || !authorized) {
@@ -49,6 +84,44 @@ export default function ProtectedLayout({
                 title="Verifying Access"
                 message="Checking session authorization & credentials..."
             />
+        );
+    }
+
+    if (dbRole === "tailor" && verificationStatus === "loading") {
+        return (
+            <FullPageLock
+                isLoading={true}
+                badgeText="ACCOUNT REVIEW"
+                title="Checking Verification"
+                message="Confirming your tailor account status..."
+            />
+        );
+    }
+
+    if (
+        dbRole === "tailor" &&
+        (verificationStatus === "unverified" || verificationStatus === "error")
+    ) {
+        return (
+            <main className="min-h-screen bg-warm-beige text-earth-text flex items-center justify-center px-6 py-12">
+                <section className="w-full max-w-lg border border-accent/30 bg-cream-bg p-8 text-center shadow-xl rounded-lg">
+                    <p className="text-xs font-mono font-bold uppercase tracking-widest text-accent">
+                        Verification required
+                    </p>
+                    <h1 className="mt-3 text-3xl font-serif font-bold">
+                        Your account is not verified
+                    </h1>
+                    <p className="mt-4 text-sm leading-6 text-earth-text/75">
+                        Please contact the Fiti team to verify your tailor account.
+                    </p>
+                    <a
+                        href={`mailto:${SUPPORT_EMAIL}?subject=Tailor account verification`}
+                        className="mt-6 inline-flex items-center justify-center bg-earth-text px-5 py-3 text-sm font-bold text-cream-bg hover:bg-accent transition-colors rounded-md"
+                    >
+                        {SUPPORT_EMAIL}
+                    </a>
+                </section>
+            </main>
         );
     }
 

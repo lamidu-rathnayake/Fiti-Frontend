@@ -124,7 +124,7 @@ export interface TailorProfile {
 
 /** Response from GET /api/v1/profiles/tailor/{id}/verification */
 export interface TailorVerification {
-    uid: string;
+    tailor_id: string;
     is_verified: boolean;
 }
 

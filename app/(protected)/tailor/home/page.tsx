@@ -128,7 +128,7 @@ export default function TailorHomePage() {
                 const storedId = localStorage.getItem("tailorSelectedShopId");
                 activeShop = storedId
                     ? (shops.find((s) => String(s.shop_id) === storedId) ??
-                      shops[0])
+                        shops[0])
                     : shops[0];
                 setSelectedShop(activeShop);
                 localStorage.setItem(
@@ -619,7 +619,7 @@ export default function TailorHomePage() {
             </div>
         );
     };
-
+    // --
     const renderOrderCard = (ord: Order, isActive: boolean) => {
         return (
             <div
@@ -1067,7 +1067,7 @@ export default function TailorHomePage() {
                                         <h2 className="text-base font-bold text-earth-text border-b border-accent/15 pb-3">
                                             Upload Documents
                                         </h2>
-                                        
+
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/80 block">
@@ -1255,9 +1255,9 @@ export default function TailorHomePage() {
                                                 {selectedRequestView.req
                                                     .target_date
                                                     ? new Date(
-                                                          selectedRequestView
-                                                              .req.target_date,
-                                                      ).toLocaleDateString()
+                                                        selectedRequestView
+                                                            .req.target_date,
+                                                    ).toLocaleDateString()
                                                     : "Flexible"}
                                             </p>
                                         </div>
@@ -1269,9 +1269,9 @@ export default function TailorHomePage() {
                                                 {selectedRequestView.req
                                                     .fabric_status
                                                     ? selectedRequestView.req.fabric_status.replace(
-                                                          "_",
-                                                          " ",
-                                                      )
+                                                        "_",
+                                                        " ",
+                                                    )
                                                     : "Not specified"}
                                             </p>
                                         </div>
@@ -1305,34 +1305,34 @@ export default function TailorHomePage() {
                                                 </div>
                                                 {selectedRequestView.req.client
                                                     .phone && (
-                                                    <div>
-                                                        <h3 className="text-[10px] font-mono font-bold text-earth-text/60 uppercase tracking-widest mb-1">
-                                                            Contact
-                                                        </h3>
-                                                        <p className="text-xs font-bold text-earth-text">
-                                                            {
-                                                                selectedRequestView
-                                                                    .req.client
-                                                                    .phone
-                                                            }
-                                                        </p>
-                                                    </div>
-                                                )}
+                                                        <div>
+                                                            <h3 className="text-[10px] font-mono font-bold text-earth-text/60 uppercase tracking-widest mb-1">
+                                                                Contact
+                                                            </h3>
+                                                            <p className="text-xs font-bold text-earth-text">
+                                                                {
+                                                                    selectedRequestView
+                                                                        .req.client
+                                                                        .phone
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                 {selectedRequestView.req.client
                                                     .city && (
-                                                    <div className="col-span-2">
-                                                        <h3 className="text-[10px] font-mono font-bold text-earth-text/60 uppercase tracking-widest mb-1">
-                                                            Location
-                                                        </h3>
-                                                        <p className="text-xs font-bold text-earth-text">
-                                                            {
-                                                                selectedRequestView
-                                                                    .req.client
-                                                                    .city
-                                                            }
-                                                        </p>
-                                                    </div>
-                                                )}
+                                                        <div className="col-span-2">
+                                                            <h3 className="text-[10px] font-mono font-bold text-earth-text/60 uppercase tracking-widest mb-1">
+                                                                Location
+                                                            </h3>
+                                                            <p className="text-xs font-bold text-earth-text">
+                                                                {
+                                                                    selectedRequestView
+                                                                        .req.client
+                                                                        .city
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    )}
                                             </div>
                                         </div>
                                     )}
@@ -1362,7 +1362,7 @@ export default function TailorHomePage() {
                                                             selectedRequestView
                                                                 .req
                                                                 .measurement![
-                                                                part as keyof typeof selectedRequestView.req.measurement
+                                                            part as keyof typeof selectedRequestView.req.measurement
                                                             ];
                                                         if (val == null)
                                                             return null;
@@ -1379,22 +1379,22 @@ export default function TailorHomePage() {
                                                     })}
                                                     {selectedRequestView.req
                                                         .measurement.notes && (
-                                                        <div className="col-span-3 mt-2">
-                                                            <h3 className="text-[10px] font-mono font-bold text-earth-text/60 uppercase tracking-widest mb-1">
-                                                                Notes
-                                                            </h3>
-                                                            <p className="text-xs text-earth-text/80 italic">
-                                                                "
-                                                                {
-                                                                    selectedRequestView
-                                                                        .req
-                                                                        .measurement
-                                                                        .notes
-                                                                }
-                                                                "
-                                                            </p>
-                                                        </div>
-                                                    )}
+                                                            <div className="col-span-3 mt-2">
+                                                                <h3 className="text-[10px] font-mono font-bold text-earth-text/60 uppercase tracking-widest mb-1">
+                                                                    Notes
+                                                                </h3>
+                                                                <p className="text-xs text-earth-text/80 italic">
+                                                                    "
+                                                                    {
+                                                                        selectedRequestView
+                                                                            .req
+                                                                            .measurement
+                                                                            .notes
+                                                                    }
+                                                                    "
+                                                                </p>
+                                                            </div>
+                                                        )}
                                                 </div>
                                             </div>
                                         )}
@@ -1415,7 +1415,7 @@ export default function TailorHomePage() {
                                             <span className="text-xs font-bold text-earth-text">
                                                 {selectedRequestView
                                                     .myShopRequest?.status ===
-                                                "quoted"
+                                                    "quoted"
                                                     ? "Quoted / Pending Approval"
                                                     : "New Inquiry"}
                                             </span>
@@ -1455,10 +1455,10 @@ export default function TailorHomePage() {
                                                                 .myShopRequest
                                                                 ?.shop_request_id
                                                                 ? (bidPrices[
-                                                                      selectedRequestView
-                                                                          .myShopRequest
-                                                                          .shop_request_id
-                                                                  ] ?? "")
+                                                                    selectedRequestView
+                                                                        .myShopRequest
+                                                                        .shop_request_id
+                                                                ] ?? "")
                                                                 : ""
                                                         }
                                                         onChange={(e) =>
@@ -1490,10 +1490,10 @@ export default function TailorHomePage() {
                                                                 .myShopRequest
                                                                 ?.shop_request_id
                                                                 ? (bidMessages[
-                                                                      selectedRequestView
-                                                                          .myShopRequest
-                                                                          .shop_request_id
-                                                                  ] ?? "")
+                                                                    selectedRequestView
+                                                                        .myShopRequest
+                                                                        .shop_request_id
+                                                                ] ?? "")
                                                                 : ""
                                                         }
                                                         onChange={(e) =>
@@ -1528,16 +1528,16 @@ export default function TailorHomePage() {
                                                             .myShopRequest
                                                             ?.shop_request_id ||
                                                         submittingBidFor ===
-                                                            selectedRequestView
-                                                                .myShopRequest
-                                                                .shop_request_id
+                                                        selectedRequestView
+                                                            .myShopRequest
+                                                            .shop_request_id
                                                     }
                                                     className="w-full bg-accent hover:bg-accent-hover disabled:opacity-50 text-cream-bg font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition-all shadow-sm"
                                                 >
                                                     {submittingBidFor ===
-                                                    selectedRequestView
-                                                        .myShopRequest
-                                                        ?.shop_request_id
+                                                        selectedRequestView
+                                                            .myShopRequest
+                                                            ?.shop_request_id
                                                         ? "Submitting..."
                                                         : "Send Quote"}
                                                 </button>
@@ -1557,9 +1557,9 @@ export default function TailorHomePage() {
                                                         className="w-full border border-red-700/30 text-red-700 hover:bg-red-700/10 disabled:opacity-50 font-bold text-xs uppercase tracking-wider py-3 rounded-xl transition-all"
                                                     >
                                                         {submittingBidFor ===
-                                                        selectedRequestView
-                                                            .myShopRequest
-                                                            .shop_request_id
+                                                            selectedRequestView
+                                                                .myShopRequest
+                                                                .shop_request_id
                                                             ? "Declining..."
                                                             : "Decline Inquiry"}
                                                     </button>
@@ -1650,9 +1650,9 @@ export default function TailorHomePage() {
                                             {selectedOrderView.order
                                                 .started_date
                                                 ? new Date(
-                                                      selectedOrderView.order
-                                                          .started_date,
-                                                  ).toLocaleDateString()
+                                                    selectedOrderView.order
+                                                        .started_date,
+                                                ).toLocaleDateString()
                                                 : "N/A"}
                                         </p>
                                     </div>
@@ -1687,7 +1687,7 @@ export default function TailorHomePage() {
                                             className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
                                         >
                                             {completingOrderId ===
-                                            selectedOrderView.order.order_id
+                                                selectedOrderView.order.order_id
                                                 ? "Processing..."
                                                 : "✓ Mark as Completed"}
                                         </button>

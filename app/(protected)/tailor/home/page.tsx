@@ -36,7 +36,7 @@ interface RequestView {
     isDirect: boolean;
 }
 
-type Tab = "overview" | "earnings" | "settings";
+type Tab = "overview" | "earnings" | "settings" | "verification";
 
 export default function TailorHomePage() {
     const { user } = useAuth();
@@ -90,6 +90,13 @@ export default function TailorHomePage() {
     const [lightboxWorkImage, setLightboxWorkImage] = useState<string | null>(
         null,
     );
+
+    // Verification states
+    const [nicFrontFile, setNicFrontFile] = useState<File | null>(null);
+    const [nicRearFile, setNicRearFile] = useState<File | null>(null);
+    const [nicFrontPreview, setNicFrontPreview] = useState<string | null>(null);
+    const [nicRearPreview, setNicRearPreview] = useState<string | null>(null);
+    const [isSubmittingNic, setIsSubmittingNic] = useState(false);
 
     const showToast = (msg: string, ok = true) => {
         setActionToast({ msg, ok });
@@ -405,6 +412,41 @@ export default function TailorHomePage() {
         }
     };
 
+    const handleSubmitVerification = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user || !tailorProfile) return;
+        if (!nicFrontFile || !nicRearFile) {
+            showToast("Please select both front and rear images of your NIC.", false);
+            return;
+        }
+
+        setIsSubmittingNic(true);
+        try {
+            const frontUrl = await uploadToCloudinary(nicFrontFile, "image");
+            const rearUrl = await uploadToCloudinary(nicRearFile, "image");
+
+            if (!frontUrl || !rearUrl) {
+                throw new Error("Failed to upload NIC images.");
+            }
+
+            const updated = await updateTailorProfile(user.uid, {
+                nic_front: frontUrl,
+                nic_rear: rearUrl,
+            });
+            setTailorProfile(updated);
+            showToast("NIC uploaded successfully! Verification pending.");
+            setNicFrontFile(null);
+            setNicRearFile(null);
+            setNicFrontPreview(null);
+            setNicRearPreview(null);
+        } catch (err: any) {
+            console.error("Failed to submit verification:", err);
+            showToast(err.message || "Failed to submit verification.", false);
+        } finally {
+            setIsSubmittingNic(false);
+        }
+    };
+
     // ── Render Helpers ──
 
     const SkeletonCard = () => (
@@ -647,6 +689,7 @@ export default function TailorHomePage() {
                             { key: "overview", label: "Overview" },
                             { key: "earnings", label: "Earnings" },
                             { key: "settings", label: "Settings" },
+                            { key: "verification", label: "Verification" },
                         ].map((t) => (
                             <button
                                 key={t.key}
@@ -965,6 +1008,146 @@ export default function TailorHomePage() {
                                             + Add New Shop
                                         </Link>
                                     </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* VERIFICATION TAB */}
+                {activeTab === "verification" && (
+                    <div className="p-6 lg:p-12 overflow-y-auto custom-scrollbar h-full">
+                        <div className="max-w-2xl mx-auto space-y-8">
+                            <div>
+                                <span className="text-[10px] font-mono tracking-[0.25em] text-earth-text/60 uppercase block mb-1 font-bold">
+                                    ACCOUNT VERIFICATION
+                                </span>
+                                <h1 className="text-3xl font-extrabold text-earth-text font-heading">
+                                    Identity Verification
+                                </h1>
+                                <p className="text-earth-text/70 text-xs mt-1 font-medium">
+                                    Upload your National Identity Card (NIC) to verify your account and increase client trust.
+                                </p>
+                            </div>
+
+                            <div className="bg-cream-bg border border-accent/20 rounded-2xl p-6 sm:p-8 shadow-sm">
+                                <div className="mb-6">
+                                    <h2 className="text-base font-bold text-earth-text border-b border-accent/15 pb-3 mb-4">
+                                        Verification Status
+                                    </h2>
+                                    {tailorProfile?.is_verified ? (
+                                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start gap-3">
+                                            <span className="text-xl">✅</span>
+                                            <div>
+                                                <h3 className="text-sm font-bold text-emerald-800">Verified Tailor</h3>
+                                                <p className="text-xs text-emerald-700/80 mt-1">Your identity has been verified. You will receive higher visibility in the marketplace.</p>
+                                            </div>
+                                        </div>
+                                    ) : tailorProfile?.nic_front && tailorProfile?.nic_rear ? (
+                                        <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
+                                            <span className="text-xl">⏳</span>
+                                            <div>
+                                                <h3 className="text-sm font-bold text-amber-800">Verification Pending</h3>
+                                                <p className="text-xs text-amber-700/80 mt-1">Your NIC images have been submitted and are under review by our team.</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="p-4 bg-earth-text/5 border border-earth-text/10 rounded-xl flex items-start gap-3">
+                                            <span className="text-xl">ℹ️</span>
+                                            <div>
+                                                <h3 className="text-sm font-bold text-earth-text">Not Verified</h3>
+                                                <p className="text-xs text-earth-text/70 mt-1">Please submit your NIC images below to initiate the verification process.</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {!tailorProfile?.is_verified && (!tailorProfile?.nic_front || !tailorProfile?.nic_rear) && (
+                                    <form onSubmit={handleSubmitVerification} className="space-y-6">
+                                        <h2 className="text-base font-bold text-earth-text border-b border-accent/15 pb-3">
+                                            Upload Documents
+                                        </h2>
+                                        
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/80 block">
+                                                    NIC Front Image *
+                                                </label>
+                                                <div className="border-2 border-dashed border-accent/30 rounded-2xl p-4 text-center hover:border-accent transition-colors bg-warm-beige/30">
+                                                    {nicFrontPreview ? (
+                                                        <div className="relative w-full h-32 rounded-xl overflow-hidden mb-2 border border-accent/20">
+                                                            <img src={nicFrontPreview} alt="NIC Front Preview" className="w-full h-full object-cover" />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => { setNicFrontFile(null); setNicFrontPreview(null); }}
+                                                                className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-lg uppercase"
+                                                            >
+                                                                Change
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <label className="cursor-pointer block py-4">
+                                                            <span className="text-2xl block mb-2">📸</span>
+                                                            <span className="text-xs font-bold text-accent uppercase block">Upload Front</span>
+                                                            <input
+                                                                type="file" accept="image/*" className="hidden"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) {
+                                                                        setNicFrontFile(file);
+                                                                        setNicFrontPreview(URL.createObjectURL(file));
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </label>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-earth-text/80 block">
+                                                    NIC Rear Image *
+                                                </label>
+                                                <div className="border-2 border-dashed border-accent/30 rounded-2xl p-4 text-center hover:border-accent transition-colors bg-warm-beige/30">
+                                                    {nicRearPreview ? (
+                                                        <div className="relative w-full h-32 rounded-xl overflow-hidden mb-2 border border-accent/20">
+                                                            <img src={nicRearPreview} alt="NIC Rear Preview" className="w-full h-full object-cover" />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => { setNicRearFile(null); setNicRearPreview(null); }}
+                                                                className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-lg uppercase"
+                                                            >
+                                                                Change
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <label className="cursor-pointer block py-4">
+                                                            <span className="text-2xl block mb-2">📸</span>
+                                                            <span className="text-xs font-bold text-accent uppercase block">Upload Rear</span>
+                                                            <input
+                                                                type="file" accept="image/*" className="hidden"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) {
+                                                                        setNicRearFile(file);
+                                                                        setNicRearPreview(URL.createObjectURL(file));
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </label>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            disabled={isSubmittingNic || !nicFrontFile || !nicRearFile}
+                                            className="w-full py-3 bg-accent text-white font-bold text-xs rounded-xl hover:bg-accent-dark transition-colors shadow-md disabled:opacity-50 mt-4"
+                                        >
+                                            {isSubmittingNic ? "Submitting Documents..." : "Submit for Verification"}
+                                        </button>
+                                    </form>
                                 )}
                             </div>
                         </div>

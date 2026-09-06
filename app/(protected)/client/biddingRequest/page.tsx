@@ -115,8 +115,8 @@ export default function BiddingRequestPage() {
             await createClothingRequest({
                 client_id: user?.uid || "guest_client",
                 clothing_category: garmentType,
-                description: notes || undefined,
-                request_location: city || undefined,
+                description: notes || null,
+                request_location: city || null,
                 latitude: latitude,
                 longitude: longitude,
                 radius_km: radius,
@@ -124,11 +124,12 @@ export default function BiddingRequestPage() {
                 request_type: "bidding", // Explicitly a bidding request
                 fabric_status: fabricChoice as "client_provided" | "shop_provides",
                 gender: gender,
-                target_budget: targetBudget ? parseFloat(targetBudget) : undefined,
-                target_date: targetDate || undefined,
+                target_budget: targetBudget ? parseFloat(targetBudget) : null,
+                target_date: targetDate || null,
                 design_image_urls: uploadedImageUrls,
-                voice_note_url: voiceUrl || undefined,
-                target_shop_ids: undefined, // Broadcast to all nearby tailors
+                voice_note_url: voiceUrl || null,
+                target_shop_ids: [], // Broadcast to all nearby tailors
+                measurement_profile_id: savedMeasurements?.measurement_id || null,
                 measurement: savedMeasurements ? {
                     chest: savedMeasurements.chest ? Number(savedMeasurements.chest) : null,
                     waist: savedMeasurements.waist ? Number(savedMeasurements.waist) : null,
@@ -138,7 +139,7 @@ export default function BiddingRequestPage() {
                     hip: savedMeasurements.hip ? Number(savedMeasurements.hip) : null,
                     inseam: savedMeasurements.inseam ? Number(savedMeasurements.inseam) : null,
                     length: savedMeasurements.length ? Number(savedMeasurements.length) : null,
-                } : undefined,
+                } : null,
             });
             setSubmitted(true);
             setTimeout(() => {

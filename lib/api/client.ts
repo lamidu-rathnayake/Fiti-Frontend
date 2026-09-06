@@ -5,8 +5,9 @@
 
 import { auth } from "@/lib/firebase/config";
 
-const API_BASE =
+const rawBase =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = rawBase.trim().replace(/\/+$/, "");
 
 export interface ApiError {
     detail: string;
@@ -59,7 +60,8 @@ export async function apiFetch<T = unknown>(
             ...rest,
             headers,
         });
-    } catch {
+    } catch (err) {
+        console.error(`Network error calling ${API_BASE}/api/v1${endpoint}:`, err);
         throw new FitiApiError(0, "Unable to connect to the backend API.");
     }
 
